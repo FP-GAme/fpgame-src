@@ -163,10 +163,10 @@ hdmi_generator hgen (
     .vga_rgb(HDMI_TX_D),
     .i2c_sclk(HDMI_I2C_SCL),
     .i2c_sda(HDMI_I2C_SDA),
-	 .hdmi_tx_int(HDMI_TX_INT),
+    .hdmi_tx_int(HDMI_TX_INT),
     .i2s_sclk(HDMI_SCLK),
     .i2s_lrclk(HDMI_LRCLK),
     .i2s_sda(HDMI_I2S)
 );
- 
+
 endmodule

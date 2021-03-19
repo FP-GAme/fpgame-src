@@ -6,7 +6,7 @@ JedecChain;
 	P ActionCode(Ign)
 		Device PartName(SOCVHPS) MfrSpec(OpMask(0));
 	P ActionCode(Cfg)
-		Device PartName(5CSEBA6U23) Path("/home/jpyankel/projects/fpgame/") File("fpgame.sof") MfrSpec(OpMask(1));
+		Device PartName(5CSEBA6U23) Path("/home/jpyankel/projects/capstone/fpgame/") File("fpgame.sof") MfrSpec(OpMask(1));
 
 ChainEnd;
 
