@@ -4,6 +4,7 @@
 *.d
 *.bin
 *.zip
+*.mif
 SoftDiv/div
 Wave-to-PCM/wav2bin
 db/
