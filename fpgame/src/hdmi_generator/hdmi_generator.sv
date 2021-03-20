@@ -4,32 +4,41 @@ module hdmi_generator (
     input logic clk,
     input logic rst_n,
 
+    // to top
     output logic vga_pclk,
     output logic vga_de,
     output logic vga_hs,
     output logic vga_vs,
     output logic [23:0] vga_rgb,
 
-    output i2c_sclk,
-    inout i2c_sda,
-	 input hdmi_tx_int,
+    output logic i2c_sclk,
+    inout wire i2c_sda,
+    input logic hdmi_tx_int,
 
     output logic i2s_sclk,
     output logic i2s_lrclk,
-    output logic i2s_sda
+    output logic i2s_sda,
+
+    // to PPU
+    input logic [9:0] rram_rddata,
+    output logic [8:0] rram_rdaddr,
+    input logic [31:0] pram_rddata,
+    output logic [9:0] pram_rdaddr
 );
 
-vpg u_vpg (
-    .clk_50(clk),
-	 .video_clk(video_clk),
-    .reset_n(rst_n),
-    .vpg_pclk(vga_pclk),
-    .vpg_de(vga_de),
-    .vpg_hs(vga_hs),
-    .vpg_vs(vga_vs),
-    .vpg_r(vga_rgb[23:16]),
-    .vpg_g(vga_rgb[15:8]),
-    .vpg_b(vga_rgb[7:0])
+hdmi_video_output hvo (
+    .video_clk(video_clk),
+    .rst_n(rst_n),
+    .vga_pclk(vga_pclk),
+    .vga_de(vga_de),
+    .vga_hs(vga_hs),
+    .vga_vs(vga_vs),
+    .vga_rgb(vga_rgb),
+    .rram_rddata(rram_rddata),
+    .rram_rdaddr(rram_rdaddr),
+    .pram_rddata(pram_rddata),
+    .pram_rdaddr(pram_rdaddr),
+    .rram_swap()
 );
 
 I2C_HDMI_Config u_I2C_HDMI_Config (

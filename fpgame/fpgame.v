@@ -89,6 +89,10 @@ wire sys_rst_n; // Reset which releases after both video and audio PLLs are fini
 assign sys_rst_n = audio_rst_n & video_rst_n;
 
 wire audio_clk, video_clk;
+wire [9:0] rram_rddata;
+wire [8:0] rram_rdaddr;
+wire [31:0] pram_rddata;
+wire [9:0] pram_rdaddr;
 
 //=======================================================
 //  Structural coding
@@ -166,7 +170,20 @@ hdmi_generator hgen (
     .hdmi_tx_int(HDMI_TX_INT),
     .i2s_sclk(HDMI_SCLK),
     .i2s_lrclk(HDMI_LRCLK),
-    .i2s_sda(HDMI_I2S)
+    .i2s_sda(HDMI_I2S),
+    .rram_rddata(rram_rddata),
+    .rram_rdaddr(rram_rdaddr),
+    .pram_rddata(pram_rddata),
+    .pram_rdaddr(pram_rdaddr)
+);
+
+ppu u_ppu (
+    .clk(FPGA_CLK2_50),
+    .rst_n(sys_rst_n),
+    .rram_rddata(rram_rddata),
+    .rram_rdaddr(rram_rdaddr),
+    .pram_rddata(pram_rddata),
+    .pram_rdaddr(pram_rdaddr)
 );
 
 endmodule
