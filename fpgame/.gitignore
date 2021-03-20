@@ -5,6 +5,7 @@ hps_isw_handoff/
 .qsys_edit/
 greybox_tmp/
 *_sim
+synthesis/
 
 # --- Important Quartus-Related File Types ---
 # These files must be kept as per:
