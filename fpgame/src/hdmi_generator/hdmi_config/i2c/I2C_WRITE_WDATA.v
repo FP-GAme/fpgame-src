@@ -51,7 +51,7 @@ else
 	    4: begin  
 		      ST <=5 ; 
 			   SCLO <= 1'b1 ; 
-				CNT <= CNT +1 ;
+				CNT <= CNT + 8'b1 ;
 		    end
 			 
 	    5: begin  

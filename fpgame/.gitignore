@@ -40,6 +40,7 @@ synthesis/
 *.htm
 *.cmp
 *.tcl
+*.tcl~
 *.ptf.*
 *.qar
 *.qarlog

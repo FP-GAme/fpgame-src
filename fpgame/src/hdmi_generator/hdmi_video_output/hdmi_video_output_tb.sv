@@ -13,13 +13,13 @@ module hdmi_video_output_tb;
     logic vga_de;
     logic vga_hs;
     logic vga_vs;
-    logic rram_swap;
+    logic rowram_swap;
 
     // interconnect
-    logic [9:0] rram_rddata;
-    logic [8:0] rram_rdaddr;
-    logic [31:0] pram_rddata;
-    logic [9:0] pram_rdaddr;
+    logic [9:0] rowram_rddata;
+    logic [8:0] rowram_rdaddr;
+    logic [63:0] palram_rddata;
+    logic [8:0] palram_rdaddr;
 
 
     hdmi_video_output hvo (
@@ -30,36 +30,37 @@ module hdmi_video_output_tb;
         .vga_hs(vga_hs),
         .vga_vs(vga_vs),
         .vga_rgb(vga_rgb),
-        .rram_rddata(rram_rddata),
-        .rram_rdaddr(rram_rdaddr),
-        .pram_rddata(pram_rddata),
-        .pram_rdaddr(pram_rdaddr),
-        .rram_swap(rram_swap)
+        .rowram_rddata,
+        .rowram_rdaddr,
+        .palram_rddata,
+        .palram_rdaddr,
+        .rowram_swap
     );
 
     // test RAM
     row_ram rr (
-        .address_a(rram_rdaddr),
+        .address_a(rowram_rdaddr),
         .address_b(9'b0),
         .clock(clk),
         .data_a(10'b0), // TODO Change
         .data_b(10'b0), // TODO Change
         .wren_a(1'b0), // TODO Change
         .wren_b(1'b0), // TODO Change
-        .q_a(rram_rddata),
+        .q_a(rowram_rddata),
         .q_b()
     );
 
     // test RAM
     palette_ram pr (
-        .address_a(pram_rdaddr),
-        .address_b(10'b0), // TODO Change
+        .address_a(palram_rdaddr),
+        .address_b(9'b0), // TODO Change
+        .byteena_b(8'b0),
         .clock(clk),
-        .data_a(32'b0), // TODO Change
-        .data_b(32'b0), // TODO Change
+        .data_a(64'b0), // TODO Change
+        .data_b(64'b0), // TODO Change
         .wren_a(1'b0), // TODO Change
         .wren_b(1'b0), //  TODO Change
-        .q_a(pram_rddata),
+        .q_a(palram_rddata),
         .q_b() // TODO Change
     );
 

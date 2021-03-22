@@ -1,6 +1,10 @@
 
 module fpgame_soc (
 	clk_clk,
+	h2f_vram_interface_export_wraddr,
+	h2f_vram_interface_export_wren,
+	h2f_vram_interface_export_wrdata,
+	h2f_vram_interface_export_byteena,
 	hps_io_hps_io_sdio_inst_CMD,
 	hps_io_hps_io_sdio_inst_D0,
 	hps_io_hps_io_sdio_inst_D1,
@@ -21,7 +25,7 @@ module fpgame_soc (
 	hps_io_hps_io_usb1_inst_NXT,
 	hps_io_hps_io_uart0_inst_RX,
 	hps_io_hps_io_uart0_inst_TX,
-	input_pio_external_connection_export,
+	input_pio_export,
 	memory_mem_a,
 	memory_mem_ba,
 	memory_mem_ck,
@@ -40,6 +44,10 @@ module fpgame_soc (
 	memory_oct_rzqin);	
 
 	input		clk_clk;
+	output	[12:0]	h2f_vram_interface_export_wraddr;
+	output		h2f_vram_interface_export_wren;
+	output	[63:0]	h2f_vram_interface_export_wrdata;
+	output	[7:0]	h2f_vram_interface_export_byteena;
 	inout		hps_io_hps_io_sdio_inst_CMD;
 	inout		hps_io_hps_io_sdio_inst_D0;
 	inout		hps_io_hps_io_sdio_inst_D1;
@@ -60,7 +68,7 @@ module fpgame_soc (
 	input		hps_io_hps_io_usb1_inst_NXT;
 	input		hps_io_hps_io_uart0_inst_RX;
 	output		hps_io_hps_io_uart0_inst_TX;
-	input	[15:0]	input_pio_external_connection_export;
+	input	[15:0]	input_pio_export;
 	output	[14:0]	memory_mem_a;
 	output	[2:0]	memory_mem_ba;
 	output		memory_mem_ck;

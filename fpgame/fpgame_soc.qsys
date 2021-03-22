@@ -17,6 +17,22 @@
          type = "int";
       }
    }
+   element h2f_vram_interface_0
+   {
+      datum _sortIndex
+      {
+         value = "3";
+         type = "int";
+      }
+   }
+   element h2f_vram_interface_0.avs_s0
+   {
+      datum baseAddress
+      {
+         value = "0";
+         type = "String";
+      }
+   }
    element hps_0
    {
       datum _sortIndex
@@ -76,9 +92,14 @@
  <parameter name="useTestBenchNamingPattern" value="false" />
  <instanceScript></instanceScript>
  <interface name="clk" internal="clk_0.clk_in" type="clock" dir="end" />
+ <interface
+   name="h2f_vram_interface"
+   internal="h2f_vram_interface_0.external"
+   type="conduit"
+   dir="end" />
  <interface name="hps_io" internal="hps_0.hps_io" type="conduit" dir="end" />
  <interface
-   name="input_pio_external_connection"
+   name="input_pio"
    internal="input_pio.external_connection"
    type="conduit"
    dir="end" />
@@ -89,6 +110,11 @@
   <parameter name="inputClockFrequency" value="0" />
   <parameter name="resetSynchronousEdges" value="NONE" />
  </module>
+ <module
+   name="h2f_vram_interface_0"
+   kind="h2f_vram_interface"
+   version="1.0"
+   enabled="1" />
  <module name="hps_0" kind="altera_hps" version="20.1" enabled="1">
   <parameter name="ABSTRACT_REAL_COMPARE_TEST" value="false" />
   <parameter name="ABS_RAM_MEM_INIT_FILENAME" value="meminit" />
@@ -636,6 +662,15 @@
  <connection
    kind="avalon"
    version="20.1"
+   start="hps_0.h2f_axi_master"
+   end="h2f_vram_interface_0.avs_s0">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0000" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="20.1"
    start="hps_0.h2f_lw_axi_master"
    end="input_pio.s1">
   <parameter name="arbitrationPriority" value="1" />
@@ -643,6 +678,11 @@
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection kind="clock" version="20.1" start="clk_0.clk" end="input_pio.clk" />
+ <connection
+   kind="clock"
+   version="20.1"
+   start="clk_0.clk"
+   end="h2f_vram_interface_0.clock" />
  <connection
    kind="clock"
    version="20.1"
@@ -659,10 +699,22 @@
    start="clk_0.clk"
    end="hps_0.h2f_lw_axi_clock" />
  <connection
+   kind="interrupt"
+   version="20.1"
+   start="hps_0.f2h_irq0"
+   end="h2f_vram_interface_0.ppu_transfer_irq">
+  <parameter name="irqNumber" value="0" />
+ </connection>
+ <connection
    kind="reset"
    version="20.1"
    start="clk_0.clk_reset"
    end="input_pio.reset" />
+ <connection
+   kind="reset"
+   version="20.1"
+   start="clk_0.clk_reset"
+   end="h2f_vram_interface_0.reset" />
  <connection
    kind="reset"
    version="20.1"

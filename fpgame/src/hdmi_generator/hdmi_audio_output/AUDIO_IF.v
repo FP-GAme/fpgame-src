@@ -89,7 +89,7 @@ begin
 	  lrclk <= ~lrclk;
 	end
 	else 
-     sclk_Count <= sclk_Count + 1;
+     sclk_Count <= sclk_Count + 6'b1;
 end
  
 always@(negedge sclk or negedge rst_n)
@@ -105,7 +105,7 @@ begin
       Data_Count <= 0;
     end
 	 else 
-	 Data_Count <= Data_Count +1;
+	 Data_Count <= Data_Count + 7'b1;
   end
 end
 
@@ -131,7 +131,7 @@ begin
 	else
 	begin
 		if(SIN_Cont < SIN_SAMPLE_DATA-1 )
-		SIN_Cont	<=	SIN_Cont+1;
+		SIN_Cont	<=	SIN_Cont+6'b1;
 		else
 		SIN_Cont	<=	0;
 	end

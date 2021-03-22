@@ -20,10 +20,10 @@ module hdmi_generator (
     output logic i2s_sda,
 
     // to PPU
-    input logic [9:0] rram_rddata,
-    output logic [8:0] rram_rdaddr,
-    input logic [31:0] pram_rddata,
-    output logic [9:0] pram_rdaddr
+    input  logic [9:0]  rowram_rddata,
+    output logic [8:0]  rowram_rdaddr,
+    input  logic [63:0] palram_rddata,
+    output logic [8:0]  palram_rdaddr
 );
 
 hdmi_video_output hvo (
@@ -34,11 +34,11 @@ hdmi_video_output hvo (
     .vga_hs(vga_hs),
     .vga_vs(vga_vs),
     .vga_rgb(vga_rgb),
-    .rram_rddata(rram_rddata),
-    .rram_rdaddr(rram_rdaddr),
-    .pram_rddata(pram_rddata),
-    .pram_rdaddr(pram_rdaddr),
-    .rram_swap()
+    .rowram_rddata,
+    .rowram_rdaddr,
+    .palram_rddata,
+    .palram_rdaddr,
+    .rowram_swap()
 );
 
 I2C_HDMI_Config u_I2C_HDMI_Config (

@@ -54,7 +54,7 @@ module I2C_Controller (
 
 wire SDAO ; 
 
-assign I2C_SDAT = SDAO?1'bz :0  ; 
+assign I2C_SDAT = SDAO ? 1'bz : 1'b0; 
 
 I2C_WRITE_WDATA  wrd(
    .RESET_N  ( RESET),

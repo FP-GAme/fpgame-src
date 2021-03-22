@@ -10,11 +10,11 @@ module hdmi_video_output (
     output logic [23:0] vga_rgb,
 
     // to PPU
-    input logic [9:0] rram_rddata,
-    output logic [8:0] rram_rdaddr,
-    input logic [31:0] pram_rddata,
-    output logic [9:0] pram_rdaddr,
-    output logic rram_swap
+    input  logic [9:0]  rowram_rddata,
+    output logic [8:0]  rowram_rdaddr,
+    input  logic [63:0] palram_rddata,
+    output logic [8:0]  palram_rdaddr,
+    output logic        rowram_swap
 );
 
     // Base timings obtained from: http://tinyvga.com/vga-timing/640x480@60Hz
@@ -51,9 +51,10 @@ module hdmi_video_output (
     logic [9:0] v_count;   // vertical/row count
     logic h_de, v_de;     // horizontal and vertical display-enable signals
     logic addr_toggle = 1'b0; // use to keep track of when to change row-buffer addresses
-    logic [8:0] n_rram_rdaddr; // next row-ram read address
+    logic [8:0] n_rowram_rdaddr; // next row-ram read address
     logic n_addr_toggle;
     logic [23:0] n_vga_rgb;
+    logic palram_datasel; // store LSB of rowram_rddata to translate from 32-bit to 64-bit rd addr
 
     enum { IDLE, SWAP, DISPLAY } c_state, n_state;
      
@@ -74,39 +75,26 @@ module hdmi_video_output (
 
     // === Next-State Logic ===
     always_comb begin
-        rram_swap = 1'b0;
-        n_rram_rdaddr = rram_rdaddr;
+        rowram_swap = 1'b0;
+        n_rowram_rdaddr = rowram_rdaddr;
         n_addr_toggle = 1'b0;
         n_vga_rgb = 24'h000000; // Regular Analog video requires black color during blank
 		  
-		  /*if (v_count < 300) begin
-		      if (h_count == 782 || h_count == 143)
-				    n_vga_rgb = {8'hFF, 8'h00, 8'h00};
-				else
-				    n_vga_rgb = {8'b0, h_count[7:0], h_count[7:0]};
-		  end
-		  else if (v_count == 514) begin
-				n_vga_rgb = {8'hFF, 8'h00, 8'h00};
-		  end
-		  else begin
-		      n_vga_rgb = {v_count[7:0], 8'b0, v_count[7:0]};
-		  end*/
-
         unique case (c_state)
             IDLE: begin
                 n_state = (h_count == h_sync + h_backporch - 6) ? SWAP : IDLE;
             end
             SWAP: begin
-                rram_swap = 1'b1;
-                n_rram_rdaddr = 9'b0; // Reset the pixel address before we enter DISPLAY
+                rowram_swap = 1'b1;
+                n_rowram_rdaddr = 9'b0; // Reset the pixel address before we enter DISPLAY
                 n_state = DISPLAY;
             end
             DISPLAY: begin
                 if (addr_toggle == 1 && h_count < h_sync + h_backporch + h_visible - 5)
-                    n_rram_rdaddr = rram_rdaddr + 1; // Increment the pixel address every 2 pixels
+                    n_rowram_rdaddr = rowram_rdaddr + 9'b1; // Increment pixel address every 2 px
 
                 n_addr_toggle = ~addr_toggle;
-                n_vga_rgb = pram_rddata[23:0];
+                n_vga_rgb = (palram_datasel) ? palram_rddata[55:32] : palram_rddata[23:0];
 
                 // As soon as we are about to enter the horizontal front porch, transition to IDLE
                 n_state = (h_count == h_sync + h_backporch + h_visible - 1) ? IDLE : DISPLAY;
@@ -121,15 +109,17 @@ module hdmi_video_output (
     // === FSM ===
     always_ff @(posedge video_clk or negedge rst_n) begin
         if (!rst_n) begin
-            rram_rdaddr <= 9'b0;
-            pram_rdaddr <= 10'b0;
+            rowram_rdaddr <= 9'b0;
+            palram_rdaddr <= 9'b0;
+            palram_datasel <= 0;
             addr_toggle <= 1'b0;
             c_state <= IDLE;
             vga_rgb <= 24'b0;
         end
         else begin
-            rram_rdaddr <= n_rram_rdaddr;
-            pram_rdaddr <= rram_rddata;
+            rowram_rdaddr <= n_rowram_rdaddr;
+            palram_rdaddr <= rowram_rddata[9:1];
+            palram_datasel <= rowram_rddata[0];
             addr_toggle <= n_addr_toggle;
             vga_rgb <= n_vga_rgb;
 
