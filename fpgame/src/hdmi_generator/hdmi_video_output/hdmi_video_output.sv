@@ -55,6 +55,7 @@ module hdmi_video_output (
     logic n_addr_toggle;
     logic [23:0] n_vga_rgb;
     logic palram_datasel; // store LSB of rowram_rddata to translate from 32-bit to 64-bit rd addr
+    logic palram_datasel_prev;
 
     enum { IDLE, SWAP, DISPLAY } c_state, n_state;
      
@@ -94,7 +95,7 @@ module hdmi_video_output (
                     n_rowram_rdaddr = rowram_rdaddr + 9'b1; // Increment pixel address every 2 px
 
                 n_addr_toggle = ~addr_toggle;
-                n_vga_rgb = (palram_datasel) ? palram_rddata[55:32] : palram_rddata[23:0];
+                n_vga_rgb = (palram_datasel_prev) ? palram_rddata[55:32] : palram_rddata[23:0];
 
                 // As soon as we are about to enter the horizontal front porch, transition to IDLE
                 n_state = (h_count == h_sync + h_backporch + h_visible - 1) ? IDLE : DISPLAY;
@@ -112,6 +113,7 @@ module hdmi_video_output (
             rowram_rdaddr <= 9'b0;
             palram_rdaddr <= 9'b0;
             palram_datasel <= 0;
+            palram_datasel_prev <= 0;
             addr_toggle <= 1'b0;
             c_state <= IDLE;
             vga_rgb <= 24'b0;
@@ -120,6 +122,7 @@ module hdmi_video_output (
             rowram_rdaddr <= n_rowram_rdaddr;
             palram_rdaddr <= rowram_rddata[9:1];
             palram_datasel <= rowram_rddata[0];
+            palram_datasel_prev <= palram_datasel;
             addr_toggle <= n_addr_toggle;
             vga_rgb <= n_vga_rgb;
 
