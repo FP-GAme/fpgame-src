@@ -28,12 +28,50 @@ module ppu (
     );
 
     // VRAM 1
-    //tile_ram tr1 (
-    //
-    //);
-    //pattern_ram ptr1 (
-    //
-    //);
+    tile_ram tr1 (
+        .address_a(),
+        .address_b(),
+        .byteena_b(),
+        .clock(clk),
+        .data_a(),
+        .data_b(),
+        .wren_a(),
+        .wren_b(),
+        .q_a(),
+        .q_b()
+        //input  [10:0] address_a;
+        //input  [10:0] address_b;
+        //input  [7:0]  byteena_b;
+        //input         clock;
+        //input  [63:0] data_a;
+        //input  [63:0] data_b;
+        //input         wren_a;
+        //input         wren_b;
+        //output [63:0] q_a;
+        //output [63:0] q_b;
+    );
+    pattern_ram ptr1 (
+        .address_a(),
+        .address_b(),
+        .byteena_b(),
+        .clock(clk),
+        .data_a(),
+        .data_b(),
+        .wren_a(),
+        .wren_b(),
+        .q_a(),
+        .q_b()
+        //input  [11:0] address_a;
+        //input  [11:0] address_b;
+        //input  [7:0]  byteena_b;
+        //input         clock;
+        //input  [63:0] data_a;
+        //input  [63:0] data_b;
+        //input         wren_a;
+        //input         wren_b;
+        //output [63:0] q_a;
+        //output [63:0] q_b;
+    );
     palette_ram plr1 (
         .address_a(palram_rdaddr),
         .address_b(9'b0), // TODO Change
@@ -46,9 +84,28 @@ module ppu (
         .q_a(palram_rddata),
         .q_b() // TODO Change
     );
-    //sprite_ram sr1 (
-    //
-    //);
+    sprite_ram sr1 (
+        .address_a(),
+        .address_b(),
+        .byteena_b(),
+        .clock(clk),
+        .data_a(),
+        .data_b(),
+        .wren_a(),
+        .wren_b(),
+        .q_a(),
+        .q_b()
+        //input  [5:0] address_a;
+        //input  [5:0] address_b;
+        //input  [7:0]  byteena_b;
+        //input         clock;
+        //input  [63:0] data_a;
+        //input  [63:0] data_b;
+        //input         wren_a;
+        //input         wren_b;
+        //output [63:0] q_a;
+        //output [63:0] q_b;
+    );
     
     // VRAM 2
     //tile_ram tr2 (
