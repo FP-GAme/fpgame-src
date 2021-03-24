@@ -2,6 +2,7 @@
 *.mp3
 *.o
 *.d
+*.a
 *.bin
 *.zip
 SoftDiv/div

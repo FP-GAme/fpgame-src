@@ -9,7 +9,7 @@ COBJ = $(patsubst %.c,%.o,$(shell find . -name '*.c'))
 ASMOBJ =
 
 # The folders to include headers from, reletive to make
-INC = src/inc usr/inc
+INC = src/inc usr/inc kern/inc
 
 # The directory to output the library to.
 OUTDIR = usr
