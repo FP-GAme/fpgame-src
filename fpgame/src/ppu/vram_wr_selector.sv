@@ -4,7 +4,7 @@ module vram_wr_selector (
     input  logic [12:0] h2f_vram_wraddr,
     input  logic        h2f_vram_wren,
     input  logic [63:0] h2f_vram_wrdata,
-    input  logic [7:0]  h2f_vram_byteena,
+    input  logic [7:0]  h2f_vram_byteena
 
     // from vram_sync 1 writer
 
