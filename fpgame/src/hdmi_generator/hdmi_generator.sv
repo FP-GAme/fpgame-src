@@ -23,7 +23,10 @@ module hdmi_generator (
     input  logic [9:0]  rowram_rddata,
     output logic [8:0]  rowram_rdaddr,
     input  logic [63:0] palram_rddata,
-    output logic [8:0]  palram_rdaddr
+    output logic [8:0]  palram_rdaddr,
+    output logic        rowram_swap,  // Also acts as a start-writing signal
+    output logic        vblank_start, // Acts as a vram sync signal
+    output logic        vblank_end    // Acts as a vram sync signal
 );
 
 hdmi_video_output hvo (
@@ -38,7 +41,9 @@ hdmi_video_output hvo (
     .rowram_rdaddr,
     .palram_rddata,
     .palram_rdaddr,
-    .rowram_swap()
+    .rowram_swap,
+    .vblank_start,
+    .vblank_end
 );
 
 I2C_HDMI_Config u_I2C_HDMI_Config (

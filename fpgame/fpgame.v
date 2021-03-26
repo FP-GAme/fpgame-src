@@ -87,17 +87,22 @@ module fpgame(
 wire audio_rst_n, video_rst_n;
 wire sys_rst_n; // Reset which releases after both video and audio PLLs are finished
 assign sys_rst_n = audio_rst_n & video_rst_n;
-
 wire audio_clk, video_clk;
-wire [9:0] rowram_rddata;
-wire [8:0] rowram_rdaddr;
+
+wire [9:0]  rowram_rddata;
+wire [8:0]  rowram_rdaddr;
 wire [63:0] palram_rddata;
-wire [8:0] palram_rdaddr;
+wire [8:0]  palram_rdaddr;
+wire        rowram_swap;
+wire        vblank_start;
+wire        vblank_end;
 
 wire [12:0] h2f_vram_wraddr;
 wire        h2f_vram_wren;
 wire [63:0] h2f_vram_wrdata;
 wire [7:0]  h2f_vram_byteena;
+wire cpu_vram_wr_irq;
+wire cpu_wr_busy;
 
 //=======================================================
 //  Structural coding
@@ -145,7 +150,9 @@ fpgame_soc u0 (
     .memory_mem_dqs_n                     (HPS_DDR3_DQS_N),                     //                              .mem_dqs_n
     .memory_mem_odt                       (HPS_DDR3_ODT),                       //                              .mem_odt
     .memory_mem_dm                        (HPS_DDR3_DM),                        //                              .mem_dm
-    .memory_oct_rzqin                     (HPS_DDR3_RZQ)                      //                              .oct_rzqin
+    .memory_oct_rzqin                     (HPS_DDR3_RZQ),                      //                              .oct_rzqin
+	.h2f_vram_interface_cpu_vram_wr_irq (cpu_vram_wr_irq),
+    .cpu_wr_busy_export                 (cpu_wr_busy)
 );
 
 i2s_pll ipll (
@@ -181,7 +188,10 @@ hdmi_generator hgen (
     .rowram_rddata(rowram_rddata),
     .rowram_rdaddr(rowram_rdaddr),
     .palram_rddata(palram_rddata),
-    .palram_rdaddr(palram_rdaddr)
+    .palram_rdaddr(palram_rdaddr),
+    .rowram_swap(rowram_swap),
+    .vblank_start(vblank_start),
+    .vblank_end(vblank_end)
 );
 
 ppu u_ppu (
@@ -191,10 +201,15 @@ ppu u_ppu (
     .rowram_rdaddr(rowram_rdaddr),
     .palram_rddata(palram_rddata),
     .palram_rdaddr(palram_rdaddr),
+    .rowram_swap(rowram_swap),
+    .vblank_start(vblank_start),
+    .vblank_end(vblank_end),
     .h2f_vram_wraddr(h2f_vram_wraddr),
     .h2f_vram_wren(h2f_vram_wren),
     .h2f_vram_wrdata(h2f_vram_wrdata),
-    .h2f_vram_byteena(h2f_vram_byteena)
+    .h2f_vram_byteena(h2f_vram_byteena),
+    .cpu_vram_wr_irq(cpu_vram_wr_irq),
+    .cpu_wr_busy(cpu_wr_busy)
 );
 
 endmodule

@@ -1,132 +1,151 @@
+/* ppu.sv
+ * Implements the Pixel Processing Unit.
+ * TODO: Come on Joe, this needs more documentation.
+ */
+
 module ppu (
     input logic clk,
     input logic rst_n,
 
-    // to HDMI video output
+    // from/to HDMI video output
     output logic [9:0]  rowram_rddata,
     input  logic [8:0]  rowram_rdaddr,
     output logic [63:0] palram_rddata,
     input  logic [8:0]  palram_rdaddr,
+    input  logic        rowram_swap,
+    input  logic        vblank_start,
+    input  logic        vblank_end,
 
-    // h2f_vram_avalon_interface
+    // h2f_vram_avalon_interface (essentially the CPU->VRAM write interface)
     input  logic [12:0] h2f_vram_wraddr,
     input  logic        h2f_vram_wren,
     input  logic [63:0] h2f_vram_wrdata,
-    input  logic [7:0]  h2f_vram_byteena
+    input  logic [7:0]  h2f_vram_byteena,
+    output logic        cpu_vram_wr_irq,
+    input  logic        cpu_wr_busy
 );
 
-    row_ram rr (
-        .address_a(rowram_rdaddr),
-        .address_b(9'b0),
-        .clock(clk),
-        .data_a(10'b0), // TODO Change
-        .data_b(10'b0), // TODO Change
-        .wren_a(1'b0), // TODO Change
-        .wren_b(1'b0), // TODO Change
-        .q_a(rowram_rddata),
-        .q_b()
+    vram_if vram_ifP(); // Actual PPU-Facing VRAM interface
+    vram_if vram_ifC(); // Actual CPU-Facing VRAM interface
+    // Routing for the following interfaces is handled by vram_interconnect.
+    vram_if vram_vsw_ifP(); // VRAM interface used by vram_sync_writer. Routed to vram_ifP in sync
+    vram_if vram_vsw_ifC(); // VRAM interface used by vram_sync_writer. Routed to vram_ifC in sync
+    vram_if vram_ppu_ifP(); // VRAM interface used by ppu_logic. Routed to vram_ifP during !sync.
+    // These interfaces will connect to vram_ifP and vram_ifC depending on the PPU state.
+
+    logic vram_sync, n_vram_sync, vram_sync_sent, n_vram_sync_sent;
+    logic n_cpu_vram_wr_irq;
+    logic sync_active;
+    logic rowram_swap_disp;
+    
+    enum { 
+        PPU_SYNC, // Either syncing VRAMs or initial state (waiting for first PPU_DISP)
+        //PPU_IRQ,  // One extra state to delay the cpu_vram_wr_irq by one cycle
+        PPU_DISP, // ppu_logic reads the PPU-Facing VRAM and cpu_logic writes the CPU-Facing VRAM
+        PPU_LATE  // CPU failed to complete its writes in time. No syncing or CPU IRQ occurs
+    } state, n_state;
+
+    // === Module Instantiation ===
+    vram vr (
+        .clk,
+        .rst_n,
+        .vram_ifP_src(vram_ifP.src), // PPU-Logic-Facing VRAM
+        .vram_ifC_src(vram_ifC.src)  // CPU-Facing VRAM
     );
 
-    // VRAM 1
-    tile_ram tr1 (
-        .address_a(),
-        .address_b(),
-        .byteena_b(),
-        .clock(clk),
-        .data_a(),
-        .data_b(),
-        .wren_a(),
-        .wren_b(),
-        .q_a(),
-        .q_b()
-        //input  [10:0] address_a;
-        //input  [10:0] address_b;
-        //input  [7:0]  byteena_b;
-        //input         clock;
-        //input  [63:0] data_a;
-        //input  [63:0] data_b;
-        //input         wren_a;
-        //input         wren_b;
-        //output [63:0] q_a;
-        //output [63:0] q_b;
+    vram_sync_writer vsw (
+        .clk,
+        .rst_n,
+        .sync(vram_sync),
+        .done(),
+        .vram_ifP_usr(vram_vsw_ifP.usr),
+        .vram_ifC_usr(vram_vsw_ifC.usr)
     );
-    pattern_ram ptr1 (
-        .address_a(),
-        .address_b(),
-        .byteena_b(),
-        .clock(clk),
-        .data_a(),
-        .data_b(),
-        .wren_a(),
-        .wren_b(),
-        .q_a(),
-        .q_b()
-        //input  [11:0] address_a;
-        //input  [11:0] address_b;
-        //input  [7:0]  byteena_b;
-        //input         clock;
-        //input  [63:0] data_a;
-        //input  [63:0] data_b;
-        //input         wren_a;
-        //input         wren_b;
-        //output [63:0] q_a;
-        //output [63:0] q_b;
+
+    ppu_logic ppul (
+        .clk,
+        .rst_n,
+        .rowram_rddata,
+        .rowram_rdaddr,
+        .palram_rddata,
+        .palram_rdaddr,
+        .rowram_swap(rowram_swap_disp),
+        .vram_ppu_ifP_usr(vram_ppu_ifP.usr)
+        // TODO: Define ppu_logic signals. One of these is going to be the row-buffer interactions.
     );
-    palette_ram plr1 (
-        .address_a(palram_rdaddr),
-        .address_b(9'b0), // TODO Change
-        .byteena_b(8'b0),
-        .clock(clk),
-        .data_a(64'b0), // TODO Change
-        .data_b(64'b0), // TODO Change
-        .wren_a(1'b0), // TODO Change
-        .wren_b(1'b0), //  TODO Change
-        .q_a(palram_rddata),
-        .q_b() // TODO Change
+
+    // Decides who gets the access to the PPU-Facing and CPU-Facing VRAMs
+    vram_interconnect vi (
+        .h2f_vram_wraddr,
+        .h2f_vram_wren,
+        .h2f_vram_wrdata,
+        .h2f_vram_byteena,
+        .sync_active(sync_active),
+        .vram_ifP_usr(vram_ifP.usr),
+        .vram_ifC_usr(vram_ifC.usr),
+        .vram_vsw_ifP_src(vram_vsw_ifP.src),
+        .vram_vsw_ifC_src(vram_vsw_ifC.src),
+        .vram_ppu_ifP_src(vram_ppu_ifP.src)
     );
-    sprite_ram sr1 (
-        .address_a(),
-        .address_b(),
-        .byteena_b(),
-        .clock(clk),
-        .data_a(),
-        .data_b(),
-        .wren_a(),
-        .wren_b(),
-        .q_a(),
-        .q_b()
-        //input  [5:0] address_a;
-        //input  [5:0] address_b;
-        //input  [7:0]  byteena_b;
-        //input         clock;
-        //input  [63:0] data_a;
-        //input  [63:0] data_b;
-        //input         wren_a;
-        //input         wren_b;
-        //output [63:0] q_a;
-        //output [63:0] q_b;
-    );
-    
-    // VRAM 2
-    //tile_ram tr2 (
-    //
-    //);
-    //pattern_ram ptr2 (
-    //
-    //);
-    /*palette_ram plr2 (
-        .address_a(palram_rdaddr),
-        .address_b(10'b0), // TODO Change
-        .clock(clk),
-        .data_a(32'b0), // TODO Change
-        .data_b(32'b0), // TODO Change
-        .wren_a(1'b0), // TODO Change
-        .wren_b(1'b0), //  TODO Change
-        .q_a(palram_rddata),
-        .q_b() // TODO Change
-    );*/
-    //sprite_ram sr2 (
-    //
-    //);
+
+    // === PPU FSM ===
+    // next-state logic
+    always_comb begin
+        // default next-signal states
+        n_cpu_vram_wr_irq = 1'b0;
+        n_vram_sync = 1'b0;
+        n_vram_sync_sent = vram_sync_sent;
+        sync_active = 1'b0;
+        rowram_swap_disp = 1'b0;
+
+        unique case (state)
+            PPU_SYNC: begin
+                // During sync, the vram_interconnect automatically assigns the vram's signals to
+                //   the vram_sync_writer.
+                sync_active = 1'b1;
+
+                n_vram_sync = !vram_sync_sent; // Only send the sync signal once per SYNC state
+                n_vram_sync_sent = 1'b1;
+                // There is a short delay to ease timing requirements on sync_active switching the
+                //   interconnect. TODO: Maybe this extra cycle of timing slack isn't needed
+
+                if (vblank_end) begin
+                    n_state = PPU_DISP;
+                    
+                    n_vram_sync_sent = 1'b0; // reset the sync-sent flag for later reuse
+                    n_cpu_vram_wr_irq = 1'b1; // tell the CPU it is okay to write
+                end
+                else n_state = PPU_SYNC;
+            end
+            PPU_DISP: begin
+                // row-ram swap signal is ignored at all non-display times
+                rowram_swap_disp = rowram_swap; // only accept the signal in display
+
+                if (vblank_start) n_state = (cpu_wr_busy) ? PPU_LATE : PPU_SYNC;
+                else n_state = PPU_DISP;
+            end
+            PPU_LATE: begin
+                // If PPU is late, do no syncing. Let the CPU finish its writes.
+                // We can only escape the LATE state if the CPU has finished its writes
+                if (vblank_end) n_state = (cpu_wr_busy) ? PPU_LATE : PPU_DISP;
+                else n_state = PPU_LATE;
+            end
+        endcase
+    end
+
+    // transition logic
+    always_ff @(posedge clk, negedge rst_n) begin
+        if (!rst_n) begin
+            state <= PPU_SYNC;
+            cpu_vram_wr_irq <= 1'b0;
+            vram_sync_sent <= 1'b0;
+        end
+        else begin
+            state <= n_state;
+            cpu_vram_wr_irq <= n_cpu_vram_wr_irq;
+            vram_sync <= n_vram_sync;
+            vram_sync_sent <= n_vram_sync_sent;
+        end
+    end
 
 endmodule : ppu

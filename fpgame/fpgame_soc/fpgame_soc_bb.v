@@ -5,6 +5,7 @@ module fpgame_soc (
 	h2f_vram_interface_export_wren,
 	h2f_vram_interface_export_wrdata,
 	h2f_vram_interface_export_byteena,
+	h2f_vram_interface_cpu_vram_wr_irq,
 	hps_io_hps_io_sdio_inst_CMD,
 	hps_io_hps_io_sdio_inst_D0,
 	hps_io_hps_io_sdio_inst_D1,
@@ -41,13 +42,15 @@ module fpgame_soc (
 	memory_mem_dqs_n,
 	memory_mem_odt,
 	memory_mem_dm,
-	memory_oct_rzqin);	
+	memory_oct_rzqin,
+	cpu_wr_busy_export);	
 
 	input		clk_clk;
 	output	[12:0]	h2f_vram_interface_export_wraddr;
 	output		h2f_vram_interface_export_wren;
 	output	[63:0]	h2f_vram_interface_export_wrdata;
 	output	[7:0]	h2f_vram_interface_export_byteena;
+	output		h2f_vram_interface_cpu_vram_wr_irq;
 	inout		hps_io_hps_io_sdio_inst_CMD;
 	inout		hps_io_hps_io_sdio_inst_D0;
 	inout		hps_io_hps_io_sdio_inst_D1;
@@ -85,4 +88,5 @@ module fpgame_soc (
 	output		memory_mem_odt;
 	output	[3:0]	memory_mem_dm;
 	input		memory_oct_rzqin;
+	output		cpu_wr_busy_export;
 endmodule

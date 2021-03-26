@@ -14,7 +14,9 @@ module hdmi_video_output (
     output logic [8:0]  rowram_rdaddr,
     input  logic [63:0] palram_rddata,
     output logic [8:0]  palram_rdaddr,
-    output logic        rowram_swap
+    output logic        rowram_swap,
+    output logic        vblank_start,
+    output logic        vblank_end
 );
 
     // Base timings obtained from: http://tinyvga.com/vga-timing/640x480@60Hz
@@ -73,6 +75,9 @@ module hdmi_video_output (
 
     assign vga_hs = ~(h_count < h_sync);
     assign vga_vs = ~(v_count < v_sync);
+    assign vblank_start = (v_count == v_total - v_frontporch && h_count == 0);
+    // Define vblank_end to be the actual vblank_end - 1 row to give enough time for row buffer prep
+    assign vblank_end   = (v_count == v_sync + v_backporch - 1 && h_count == 0);
 
     // === Next-State Logic ===
     always_comb begin
