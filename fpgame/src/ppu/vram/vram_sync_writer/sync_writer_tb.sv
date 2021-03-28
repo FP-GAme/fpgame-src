@@ -28,13 +28,13 @@ module sync_writer_tb;
         .rst_n,
         .sync,
         .done,
-        .addr_A(tilram_a_addr_a),
-        .wren_A(tilram_a_wren_a),
-        .rddata_A(tilram_a_rddata_a),
-        .addr_B(tilram_b_addr_b),
-        .byteena_B(tilram_b_byteena_b),
-        .wrdata_B(tilram_b_wrdata_b),
-        .wren_B(tilram_b_wren_b)
+        .addr_from(tilram_a_addr_a),
+        .wren_from(tilram_a_wren_a),
+        .rddata_from(tilram_a_rddata_a),
+        .addr_to(tilram_b_addr_b),
+        .byteena_to(tilram_b_byteena_b),
+        .wrdata_to(tilram_b_wrdata_b),
+        .wren_to(tilram_b_wren_b)
     );
 
     tile_ram_tester tr1 (
