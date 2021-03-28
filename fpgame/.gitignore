@@ -26,6 +26,7 @@ synthesis/
 *.sopcinfo
 *.sof
 *.pof
+*.rbf
 *.jdi
 *.rpt           
 *.smsg
