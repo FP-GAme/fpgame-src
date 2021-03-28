@@ -15,3 +15,5 @@ unsaved/
 synthesis/
 hps_isw_handoff/
 .qsys_edit/
+linux-socfpga/
+spl_bsp/

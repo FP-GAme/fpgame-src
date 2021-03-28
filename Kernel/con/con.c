@@ -13,14 +13,22 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/fs.h>
+#include <linux/io-mapping.h>
+#include <asm-generic/io.h>
 
-#include <fp-game/drv_con.h>
+#include <linux/fp-game/drv_con.h>
+
+/** @brief The address of the controllers memory mapped i/o */
+#define CON_MMIO_ADDR 0xFF200000
+
+/** @brief The I/O mapping region for the controller driver. */
+static struct io_mapping *con_io;
 
 /* Functions */
 int con_init(void);
-int con_ioctl(struct inode *inode, struct file *file,
-              unsigned ioctl_num, unsigned long ioctl_param);
-int con_clean(void);
+long con_ioctl(struct file *file, unsigned ioctl_num,
+               unsigned long ioctl_param);
+void con_clean(void);
 
 /**
  * @brief File operations structure.
@@ -29,7 +37,7 @@ int con_clean(void);
  * device driver implements.
  */
 struct file_operations fops = {
-	.ioctl = con_ioctl
+	.unlocked_ioctl = con_ioctl
 };
 
 /**
@@ -38,7 +46,8 @@ struct file_operations fops = {
  */
 int con_init(void)
 {
-	int ret = register_chrdev(CON_MAJOR_NUM, CON_DEV_NAME, &fops);
+	/* Register our driver with the kernel. */
+	int ret = register_chrdev(CON_MAJOR_NUM, CON_DEV_FILE, &fops);
 
 	if (ret < 0) {
 		printk(KERN_ALERT "Initializing FP-GAme controller failed: %d",
@@ -46,12 +55,14 @@ int con_init(void)
 		return ret;
 	}
 
+	/* Map the controller I/O. */
+	con_io = io_mapping_create_wc(CON_MMIO_ADDR, sizeof(int));
+
 	return 0;
 }
 
 /**
  * @brief Handles an IOCTL call to the controller module.
- * @param inode Ignored.
  * @param file Ignored.
  * @param ioctl_num The ioctl command number.
  * @param ioctl_param Ignored.
@@ -60,17 +71,23 @@ int con_init(void)
  *
  * @return The current controller state on success, or -1 on failure.
  */
-int con_ioctl(struct inode *inode, struct file *file,
-              unsigned ioctl_num, unsigned long ioctl_param)
+long con_ioctl(struct file *file, unsigned ioctl_num,
+               unsigned long ioctl_param)
 {
-	(void)inode;
 	(void)file;
 	(void)ioctl_param;
 
 	if (ioctl_num != IOCTL_CON_GET_STATE) { return -1; }
 
-	/* TODO: Get controler state */
-	return -1;
+	/*
+	 * Map our address. This holds a lock, so we must unmap it after
+	 * reading the controller state.
+	 */
+	void *con_addr = io_mapping_map_wc(con_io, 0, sizeof(int));
+	int state = readl(con_addr);
+	io_mapping_unmap(con_addr);
+
+	return state;
 }
 
 /**
@@ -79,10 +96,13 @@ int con_ioctl(struct inode *inode, struct file *file,
  */
 void con_clean(void)
 {
-	int ret = unregister_chrdev(CON_MAJOR_NUM, CON_DEV_NAME);
-
-	if (ret < 0) {
-		printk(KERN_ALERT "Failed to clean FP-GAme controller: %d",
-		       ret);
-	}
+	unregister_chrdev(CON_MAJOR_NUM, CON_DEV_FILE);
+	io_mapping_free(con_io);
 }
+
+module_init(con_init);
+module_exit(con_clean);
+
+MODULE_AUTHOR("Andrew Spaulding");
+MODULE_DESCRIPTION("The nightmares, Snake? They never go away.");
+MODULE_LICENSE("GPL"); /* I wonder if this is legally binding \_(ツ)_/ */

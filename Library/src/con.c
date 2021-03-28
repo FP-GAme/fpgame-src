@@ -4,10 +4,10 @@
  * @brief Implementation of the user controller driver interface.
  */
 
-#include <FP-GAme/con.h>
+#include <fp-game/con.h>
 
 #include <sys/ioctl.h>
-#include <ioctl_con.h>
+#include <fp-game/drv_con.h>
 #include <fcntl.h>
 #include <unistd.h>
 
@@ -38,7 +38,7 @@ int get_con_state(void)
 	/* Open the device file, if it isn't already. */
 	bool close_fd = false;
 	if (dev_file_fd < 0) {
-		dev_file_fd = open(CON_DEV_FILE, 0);
+		noway((dev_file_fd = open(CON_DEV_FILE, 0)) < 0);
 		if (dev_file_fd < 0) { return -1; }
 		close_fd = (atexit(con_cleanup) < 0);
 	}

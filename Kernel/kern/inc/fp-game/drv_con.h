@@ -18,7 +18,7 @@
  *
  * We select 0xFA-0xFC for our drivers, with the controller taking 0xFC.
  */
-#define CON_MAJOR_NUM 0xFC
+#define CON_MAJOR_NUM 0x1FC
 
 /** @brief The IOCTL command which reads the current controller input. */
 #define IOCTL_CON_GET_STATE _IO(CON_MAJOR_NUM, 0)

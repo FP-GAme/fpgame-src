@@ -1,5 +1,5 @@
 # The name of the application to be built.
-TARGET = fp_game.a
+TARGET = libfpgame.a
 
 # The architecture being compiled for.
 ARCH = arm
