@@ -21,6 +21,7 @@ module cpu_dummy_writer (
             h2f_vram_wrdata <= 64'b0;
             h2f_vram_byteena <= 8'b0;
             wr_counter <= 3'b0;
+            state <= DUMMY_IDLE;
         end
         else if (state == DUMMY_IDLE) begin
             h2f_vram_wren <= 1'b0;

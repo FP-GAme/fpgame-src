@@ -254,6 +254,16 @@ always_comb begin
     vram_ppu_ifP_src.patram_rddata_b = vram_ifP_usr.patram_rddata_b;
     vram_ppu_ifP_src.palram_rddata_b = vram_ifP_usr.palram_rddata_b;
     vram_ppu_ifP_src.sprram_rddata_b = vram_ifP_usr.sprram_rddata_b;
+
+    // Default the VRAM Sync Writer reads to Xs (since it should never read from PPU-Facing)
+    vram_vsw_ifP_src.tilram_rddata_a = 'X;
+    vram_vsw_ifP_src.tilram_rddata_b = 'X;
+    vram_vsw_ifP_src.patram_rddata_a = 'X;
+    vram_vsw_ifP_src.patram_rddata_b = 'X;
+    vram_vsw_ifP_src.palram_rddata_a = 'X;
+    vram_vsw_ifP_src.palram_rddata_b = 'X;
+    vram_vsw_ifP_src.sprram_rddata_a = 'X;
+    vram_vsw_ifP_src.sprram_rddata_b = 'X;
 end
 
 endmodule : vram_interconnect

@@ -75,7 +75,8 @@ module fpgame(
     output                      HPS_USB_STP,
 
     //////////// GPIO_1, GPIO connect to GPIO Default //////////
-    inout           [35:0]      GPIO
+    inout           [35:0]      GPIO,
+    output          [7:0]       LED
 );
 
 
@@ -209,7 +210,8 @@ ppu u_ppu (
     .h2f_vram_wrdata(h2f_vram_wrdata),
     .h2f_vram_byteena(h2f_vram_byteena),
     .cpu_vram_wr_irq(cpu_vram_wr_irq),
-    .cpu_wr_busy(cpu_wr_busy)
+    .cpu_wr_busy(cpu_wr_busy),
+    .LED(LED)
 );
 
 endmodule

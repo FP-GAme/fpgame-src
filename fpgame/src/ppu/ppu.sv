@@ -22,6 +22,7 @@ module ppu (
     input  logic [63:0] h2f_vram_wrdata,
     input  logic [7:0]  h2f_vram_byteena,
     output logic        cpu_vram_wr_irq,
+    output logic [7:0]  LED, // TODO: Remove after debug
     input  logic        cpu_wr_busy
 );
 
@@ -70,6 +71,7 @@ module ppu (
         .palram_rddata,
         .palram_rdaddr,
         .rowram_swap(rowram_swap_disp),
+        .LED, // TODO: Remove after debug
         .vram_ppu_ifP_usr(vram_ppu_ifP.usr)
         // TODO: Define ppu_logic signals. One of these is going to be the row-buffer interactions.
     );
