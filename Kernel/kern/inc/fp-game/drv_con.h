@@ -16,7 +16,7 @@
  * A list of numbers in use is available at:
  * https://www.kernel.org/doc/html/latest/userspace-api/ioctl/ioctl-number.html
  *
- * We select 0xFA-0xFC for our drivers, with the controller taking 0xFC.
+ * We select 0x1FA-0x1FC for our drivers, with the controller taking 0x1FC.
  */
 #define CON_MAJOR_NUM 0x1FC
 
