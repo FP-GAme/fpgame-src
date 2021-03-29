@@ -13,7 +13,7 @@ module ppu_logic (
     input  logic [8:0]  palram_rdaddr,
     input  logic        rowram_swap,
     
-    output logic [7:0]  LED, // TODO: Remove after debug
+    output logic [5:0]  LED, // TODO: Remove after debug
 
     vram_if.usr vram_ppu_ifP_usr
 );
@@ -48,7 +48,7 @@ module ppu_logic (
 endmodule : ppu_logic
 
 module ppu_debug_reader (
-    output logic [7:0] LED, // TODO: Remove after debug
+    output logic [5:0] LED, // TODO: Remove after debug
     output logic [63:0] palram_rddata,
     input  logic [8:0]  palram_rdaddr,
     vram_if.usr vram_ppu_ifP_usr
@@ -62,8 +62,6 @@ module ppu_debug_reader (
     assign vram_ppu_ifP_usr.palram_wren_b = 1'b0;
     assign vram_ppu_ifP_usr.palram_wrdata_b = 64'b0;
     assign vram_ppu_ifP_usr.palram_byteena_b = 8'b0;
-
-    assign LED[7:6] = 2'b0;
 
     logic [5:0] rd_data_correct;
 

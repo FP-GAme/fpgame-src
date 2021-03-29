@@ -22,7 +22,7 @@ module ppu (
     input  logic [63:0] h2f_vram_wrdata,
     input  logic [7:0]  h2f_vram_byteena,
     output logic        cpu_vram_wr_irq,
-    output logic [7:0]  LED, // TODO: Remove after debug
+    output logic [5:0]  LED, // TODO: Remove after debug
     input  logic        cpu_wr_busy
 );
 
