@@ -104,6 +104,8 @@ logic        cpu_wr_busy;
 // cpu to ioss interconnect
 logic [15:0] con_state;
 
+assign GPIO[10] = cpu_wr_busy; // TODO: Remove after debug
+
 // ==================
 // === Submodules ===
 // ==================

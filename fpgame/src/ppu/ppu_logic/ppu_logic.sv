@@ -36,10 +36,12 @@ module ppu_logic (
     );
 
     ppu_debug_reader pdr (
+        .clk,
+        .rst_n,
         .LED,
         .palram_rddata,
         .palram_rdaddr,
-        .vram_ppu_ifP_usr(vram_ppu_ifP_usr.usr)
+        .vram_ppu_ifP_usr(vram_ppu_ifP_usr)
     );
 
     //assign palram_rddata = vram_ppu_ifP_usr.palram_rddata_a; // TODO: Check over later
@@ -48,6 +50,8 @@ module ppu_logic (
 endmodule : ppu_logic
 
 module ppu_debug_reader (
+    input  logic clk,
+    input  logic rst_n,
     output logic [5:0] LED, // TODO: Remove after debug
     output logic [63:0] palram_rddata,
     input  logic [8:0]  palram_rdaddr,
@@ -92,12 +96,31 @@ module ppu_debug_reader (
     assign vram_ppu_ifP_usr.sprram_addr_a =  6'd0;
     assign vram_ppu_ifP_usr.sprram_addr_b =  6'd39;
 
-    assign rd_data_correct[0] = (vram_ppu_ifP_usr.tilram_rddata_a == 64'd12345);
-    assign rd_data_correct[1] = (vram_ppu_ifP_usr.tilram_rddata_b == 64'd12345);
-    assign rd_data_correct[2] = (vram_ppu_ifP_usr.patram_rddata_a == 64'd12345);
-    assign rd_data_correct[3] = (vram_ppu_ifP_usr.patram_rddata_b == 64'd12345);
-    assign rd_data_correct[4] = (vram_ppu_ifP_usr.sprram_rddata_a == 64'd12345);
-    assign rd_data_correct[5] = (vram_ppu_ifP_usr.sprram_rddata_b == 64'd12345);
+    always_ff @(posedge clk, negedge rst_n) begin
+        if (!rst_n) begin
+            rd_data_correct = 6'b0;
+        end
+        else begin
+            if (vram_ppu_ifP_usr.tilram_rddata_a == 64'd12345) begin
+                rd_data_correct[0] <= 1'b1;
+            end
+            if (vram_ppu_ifP_usr.tilram_rddata_b == 64'd12345) begin
+                rd_data_correct[1] <= 1'b1;
+            end
+            if (vram_ppu_ifP_usr.patram_rddata_a == 64'd12345) begin
+                rd_data_correct[2] <= 1'b1;
+            end
+            if (vram_ppu_ifP_usr.patram_rddata_b == 64'd12345) begin
+                rd_data_correct[3] <= 1'b1;
+            end
+            if (vram_ppu_ifP_usr.sprram_rddata_a == 64'd12345) begin
+                rd_data_correct[4] <= 1'b1;
+            end
+            if (vram_ppu_ifP_usr.sprram_rddata_b == 64'd12345) begin
+                rd_data_correct[5] <= 1'b1;
+            end
+        end
+    end
 
     assign LED[5:0] = rd_data_correct;
 endmodule : ppu_debug_reader

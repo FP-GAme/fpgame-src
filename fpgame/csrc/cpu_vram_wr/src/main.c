@@ -11,6 +11,7 @@
 #include <stdint.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <stdbool.h>
 
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -20,8 +21,6 @@
 // === TODO: MAKE VRAM HEADERS ===
 #define H2F_MMIO_BASE  (0xC0000000U)
 #define H2F_MMIO_RANGE (0x3C000000U)
-
-#define VRAM_BASE      (H2F_MMIO_BASE + H2F_VRAM_INTERFACE_0_BASE)
 
 // All numbers are in terms of Bytes and are relative to H2F_MMIO_BASE + H2F_VRAM_INTERFACE_0_BASE
 #define TILE_OFFSET    (0x0000U)
@@ -34,38 +33,44 @@
 
 #define PALETTE_OFFSET (0xC000U)
 #define PALETTE_RANGE  (4096u)
-#define PALETTE_END    (0xCFFF)
+//#define PALETTE_END    (0xCFFF)
 
 #define SPRITE_OFFSET  (0xD000U)
 #define SPRITE_RANGE   (320U)
 //#define SPRITE_END     (0xD13F)
 
-#define VRAM_RANGE     (TILE_RANGE + PATTERN_RANGE + PALETTE_RANGE + SPRITE_RANGE)
+//#define VRAM_RANGE     (TILE_RANGE + PATTERN_RANGE + PALETTE_RANGE + SPRITE_RANGE)
 // === TODO: MAKE VRAM HEADERS ===
 
-// This function will return a MMIO-accessible byte-address into a VRAM segment given the id and rel
-//   addr
-uint8_t *calc_mmio_vram_offset (uint32_t vram_seg_id, uint32_t rel_addr)
+// This function will return an offset from the base of MMIO-accessible VRAM given the segment id
+//   and rel addr
+// The in_bounds bool will be false if an error occurs.
+uint32_t calc_vram_offset (uint32_t vram_seg_id, uint32_t rel_addr, bool *in_bounds)
 {
-    switch (vram_seg_id)
+
+    if (vram_seg_id == 0 && rel_addr < TILE_RANGE)
     {
-        case 0:
-            if (rel_addr < TILE_RANGE) return (uint8_t*)VRAM_BASE + TILE_OFFSET + rel_addr;
-            break;
-        case 1:
-            if (rel_addr < PATTERN_RANGE) return (uint8_t*)VRAM_BASE + PATTERN_OFFSET + rel_addr;
-            break;
-        case 2:
-            if (rel_addr < PALETTE_RANGE) return (uint8_t*)VRAM_BASE + PALETTE_OFFSET + rel_addr;
-            break;
-        case 3:
-            if (rel_addr < SPRITE_RANGE) return (uint8_t*)VRAM_BASE + SPRITE_OFFSET + rel_addr;
-            break;
-        default:
-            break;
+        *in_bounds = true;
+        return TILE_OFFSET + rel_addr;
+    }
+    else if (vram_seg_id == 1 && rel_addr < PATTERN_RANGE)
+    {
+        *in_bounds = true;
+        return PATTERN_OFFSET + rel_addr;
+    }
+    else if (vram_seg_id == 2 && rel_addr < PALETTE_RANGE)
+    {
+        *in_bounds = true;
+        return PALETTE_OFFSET + rel_addr;
+    }
+    else if (vram_seg_id == 3 && rel_addr < SPRITE_RANGE)
+    {
+        *in_bounds = true;
+        return SPRITE_OFFSET + rel_addr;
     }
 
-    return NULL;
+    *in_bounds = false;
+    return 0;
 }
 
 int main(int argc, char *argv[])
@@ -112,34 +117,39 @@ int main(int argc, char *argv[])
     printf("Selected VRAM Segment: %s RAM\n", vram_seg_id_str[vram_seg_id]);
 
     uint32_t rel_addr = strtoul(argv[2], NULL, 16);
-    uint8_t *wr_addr;
-    if ( !(wr_addr = calc_mmio_vram_offset(vram_seg_id, rel_addr)) )
-    {
+
+    bool in_bounds = false;
+    uint32_t vram_offset = calc_vram_offset(vram_seg_id, rel_addr, &in_bounds);
+    if (in_bounds == false) {
         fprintf(stderr, "Relative Address %X outside of %s RAM range\n", rel_addr,
                 vram_seg_id_str[vram_seg_id]);
         return -1;
     }
 
-    printf("Relative Address: %X\n", rel_addr);
-    printf("Calculated Byte Address: %X\n", (uint32_t)wr_addr);
-    printf("VRAM_BASE: %X\n", (uint32_t)VRAM_BASE);
-    printf("VRAM_RANGE: %X\n", (uint32_t)VRAM_RANGE);
+    printf("Relative Address: %X\n", vram_offset);
 
     /* First, we open memory as a file */
-    int mem = open("/dev/mem", O_RDWR);
+    int mem = open("/dev/mem", O_RDWR | O_SYNC);
     if (mem < 0) {
         perror("Failed to open /dev/mem");
         return -1;
     }
 
+    printf("Opened /dev/mem successful\n");
+
     /* Next, we map the controllers MMIO */
-    volatile uint8_t *vram_vaddr = mmap(NULL, VRAM_RANGE, PROT_WRITE,
-                                        MAP_SHARED, mem, VRAM_BASE);
-    if (vram_vaddr == MAP_FAILED) {
+    volatile uint8_t *h2f_vaddr = mmap(NULL, H2F_MMIO_RANGE, PROT_WRITE,
+                                        MAP_SHARED, mem, H2F_MMIO_BASE);
+    if (h2f_vaddr == MAP_FAILED) {
         perror("Failed to map H2F_MMIO address");
         close(mem);
         return -1;
     }
+    printf("h2f_vaddr mmap successful\n");
+
+
+    volatile uint8_t *wr_addr = h2f_vaddr + H2F_VRAM_INTERFACE_0_BASE + vram_offset;
+    printf("Calculated Byte Address: %X\n", (uint32_t)wr_addr);
 
     uint64_t wr_data = strtoul(argv[4], NULL, 16);
 

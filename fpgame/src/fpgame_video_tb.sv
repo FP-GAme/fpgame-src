@@ -144,7 +144,7 @@ module fpgame_video_tb;
         .h2f_vram_wrdata(h2f_vram_wrdata),
         .h2f_vram_byteena(h2f_vram_byteena),
         .cpu_vram_wr_irq,
-        .cpu_wr_busy(1'b0)
+        .cpu_wr_busy(1'b1)
     );
 
     cpu_dummy_writer dummy_cpu (
