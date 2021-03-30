@@ -20,10 +20,10 @@ module hdmi_generator (
     output logic i2s_sda,
 
     // to PPU
-    input  logic [9:0]  rowram_rddata,
-    output logic [8:0]  rowram_rdaddr,
-    input  logic [63:0] palram_rddata,
-    output logic [8:0]  palram_rdaddr,
+    input  logic [9:0]  hdmi_rowram_rddata,
+    output logic [8:0]  hdmi_rowram_rdaddr,
+    input  logic [63:0] hdmi_palram_rddata,
+    output logic [8:0]  hdmi_palram_rdaddr,
     output logic        rowram_swap,  // Also acts as a start-writing signal
     output logic        vblank_start, // Acts as a vram sync signal
     output logic        vblank_end    // Acts as a vram sync signal
@@ -37,10 +37,10 @@ hdmi_video_output hvo (
     .vga_hs(vga_hs),
     .vga_vs(vga_vs),
     .vga_rgb(vga_rgb),
-    .rowram_rddata,
-    .rowram_rdaddr,
-    .palram_rddata,
-    .palram_rdaddr,
+    .rowram_rddata(hdmi_rowram_rddata),
+    .rowram_rdaddr(hdmi_rowram_rdaddr),
+    .palram_rddata(hdmi_palram_rddata),
+    .palram_rdaddr(hdmi_palram_rdaddr),
     .rowram_swap,
     .vblank_start,
     .vblank_end

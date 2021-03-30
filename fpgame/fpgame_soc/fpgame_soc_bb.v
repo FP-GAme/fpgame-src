@@ -1,6 +1,7 @@
 
 module fpgame_soc (
 	clk_clk,
+	cpu_wr_busy_export,
 	h2f_vram_interface_export_wraddr,
 	h2f_vram_interface_export_wren,
 	h2f_vram_interface_export_wrdata,
@@ -43,9 +44,13 @@ module fpgame_soc (
 	memory_mem_odt,
 	memory_mem_dm,
 	memory_oct_rzqin,
-	cpu_wr_busy_export);	
+	ppu_bgscroll_export,
+	ppu_enable_export,
+	ppu_bgcolor_export,
+	ppu_fgscroll_export);	
 
 	input		clk_clk;
+	output		cpu_wr_busy_export;
 	output	[12:0]	h2f_vram_interface_export_wraddr;
 	output		h2f_vram_interface_export_wren;
 	output	[63:0]	h2f_vram_interface_export_wrdata;
@@ -88,5 +93,8 @@ module fpgame_soc (
 	output		memory_mem_odt;
 	output	[3:0]	memory_mem_dm;
 	input		memory_oct_rzqin;
-	output		cpu_wr_busy_export;
+	output	[31:0]	ppu_bgscroll_export;
+	output	[2:0]	ppu_enable_export;
+	output	[23:0]	ppu_bgcolor_export;
+	output	[31:0]	ppu_fgscroll_export;
 endmodule

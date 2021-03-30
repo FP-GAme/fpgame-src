@@ -85,10 +85,10 @@ assign sys_rst_n = audio_rst_n & video_rst_n;
 logic audio_clk, video_clk;
 
 // hdmi_generator to ppu interconnect
-logic [9:0]  rowram_rddata;
-logic [8:0]  rowram_rdaddr;
-logic [63:0] palram_rddata;
-logic [8:0]  palram_rdaddr;
+logic [9:0]  hdmi_rowram_rddata;
+logic [8:0]  hdmi_rowram_rdaddr;
+logic [63:0] hdmi_palram_rddata;
+logic [8:0]  hdmi_palram_rdaddr;
 logic        rowram_swap;
 logic        vblank_start;
 logic        vblank_end;
@@ -100,6 +100,12 @@ logic [63:0] h2f_vram_wrdata;
 logic [7:0]  h2f_vram_byteena;
 logic        cpu_vram_wr_irq;
 logic        cpu_wr_busy;
+// TODO: These ppu signals need to be double-buffered like VRAM (when cpu_wr_busy is not high).
+// TODO: Do it in the ppu module.
+logic [31:0] ppu_bgscroll;
+logic [2:0]  ppu_enable;
+logic [23:0] ppu_bgcolor;
+logic [31:0] ppu_fgscroll;
 
 // cpu to ioss interconnect
 logic [15:0] con_state;
@@ -153,7 +159,11 @@ fpgame_soc u0 (
     .memory_mem_dm                      (HPS_DDR3_DM),
     .memory_oct_rzqin                   (HPS_DDR3_RZQ),
     .h2f_vram_interface_cpu_vram_wr_irq (cpu_vram_wr_irq),
-    .cpu_wr_busy_export                 (cpu_wr_busy)
+    .cpu_wr_busy_export                 (cpu_wr_busy),
+    .ppu_bgscroll_export                (ppu_bgscroll),
+    .ppu_enable_export                  (ppu_enable),
+    .ppu_bgcolor_export                 (ppu_bgcolor),
+    .ppu_fgscroll_export                (ppu_fgscroll)
 );
 
 i2s_pll ipll (
@@ -186,10 +196,10 @@ hdmi_generator hgen (
     .i2s_sclk(HDMI_SCLK),
     .i2s_lrclk(HDMI_LRCLK),
     .i2s_sda(HDMI_I2S),
-    .rowram_rddata,
-    .rowram_rdaddr,
-    .palram_rddata,
-    .palram_rdaddr,
+    .hdmi_rowram_rddata,
+    .hdmi_rowram_rdaddr,
+    .hdmi_palram_rddata,
+    .hdmi_palram_rdaddr,
     .rowram_swap,
     .vblank_start,
     .vblank_end
@@ -198,10 +208,10 @@ hdmi_generator hgen (
 ppu u_ppu (
     .clk(FPGA_CLK1_50),
     .rst_n(sys_rst_n),
-    .rowram_rddata,
-    .rowram_rdaddr,
-    .palram_rddata,
-    .palram_rdaddr,
+    .hdmi_rowram_rddata,
+    .hdmi_rowram_rdaddr,
+    .hdmi_palram_rddata,
+    .hdmi_palram_rdaddr,
     .rowram_swap,
     .vblank_start,
     .vblank_end,
@@ -210,8 +220,7 @@ ppu u_ppu (
     .h2f_vram_wrdata,
     .h2f_vram_byteena,
     .cpu_vram_wr_irq,
-    .cpu_wr_busy,
-    .LED(LED[5:0])
+    .cpu_wr_busy
 );
 
 ioss u_ioss (

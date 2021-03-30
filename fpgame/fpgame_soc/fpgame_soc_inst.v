@@ -1,5 +1,6 @@
 	fpgame_soc u0 (
 		.clk_clk                            (<connected-to-clk_clk>),                            //                            clk.clk
+		.cpu_wr_busy_export                 (<connected-to-cpu_wr_busy_export>),                 //                    cpu_wr_busy.export
 		.h2f_vram_interface_export_wraddr   (<connected-to-h2f_vram_interface_export_wraddr>),   //             h2f_vram_interface.export_wraddr
 		.h2f_vram_interface_export_wren     (<connected-to-h2f_vram_interface_export_wren>),     //                               .export_wren
 		.h2f_vram_interface_export_wrdata   (<connected-to-h2f_vram_interface_export_wrdata>),   //                               .export_wrdata
@@ -42,6 +43,9 @@
 		.memory_mem_odt                     (<connected-to-memory_mem_odt>),                     //                               .mem_odt
 		.memory_mem_dm                      (<connected-to-memory_mem_dm>),                      //                               .mem_dm
 		.memory_oct_rzqin                   (<connected-to-memory_oct_rzqin>),                   //                               .oct_rzqin
-		.cpu_wr_busy_export                 (<connected-to-cpu_wr_busy_export>)                  //                    cpu_wr_busy.export
+		.ppu_bgscroll_export                (<connected-to-ppu_bgscroll_export>),                //                   ppu_bgscroll.export
+		.ppu_enable_export                  (<connected-to-ppu_enable_export>),                  //                     ppu_enable.export
+		.ppu_bgcolor_export                 (<connected-to-ppu_bgcolor_export>),                 //                    ppu_bgcolor.export
+		.ppu_fgscroll_export                (<connected-to-ppu_fgscroll_export>)                 //                   ppu_fgscroll.export
 	);
 

@@ -8,10 +8,10 @@ module ppu (
     input logic rst_n,
 
     // from/to HDMI video output
-    output logic [9:0]  rowram_rddata,
-    input  logic [8:0]  rowram_rdaddr,
-    output logic [63:0] palram_rddata,
-    input  logic [8:0]  palram_rdaddr,
+    output logic [9:0]  hdmi_rowram_rddata,
+    input  logic [8:0]  hdmi_rowram_rdaddr,
+    output logic [63:0] hdmi_palram_rddata,
+    input  logic [8:0]  hdmi_palram_rdaddr,
     input  logic        rowram_swap,
     input  logic        vblank_start,
     input  logic        vblank_end,
@@ -22,7 +22,6 @@ module ppu (
     input  logic [63:0] h2f_vram_wrdata,
     input  logic [7:0]  h2f_vram_byteena,
     output logic        cpu_vram_wr_irq,
-    output logic [5:0]  LED, // TODO: Remove after debug
     input  logic        cpu_wr_busy
 );
 
@@ -66,14 +65,12 @@ module ppu (
     ppu_logic ppul (
         .clk,
         .rst_n,
-        .rowram_rddata,
-        .rowram_rdaddr,
-        .palram_rddata,
-        .palram_rdaddr,
+        .hdmi_rowram_rddata,
+        .hdmi_rowram_rdaddr,
+        .hdmi_palram_rddata,
+        .hdmi_palram_rdaddr,
         .rowram_swap(rowram_swap_disp),
-        .LED, // TODO: Remove after debug
         .vram_ppu_ifP_usr(vram_ppu_ifP.usr)
-        // TODO: Define ppu_logic signals. One of these is going to be the row-buffer interactions.
     );
 
     // Decides who gets the access to the PPU-Facing and CPU-Facing VRAMs
