@@ -16,7 +16,7 @@ module fpgame_video_tb;
     logic [8:0]  hdmi_palram_rdaddr;
     logic        rowram_swap;
     logic        vblank_start;
-    logic        vblank_end;
+    logic        vblank_end_soon;
     logic        cpu_vram_wr_irq;
     logic        cpu_wr_busy;
 
@@ -34,7 +34,7 @@ module fpgame_video_tb;
         .palram_rdaddr(hdmi_palram_rdaddr),
         .rowram_swap,
         .vblank_start,
-        .vblank_end
+        .vblank_end_soon
     );
 
     ppu u_ppu (
@@ -46,7 +46,7 @@ module fpgame_video_tb;
         .hdmi_palram_rdaddr,
         .rowram_swap,
         .vblank_start,
-        .vblank_end,
+        .vblank_end_soon,
         .h2f_vram_wraddr(h2f_vram_wraddr),
         .h2f_vram_wren(h2f_vram_wren),
         .h2f_vram_wrdata(h2f_vram_wrdata),

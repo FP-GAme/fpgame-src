@@ -25,20 +25,6 @@ module row_ram_swap (
     logic [9:0] rr1_wrdata, rr2_wrdata;
     logic       rr1_wren,   rr2_wren;
 
-    // TODO REMOVE AFTER DEBUG:
-    // THIS WORKED
-    /*row_ram rr1 (
-        .address_a(hdmi_rowram_rdaddr),
-        .address_b(9'b0),
-        .clock(clk),
-        .data_a(10'b0), // TODO Change
-        .data_b(10'b0), // TODO Change
-        .wren_a(1'b0), // TODO Change
-        .wren_b(1'b0), // TODO Change
-        .q_a(hdmi_rowram_rddata),
-        .q_b()
-    );*/
-
     // Even though we have dual-ports, we simplify things by using 1 port (ignoring port b)
     row_ram rr1 (
         .address_a(rr1_addr),
@@ -84,11 +70,6 @@ module row_ram_swap (
 
     assign hdmi_rowram_rddata = (swapped) ? rr2_rddata : rr1_rddata;
 
-    /*assign rr1_addr = hdmi_rowram_rdaddr;
-    assign hdmi_rowram_rddata = rr1_rddata;
-    assign rr1_wren = 1'b0;
-    assign rr1_wrdata = 10'b0;*/
-
     // Receive buffer swap signal. Buffers are swapped combinationally after the clock edge after
     //   the rowram_swap signal has been detected.
     always_ff @(posedge clk, negedge rst_n) begin
@@ -97,8 +78,6 @@ module row_ram_swap (
             ignore_swap <= 1'b0;
         end
         else if (rowram_swap) begin
-            //swapped <= 1'b0; // TODO: Remove after debug
-            //ignore_swap <= 1'b0; // TODO: Remove after debug
             swapped <= (ignore_swap) ? swapped : ~swapped;
             ignore_swap <= ~ignore_swap;
         end

@@ -14,7 +14,7 @@ module ppu (
     input  logic [8:0]  hdmi_palram_rdaddr,
     input  logic        rowram_swap,
     input  logic        vblank_start,
-    input  logic        vblank_end,
+    input  logic        vblank_end_soon,
 
     // h2f_vram_avalon_interface (essentially the CPU->VRAM write interface)
     input  logic [12:0] h2f_vram_wraddr,
@@ -108,7 +108,7 @@ module ppu (
                 // There is a short delay to ease timing requirements on sync_active switching the
                 //   interconnect. TODO: Maybe this extra cycle of timing slack isn't needed
 
-                if (vblank_end) begin
+                if (vblank_end_soon) begin
                     n_state = PPU_DISP;
                     
                     n_vram_sync_sent = 1'b0; // reset the sync-sent flag for later reuse
@@ -126,7 +126,7 @@ module ppu (
             PPU_LATE: begin
                 // If PPU is late, do no syncing. Let the CPU finish its writes.
                 // We can only escape the LATE state if the CPU has finished its writes
-                if (vblank_end) n_state = (cpu_wr_busy) ? PPU_LATE : PPU_DISP;
+                if (vblank_end_soon) n_state = (cpu_wr_busy) ? PPU_LATE : PPU_DISP;
                 else n_state = PPU_LATE;
             end
         endcase

@@ -16,7 +16,7 @@ module hdmi_video_output (
     output logic [8:0]  palram_rdaddr,
     output logic        rowram_swap,
     output logic        vblank_start,
-    output logic        vblank_end
+    output logic        vblank_end_soon // Signal that PPU that vblank period is about to end
 );
 
     // Base timings obtained from: http://tinyvga.com/vga-timing/640x480@60Hz
@@ -76,8 +76,9 @@ module hdmi_video_output (
     assign vga_hs = ~(h_count < h_sync);
     assign vga_vs = ~(v_count < v_sync);
     assign vblank_start = (v_count == v_total - v_frontporch && h_count == 0);
-    // Define vblank_end to be the actual vblank_end - 1 row to give enough time for row buffer prep
-    assign vblank_end   = (v_count == v_sync + v_backporch - 1 && h_count == 0);
+    // Define vblank_end_soon to be the actual vblank_end - 2 rows. (i.e., on row 33)
+    // This gives the PPU enough time to buffer a row for the first real display period
+    assign vblank_end_soon = (v_count == v_sync + v_backporch - 2 && h_count == 0);
 
     // === Next-State Logic ===
     always_comb begin
@@ -91,7 +92,9 @@ module hdmi_video_output (
                 n_state = (h_count == h_sync + h_backporch - 6) ? SWAP : IDLE;
             end
             SWAP: begin
-                rowram_swap = 1'b1;
+                // Only swap rowram on odd-numbered rows. This is so that we duplicate each row x2,
+                //   which effectively auto-upscales from 240px to 480px.
+                rowram_swap = v_count[0];
                 n_rowram_rdaddr = 9'b0; // Reset the pixel address before we enter DISPLAY
                 n_state = DISPLAY;
             end

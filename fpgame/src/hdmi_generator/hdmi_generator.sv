@@ -26,7 +26,7 @@ module hdmi_generator (
     output logic [8:0]  hdmi_palram_rdaddr,
     output logic        rowram_swap,  // Also acts as a start-writing signal
     output logic        vblank_start, // Acts as a vram sync signal
-    output logic        vblank_end    // Acts as a vram sync signal
+    output logic        vblank_end_soon // Tells the PPU when to start preparing the next row RAM
 );
 
 hdmi_video_output hvo (
@@ -43,7 +43,7 @@ hdmi_video_output hvo (
     .palram_rdaddr(hdmi_palram_rdaddr),
     .rowram_swap,
     .vblank_start,
-    .vblank_end
+    .vblank_end_soon
 );
 
 I2C_HDMI_Config u_I2C_HDMI_Config (
