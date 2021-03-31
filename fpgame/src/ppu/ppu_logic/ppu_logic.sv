@@ -25,7 +25,7 @@ module ppu_logic (
 
     /*tile_engine bgte (
 
-    );
+    );*/
     /*tile_engine fgte (
 
     );*/
