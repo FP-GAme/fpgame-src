@@ -8,6 +8,7 @@ module sync_writer #(
     input  logic rst_n,
     input  logic sync,
     output logic done,
+    input  logic clr_done,
 
     // from (source)
     output logic [ADDR_WIDTH-1:0]   addr_from,
@@ -64,6 +65,7 @@ always_ff @(posedge clk or negedge rst_n) begin
                     byteena_to <= '1; // Fill with 1s to enable writing of all bytes
                     wren_to <= 1'b1;
                 end
+                else if (clr_done) done <= 1'b0;
             end
             SYNC: begin
                 // if all writes are done, exit to idle and assert sync signal

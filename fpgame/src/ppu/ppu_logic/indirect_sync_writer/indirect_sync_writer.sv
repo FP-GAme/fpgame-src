@@ -59,7 +59,6 @@ module indirect_sync_writer #(
     output logic [TARG_ADDR_WIDTH-1:0] addr_targ,
     output logic [DATA_WIDTH-1:0]      wrdata_targ,
     output logic                       wren_targ
-
 );
 
 enum { IDLE, SYNC } state, n_state;

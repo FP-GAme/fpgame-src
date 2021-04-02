@@ -28,6 +28,7 @@ module sync_writer_tb;
         .rst_n,
         .sync,
         .done,
+        .clr_done(1'b0),
         .addr_from(tilram_a_addr_a),
         .wren_from(tilram_a_wren_a),
         .rddata_from(tilram_a_rddata_a),
