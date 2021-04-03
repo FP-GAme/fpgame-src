@@ -51,16 +51,15 @@ module ppu_logic_tb;
         #19;
 
         rowram_swap = 1'b1;
+        #40;
+        rowram_swap = 1'b0;
+        #64000;
+
+        rowram_swap = 1'b1;
         #20;
         rowram_swap = 1'b0;
         #64000;
 
-/*
-        rowram_swap = 1'b1;
-        #20;
-        rowram_swap = 1'b0;
-        #3200;
-*/
         $stop;
     end
 

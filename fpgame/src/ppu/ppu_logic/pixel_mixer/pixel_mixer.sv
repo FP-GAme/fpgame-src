@@ -137,7 +137,10 @@ always_comb begin
         pixel_counter_en = 1'b1;
         pmxr_rowram_wren = 1'b1;
 
-        n_state = (pixel_addr == MAX_PIXEL_ADDR) ? PMXR_WAIT : PMXR_FETCH;
+        // avoid overflowing
+        if (pixel_addr == MAX_PIXEL_ADDR) pixel_counter_en = 1'b0;
+
+        n_state = (pmxr_rowram_wraddr == MAX_PIXEL_ADDR) ? PMXR_WAIT : PMXR_FETCH;
     end
 end
 

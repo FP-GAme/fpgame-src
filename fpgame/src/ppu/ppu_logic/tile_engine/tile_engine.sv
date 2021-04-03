@@ -230,8 +230,38 @@ module tile_engine #(
 
     // Permanently attached to indirect_syncwriter/(patram_fetcher)
     logic [5:0]  trp_addr_a;
-    logic [63:0] trp_wrdata_a;
     logic        trp_wren_a;
+    logic [63:0] trp_wrdata_a;
+    // In order to mirror in the x direction, we simply subtract pixel_addr[2:0] from 3'b111
+    logic x_mirror;
+    assign x_mirror = trt_rddata_b[0];
+    // The solution is to buffer x_mirror trt_rddata_b to match with the final values.
+    logic [63:0] trp_wrdata_a_mirrored;
+    assign trp_wrdata_a_mirrored = {
+        // 2nd row mirrored
+        trp_wrdata_a[35:32],
+        trp_wrdata_a[39:36],
+        trp_wrdata_a[43:40],
+        trp_wrdata_a[47:44],
+        trp_wrdata_a[51:48],
+        trp_wrdata_a[55:52],
+        trp_wrdata_a[59:56],
+        trp_wrdata_a[63:60],
+        // 1st row mirrored (most significant 4-bit chunk becomes least significant)
+        trp_wrdata_a[3:0],
+        trp_wrdata_a[7:4],
+        trp_wrdata_a[11:8],
+        trp_wrdata_a[15:12],
+        trp_wrdata_a[19:16],
+        trp_wrdata_a[23:20],
+        trp_wrdata_a[27:24],
+        trp_wrdata_a[31:28]
+    };
+    logic x_mirror_buf1; // Note that we must delay this signal until our final readdata comes back
+    logic x_mirror_buf2;
+
+    logic [63:0] trp_wrdata_a_final;
+    assign trp_wrdata_a_final = (x_mirror_buf2) ? trp_wrdata_a_mirrored : trp_wrdata_a;
     
     // Permanently attached to pixel-mixer (through some special access logic for scrolling)
     logic [9:0]  trp_addr_b;
@@ -239,13 +269,14 @@ module tile_engine #(
     // pixel_addr[8:3] selects 1 out of 64 (technically 41) tile-rows (tile-slices) of pixels
     // pixel_addr[2:0] selects 1 out of the 8 pixels
     assign trp_addr_b = { pixel_addr[8:3], effective_pixelrow[0], pixel_addr[2:0] };
+
     logic [3:0]  trp_rddata_b;
     
     tileng_rowdata_patram trp (
         .address_a(trp_addr_a),
         .address_b(trp_addr_b),
         .clock(clk),
-        .data_a(trp_wrdata_a),
+        .data_a(trp_wrdata_a_final),
         .data_b('X),         // Read-only port for pixel-mixer
         .wren_a(trp_wren_a),
         .wren_b(1'b0),       // Read-only port for pixel-mixer
@@ -321,9 +352,17 @@ module tile_engine #(
             n_done <= 1'b0;
             done <= 1'b0;
             tilram_fetcher_start <= 1'b0;
+            x_mirror_buf1 <= 1'b0;
+            x_mirror_buf2 <= 1'b0;
         end
         else begin
+
+            // implement x-mirror signal delay
+            x_mirror_buf1 <= x_mirror;
+            x_mirror_buf2 <= x_mirror_buf1;
+
             done <= n_done; // Delay the done signal by 1 so that we are in IDLE when it is asserted
+
             if (state == TILENG_IDLE) begin
                 n_done <= 1'b0;
                 if (prep) begin 
