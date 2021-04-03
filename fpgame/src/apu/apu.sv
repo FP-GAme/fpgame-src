@@ -17,63 +17,108 @@
 
 module apu
 (
-	input  logic        clock, reset_l,
-	input  logic [22:0] queued_buf_addr,
-	input  logic        buf_ready,       /* New buffer received from MMIO */
+	input  logic        clock, reset_l, /* 50KHz clock. */
+	input  logic [31:0] control,
+	input  logic        control_valid,  /* Control from MMIO. */
+	output logic        buf_irq
+
 	input  logic [63:0] mem_data,
-	input  logic        mem_ready,       /* DDR3 has placed samples on the line. */
-	input  logic        sample_req,      /* I2S wants a new sample. */
-	output logic [7:0]  sample_out,
+	input  logic        mem_ack,        /* DDR3 data is valid. */
 	output logic [28:0] mem_addr,
 	output logic        mem_read_en,
-	output logic        buf_irq
+
+	input  logic        i2s_clk,
+	output logic        i2s_out,
+	output logic        i2s_ws
 );
 
 /*** Wires ***/
 
-/* Base addresses for the active and queued buffer. */
-logic [22:0] active_buf_base, next_active_buf_base, queued_buf_base,
-             next_queued_buf_base;
+logic apu_en, next_apu_en;
+logic enq_base;
+logic irq_en, next_irq_en, irq_ack, irq_req, next_buf_irq;
 
-/* We need to track which buffers are valid to know what to play next. */
-logic active_buf_valid, next_active_buf_valid, queued_buf_valid,
-      next_queued_buf_valid;
+logic [22:0] queued_base, next_queued_base;
+logic queued_base_valid, next_queued_base_valid;
+logic queued_base_ack;
 
-/* The address of the next chunk to fetch. */
-logic [5:0] chunk_addr, next_chunk_addr;
+/* Module interconnect */
 
-/* Samples which have been read from RAM and are pending being sent to I2S */
-logic [63:0] active_chunk, next_active_chunk, queued_chunk, next_queued_chunk;
+logic [16:0] i2s_sample;
+logic [7:0] sample;
+
+logic [63:0] chunk;
+logic chunk_valid, chunk_ack;
+
+logic debounce_i2s_ws, sample_req;
+
+/*** Modules ***/
+
+sample_fetcher(.clock, .reset_l, .mem_data, .mem_ack, .mem_addr, .mem_read_en,
+               .chunk, .chunk_valid, .chunk_ack, .base(queued_base),
+               .base_valid(queued_base_valid), .base_ack(queued_base_ack));
+
+chunk_player(.clock, .reset_l, .chunk, .chunk_valid, chunk_ack, .sample,
+             .sample_req);
+
+posedge_detect(.clock, .reset_l, .in(debounce_i2s_ws), .out(sample_req));
+
+debounce(.clock, .reset_l, .in(i2s_ws), .out(debounce_i2s_ws));
+
+/*
+ * Important: It isn't, strictly speaking, safe to connect an output from one
+ * clock domain to another without debouncing it. However, we know that the
+ * chunk player is running ~50x faster than the i2s communication module and
+ * that it won't change the sample late in the i2s clocks cycle. The sample
+ * will be available at the third clock cycle from the ws switch, which is
+ * more than enough time for the flip-flop to react and avoid going
+ * meta-stable.
+ *
+ * The same cannot be said for the edge detection on i2s_ws itself, which is
+ * why it is debounced.
+ */
+i2s_comm(.clock(i2s_clk), .reset_l, .i2s_out, .i2s_ws,
+         .sample(i2s_sample));
 
 /*** Combonational Logic ***/
 
-assign buf_irq = active_buf_valid & ~queued_buf_valid;
+assign i2s_sample = (apu_en) ? { sample, 8'd0 } : 16'd0;
 
-assign mem_addr = { active_buf_base, chunk_addr };
+assign irq_ack = control_valid & control[0];
+assign irq_req = control_valid & control[1];
+assign enq_base = control_valid & control[2];
+assign next_apu_en = control_valid & control[3];
 
-assign next_queued_buf_base = (buf_ready) ? queued_buf_addr : queued_buf_base;
+assign next_irq_en = (irq_ack) ? 1'b0 : ((irq_req) ? 1'b1 : irq_en);
+assign next_buf_irq = (irq_ack) ? 1'b0 : (irq_en & ~queued_base_valid);
 
-// TODO: The rest lmao.
+always_comb begin
+	next_queued_base = queued_base;
+	next_queued_base_valid = queued_base_valid;
+
+	if (enq_base) begin
+		next_queued_base = control[31:9];
+		next_queued_base_valid = 1'b1;
+	end else if (queued_base_ack) begin
+		next_queued_base_valid = 1'b0;
+	end
+end
 
 /*** Sequential Logic ***/
 
 always_ff @(posedge clock, negedge reset_l) begin
 	if (~reset_l) begin
-		active_buf_base <= 'd0;
-		active_buf_valid <= 'd0;
-		queued_buf_base <= 'd0;
-		queued_buf_valid <= 'd0;
-		chunk_addr <= 'd0;
-		active_chunk <= 'd0;
-		queued_chunk <= 'd0;
+		apu_en <= 1'b0;
+		irq_en <= 1'b0;
+		buf_irq <= 1'b0;
+		queued_base <= 'd0;
+		queued_base_valid <= 1'b0;
 	end else begin
-		active_buf_base <= next_active_buf_base;
-		active_buf_valid <= next_active_buf_valid;
-		queued_buf_base <= next_queued_buf_base;
-		queued_buf_valid <= next_queued_buf_valid;
-		chunk_addr <= next_chunk_addr;
-		active_chunk <= next_active_chunk;
-		queued_chunk <= next_queued_chunk;
+		apu_en <= next_apu_en;
+		irq_en <= next_irq_en;
+		buf_irq <= next_buf_irq;
+		queued_base <= next_queued_base;
+		queued_base_valid <= next_queued_base_valid;
 	end
 end
 
