@@ -41,7 +41,7 @@ synthesis/
 *.txt
 *.htm
 *.cmp
-*.tcl
+#*.tcl - Turns out that we want to save these
 *.tcl~
 *.ptf.*
 *.qar
