@@ -9,6 +9,27 @@
    categories="System" />
  <parameter name="bonusData"><![CDATA[bonusData 
 {
+   element PIO_with_async_write_0
+   {
+      datum _sortIndex
+      {
+         value = "9";
+         type = "int";
+      }
+   }
+   element PIO_with_async_write_0.avs_s0
+   {
+      datum _lockedAddress
+      {
+         value = "1";
+         type = "boolean";
+      }
+      datum baseAddress
+      {
+         value = "16";
+         type = "String";
+      }
+   }
    element clk_0
    {
       datum _sortIndex
@@ -24,6 +45,11 @@
          value = "4";
          type = "int";
       }
+      datum sopceditor_expanded
+      {
+         value = "0";
+         type = "boolean";
+      }
    }
    element cpu_wr_busy_pio.s1
    {
@@ -34,7 +60,7 @@
       }
       datum baseAddress
       {
-         value = "16";
+         value = "32";
          type = "String";
       }
    }
@@ -44,6 +70,11 @@
       {
          value = "3";
          type = "int";
+      }
+      datum sopceditor_expanded
+      {
+         value = "0";
+         type = "boolean";
       }
    }
    element h2f_vram_interface_0.avs_s0
@@ -66,6 +97,11 @@
          value = "1";
          type = "int";
       }
+      datum sopceditor_expanded
+      {
+         value = "1";
+         type = "boolean";
+      }
    }
    element hps_0.f2h_sdram0_data
    {
@@ -81,6 +117,11 @@
       {
          value = "2";
          type = "int";
+      }
+      datum sopceditor_expanded
+      {
+         value = "0";
+         type = "boolean";
       }
    }
    element input_pio.s1
@@ -111,9 +152,14 @@
    }
    element ppu_bgcolor_pio.s1
    {
+      datum _lockedAddress
+      {
+         value = "1";
+         type = "boolean";
+      }
       datum baseAddress
       {
-         value = "48";
+         value = "64";
          type = "String";
       }
    }
@@ -132,9 +178,14 @@
    }
    element ppu_bgscroll_pio.s1
    {
+      datum _lockedAddress
+      {
+         value = "1";
+         type = "boolean";
+      }
       datum baseAddress
       {
-         value = "80";
+         value = "96";
          type = "String";
       }
    }
@@ -153,9 +204,14 @@
    }
    element ppu_enable_pio.s1
    {
+      datum _lockedAddress
+      {
+         value = "1";
+         type = "boolean";
+      }
       datum baseAddress
       {
-         value = "64";
+         value = "80";
          type = "String";
       }
    }
@@ -174,9 +230,14 @@
    }
    element ppu_fgscroll_pio.s1
    {
+      datum _lockedAddress
+      {
+         value = "1";
+         type = "boolean";
+      }
       datum baseAddress
       {
-         value = "32";
+         value = "48";
          type = "String";
       }
    }
@@ -201,6 +262,11 @@
  <parameter name="timeStamp" value="0" />
  <parameter name="useTestBenchNamingPattern" value="false" />
  <instanceScript></instanceScript>
+ <interface
+   name="apu_control"
+   internal="PIO_with_async_write_0.conduit_end"
+   type="conduit"
+   dir="end" />
  <interface name="clk" internal="clk_0.clk_in" type="clock" dir="end" />
  <interface
    name="cpu_wr_busy"
@@ -217,6 +283,13 @@
    internal="h2f_vram_interface_0.ppu_transfer_irq"
    type="interrupt"
    dir="end" />
+ <interface
+   name="hps_0_f2h_sdram0_data"
+   internal="hps_0.f2h_sdram0_data"
+   type="avalon"
+   dir="end" />
+ <interface name="hps_0_h2f_gp" internal="hps_0.h2f_gp" />
+ <interface name="hps_0_h2f_mpu_events" internal="hps_0.h2f_mpu_events" />
  <interface name="hps_io" internal="hps_0.hps_io" type="conduit" dir="end" />
  <interface
    name="input_pio"
@@ -244,6 +317,11 @@
    internal="ppu_fgscroll_pio.external_connection"
    type="conduit"
    dir="end" />
+ <module
+   name="PIO_with_async_write_0"
+   kind="PIO_with_async_write"
+   version="4.20"
+   enabled="1" />
  <module name="clk_0" kind="clock_source" version="20.1" enabled="1">
   <parameter name="clockFrequency" value="50000000" />
   <parameter name="clockFrequencyKnown" value="true" />
@@ -902,6 +980,15 @@
    kind="avalon"
    version="20.1"
    start="hps_0.h2f_lw_axi_master"
+   end="PIO_with_async_write_0.avs_s0">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0010" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="20.1"
+   start="hps_0.h2f_lw_axi_master"
    end="input_pio.s1">
   <parameter name="arbitrationPriority" value="1" />
   <parameter name="baseAddress" value="0x0000" />
@@ -913,7 +1000,7 @@
    start="hps_0.h2f_lw_axi_master"
    end="cpu_wr_busy_pio.s1">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0010" />
+  <parameter name="baseAddress" value="0x0020" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -922,7 +1009,7 @@
    start="hps_0.h2f_lw_axi_master"
    end="ppu_bgscroll_pio.s1">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0050" />
+  <parameter name="baseAddress" value="0x0060" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -931,7 +1018,7 @@
    start="hps_0.h2f_lw_axi_master"
    end="ppu_enable_pio.s1">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0040" />
+  <parameter name="baseAddress" value="0x0050" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -940,7 +1027,7 @@
    start="hps_0.h2f_lw_axi_master"
    end="ppu_bgcolor_pio.s1">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0030" />
+  <parameter name="baseAddress" value="0x0040" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -949,7 +1036,7 @@
    start="hps_0.h2f_lw_axi_master"
    end="ppu_fgscroll_pio.s1">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0020" />
+  <parameter name="baseAddress" value="0x0030" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection kind="clock" version="20.1" start="clk_0.clk" end="input_pio.clk" />
@@ -983,6 +1070,11 @@
    version="20.1"
    start="clk_0.clk"
    end="h2f_vram_interface_0.clock" />
+ <connection
+   kind="clock"
+   version="20.1"
+   start="clk_0.clk"
+   end="PIO_with_async_write_0.clock" />
  <connection
    kind="clock"
    version="20.1"
@@ -1033,6 +1125,11 @@
    version="20.1"
    start="clk_0.clk_reset"
    end="ppu_fgscroll_pio.reset" />
+ <connection
+   kind="reset"
+   version="20.1"
+   start="clk_0.clk_reset"
+   end="PIO_with_async_write_0.reset" />
  <connection
    kind="reset"
    version="20.1"

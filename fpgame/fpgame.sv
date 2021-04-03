@@ -111,6 +111,12 @@ logic [31:0] ppu_fgscroll;
 // cpu to ioss interconnect
 logic [15:0] con_state;
 
+/* APU to CPU interconnect */
+logic [63:0] apu_mem_data;
+logic [31:0] apu_control;
+logic [28:0] apu_mem_addr;
+logic apu_control_valid, apu_mem_read_en, apu_mem_ack;
+
 assign GPIO[10] = cpu_wr_busy; // TODO: Remove after debug
 
 // ==================
@@ -164,7 +170,15 @@ fpgame_soc u0 (
     .ppu_bgscroll_export                (ppu_bgscroll),
     .ppu_enable_export                  (ppu_enable),
     .ppu_bgcolor_export                 (ppu_bgcolor),
-    .ppu_fgscroll_export                (ppu_fgscroll)
+    .ppu_fgscroll_export                (ppu_fgscroll),
+    .apu_control_export_data		(apu_control),
+    .apu_control_export_valid		(apu_control_valid),
+    .hps_0_f2h_sdram0_data_burstcount    ('d4),
+    .hps_0_f2h_sdram0_data_waitrequest   ('b0),
+    .hps_0_f2h_sdram0_data_address       (apu_mem_addr),
+    .hps_0_f2h_sdram0_data_readdata      (apu_mem_data),
+    .hps_0_f2h_sdram0_data_readdatavalid (apu_mem_ack),
+    .hps_0_f2h_sdram0_data_read          (apu_mem_read_en)
 );
 
 i2s_pll ipll (
@@ -203,31 +217,18 @@ hdmi_generator hgen (
     .next_row
 );
 
-logic mem_ack, mem_read_en;
-logic [63:0] mem_data;
-logic [28:0] mem_addr;
-
 apu u_apu (
 	.clock(FPGA_CLK1_50),
 	.reset_l(sys_rst_n),
-	.control(32'hffffffff),
-	.control_valid(1'b1),
-	.mem_data,
-	.mem_ack,
-	.mem_addr,
-	.mem_read_en,
+	.control(apu_control),
+	.control_valid(apu_control_valid),
+	.mem_data(apu_mem_data),
+	.mem_ack(apu_mem_ack),
+	.mem_addr(apu_mem_addr),
+	.mem_read_en(apu_mem_read_en),
 	.i2s_clk(HDMI_SCLK),
 	.i2s_ws(HDMI_LRCLK),
 	.i2s_out(HDMI_I2S)
-);
-
-sin_table atst (
-	.clock(FPGA_CLK1_50),
-	.reset_l(sys_rst_n),
-	.mem_data,
-	.mem_ack,
-	.mem_addr,
-	.mem_read_en
 );
 
 ppu u_ppu (
