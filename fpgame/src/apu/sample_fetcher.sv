@@ -9,20 +9,20 @@
 
 module sample_fetcher
 (
-	input  logic        clock, reset_l
+	input  logic        clock, reset_l,
 
-	input  logic [63:0] mem_data;
-	input  logic        mem_ack;
-	output logic [28:0] mem_addr;
-	output logic        mem_read_en;
+	input  logic [63:0] mem_data,
+	input  logic        mem_ack,
+	output logic [28:0] mem_addr,
+	output logic        mem_read_en,
 
-	output logic [63:0] chunk;
-	output logic        chunk_valid;
-	input  logic        chunk_ack;
+	output logic [63:0] chunk,
+	output logic        chunk_valid,
+	input  logic        chunk_ack,
 
-	input  logic [22:0] base;
-	input  logic        base_valid;
-	output logic        base_ack;
+	input  logic [22:0] base,
+	input  logic        base_valid,
+	output logic        base_ack
 );
 
 /*** Wires ***/
@@ -43,8 +43,6 @@ enum { IDLE, READ_WAIT } ram_state, next_ram_state;
 
 /*** Combonational Logic ***/
 
-assign next_queued_buf_base = (buf_ready) ? buf_addr : queued_buf_base;
-
 always_comb begin
 	next_chunk = (mem_ack) ? mem_data : chunk;
 	next_chunk_addr = (mem_read_en) ? chunk_addr + 'd1 : chunk_addr;
@@ -58,12 +56,12 @@ always_comb begin
 	unique case (ram_state)
 	IDLE: begin
 		mem_read_en = (~chunk_valid);
-		next_ram_state = (mem_read_en & ~mem_ready) ? READ_WAIT : IDLE;
+		next_ram_state = (mem_read_en & ~mem_ack) ? READ_WAIT : IDLE;
 
 	end
 	READ_WAIT: begin
 		mem_read_en = 'b0;
-		next_ram_state = (mem_ready) ? IDLE : READ_WAIT;
+		next_ram_state = (mem_ack) ? IDLE : READ_WAIT;
 	end
 	endcase
 end

@@ -194,9 +194,9 @@ hdmi_generator hgen (
     .i2c_sclk(HDMI_I2C_SCL),
     .i2c_sda(HDMI_I2C_SDA),
     .hdmi_tx_int(HDMI_TX_INT),
-    .i2s_sclk(HDMI_SCLK),
+/*    .i2s_sclk(HDMI_SCLK),
     .i2s_lrclk(HDMI_LRCLK),
-    .i2s_sda(HDMI_I2S),
+    .i2s_sda(HDMI_I2S), */
     .hdmi_rowram_rddata,
     .hdmi_rowram_rdaddr,
     .hdmi_palram_rddata,
@@ -205,6 +205,33 @@ hdmi_generator hgen (
     .vblank_start,
     .vblank_end_soon,
     .next_row
+);
+
+logic mem_ack, mem_read_en;
+logic [63:0] mem_data;
+logic [28:0] mem_addr;
+
+assign HDMI_SCLK = audio_clk;
+
+apu u_apu (
+	.clock(FPGA_CLK1_50),
+	.reset_l(sys_rst_n),
+	.control(32'hffffffff),
+	.control_valid(1'b1),
+	.mem_data,
+	.mem_ack,
+	.mem_addr,
+	.mem_read_en,
+	.i2s_clk(audio_clk),
+	.i2s_ws(HDMI_LRCLK),
+	.i2s_out(HDMI_I2S)
+);
+
+sin_table atst (
+	.mem_data,
+	.mem_ack,
+	.mem_addr,
+	.mem_read_en
 );
 
 ppu u_ppu (

@@ -20,7 +20,7 @@ module apu
 	input  logic        clock, reset_l, /* 50KHz clock. */
 	input  logic [31:0] control,
 	input  logic        control_valid,  /* Control from MMIO. */
-	output logic        buf_irq
+	output logic        buf_irq,
 
 	input  logic [63:0] mem_data,
 	input  logic        mem_ack,        /* DDR3 data is valid. */
@@ -58,7 +58,7 @@ sample_fetcher(.clock, .reset_l, .mem_data, .mem_ack, .mem_addr, .mem_read_en,
                .chunk, .chunk_valid, .chunk_ack, .base(queued_base),
                .base_valid(queued_base_valid), .base_ack(queued_base_ack));
 
-chunk_player(.clock, .reset_l, .chunk, .chunk_valid, chunk_ack, .sample,
+chunk_player(.clock, .reset_l, .chunk, .chunk_valid, .chunk_ack, .sample,
              .sample_req);
 
 posedge_detect(.clock, .reset_l, .in(debounce_i2s_ws), .out(sample_req));

@@ -21,6 +21,7 @@ synthesis/
 # Source:
 # https://github.com/thomasrussellmurphy/quartus-DE1_SOC-project/blob/master/.gitignore
 
+*.swp
 *.bak
 *.pin
 *.sopcinfo
@@ -28,7 +29,7 @@ synthesis/
 *.pof
 *.rbf
 *.jdi
-*.rpt           
+*.rpt
 *.smsg
 *.summary
 *.xml

@@ -8,7 +8,7 @@
 
 module posedge_detect
 (
-	input  logic clock, reset_l
+	input  logic clock, reset_l,
 	input  logic in,
 	output logic out
 );
@@ -24,7 +24,7 @@ assign next_out = ~last_in & in;
 
 /*** Sequential Logic ***/
 
-always_ff @(posedge clock, negedge reset) begin
+always_ff @(posedge clock, negedge reset_l) begin
 	if (~reset_l) begin
 		out <= 1'b0;
 		last_in <= 1'b0;

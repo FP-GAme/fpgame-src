@@ -4,7 +4,7 @@
 
 set_global_assignment -name FAMILY "Cyclone V"
 set_global_assignment -name DEVICE 5CSEBA6U23I7
-set_global_assignment -name TOP_LEVEL_ENTITY ppu_logic_tb
+set_global_assignment -name TOP_LEVEL_ENTITY fpgame
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 16.0.2
 set_global_assignment -name LAST_QUARTUS_VERSION "20.1.1 Lite Edition"
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "00:20:01 MARCH 11,2021"
@@ -156,6 +156,13 @@ set_global_assignment -name EDA_TEST_BENCH_NAME ppu_logic_tb -section_id eda_sim
 set_global_assignment -name EDA_DESIGN_INSTANCE_NAME NA -section_id ppu_logic_tb
 set_global_assignment -name EDA_TEST_BENCH_MODULE_NAME ppu_logic_tb -section_id ppu_logic_tb
 set_global_assignment -name EDA_TEST_BENCH_FILE src/ppu/ppu_logic/ppu_logic_tb.sv -section_id ppu_logic_tb
+set_global_assignment -name SYSTEMVERILOG_FILE src/common/debounce.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/common/posedge_detect.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/apu/sin_table.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/apu/sample_fetcher.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/apu/i2s_comm.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/apu/chunk_player.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/apu/apu.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/ppu_logic/ppu_logic_tb.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/ppu_logic/pixel_mixer/pixel_mixer.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/ppu_logic/tile_engine/tile_engine_tb.sv
@@ -168,7 +175,6 @@ set_global_assignment -name SYSTEMVERILOG_FILE src/common/clk_div.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/common/shift_reg.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/common/timer.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/ioss/controller.sv
-set_global_assignment -name SYSTEMVERILOG_FILE src/ioss/debounce.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/ioss/ioss.sv
 set_global_assignment -name SYSTEMVERILOG_FILE fpgame.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/fpgame_video_tb.sv

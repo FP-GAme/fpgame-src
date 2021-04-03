@@ -4,10 +4,10 @@
 
 module sin_table
 (
-	input  logic [29:0] mem_addr,
+	input  logic [28:0] mem_addr,
 	input  logic        mem_read_en,
 	output logic [63:0] mem_data,
-	output logic        mem_ready
+	output logic        mem_ack
 );
 
 assign mem_ready = 1'b1;
