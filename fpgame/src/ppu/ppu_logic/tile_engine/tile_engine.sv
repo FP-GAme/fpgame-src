@@ -69,7 +69,7 @@ module tile_engine #(
     input  logic rst_n,
 
     // From ppu_logic (and technically hdmi_video_output)
-    input  logic [8:0]  row,
+    input  logic [7:0]  next_row,
     output logic [10:0] tilram_addr,
     input  logic [63:0] tilram_rddata,
     output logic [11:0] patram_addr,
@@ -105,7 +105,7 @@ module tile_engine #(
     logic [8:0] scroll_y;
     assign scroll_y = scroll[24:16];
     logic [8:0] effective_pixelrow; // Given scanline and scroll, which row of pixels are we on?
-    assign effective_pixelrow = scroll_y + row; // Overflow is welcome here
+    assign effective_pixelrow = scroll_y + next_row; // Overflow is welcome here
     logic [5:0] effective_tilerow; // Given which pixelrow we are on, which tilerow is it a part of?
     assign effective_tilerow = effective_pixelrow[8:3]; // The tile for the current row + scrolling
 

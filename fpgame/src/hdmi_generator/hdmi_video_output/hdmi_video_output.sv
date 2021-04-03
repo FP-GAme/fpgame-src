@@ -16,7 +16,8 @@ module hdmi_video_output (
     output logic [8:0]  palram_rdaddr,
     output logic        rowram_swap,
     output logic        vblank_start,
-    output logic        vblank_end_soon // Signal that PPU that vblank period is about to end
+    output logic        vblank_end_soon, // Signal that PPU that vblank period is about to end
+    output logic [7:0]  next_row         // Next row number to prep between (0, 239)
 );
 
     // Base timings obtained from: http://tinyvga.com/vga-timing/640x480@60Hz
@@ -79,6 +80,11 @@ module hdmi_video_output (
     // Define vblank_end_soon to be the actual vblank_end - 2 rows. (i.e., on row 33)
     // This gives the PPU enough time to buffer a row for the first real display period
     assign vblank_end_soon = (v_count == v_sync + v_backporch - 2 && h_count == 0);
+    // The row that should be prepped is the row 2 rows in advance (and downscaled to 240 rows)
+    logic [9:0] next_row_240;
+    // Note that 10'd33 is 2 rows before start of display, and 10'd512 is 2 rows right before end.
+    assign next_row_240 = (v_count>=10'd33 && v_count<=10'd512) ? ((v_count - 10'd33) >> 1) : 10'd0;
+    assign next_row = next_row_240[7:0]; // This is fine, since prep_row_240 is within (0, 239)
 
     // === Next-State Logic ===
     always_comb begin

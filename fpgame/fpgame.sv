@@ -92,6 +92,7 @@ logic [8:0]  hdmi_palram_rdaddr;
 logic        rowram_swap;
 logic        vblank_start;
 logic        vblank_end_soon;
+logic [7:0]  next_row;
 
 // ppu to cpu interconnect
 logic [12:0] h2f_vram_wraddr;
@@ -202,7 +203,8 @@ hdmi_generator hgen (
     .hdmi_palram_rdaddr,
     .rowram_swap,
     .vblank_start,
-    .vblank_end_soon
+    .vblank_end_soon,
+    .next_row
 );
 
 ppu u_ppu (
@@ -213,6 +215,7 @@ ppu u_ppu (
     .hdmi_palram_rddata,
     .hdmi_palram_rdaddr,
     .rowram_swap,
+    .next_row,
     .vblank_start,
     .vblank_end_soon,
     .h2f_vram_wraddr,

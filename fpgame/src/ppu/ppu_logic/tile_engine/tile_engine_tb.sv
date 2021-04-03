@@ -16,7 +16,7 @@ module tile_engine_tb;
     ) bgte (
         .clk,
         .rst_n,
-        .row('0),
+        .next_row('0),
         .tilram_addr,
         .tilram_rddata,
         .patram_addr,

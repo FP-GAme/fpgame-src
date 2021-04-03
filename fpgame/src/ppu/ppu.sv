@@ -13,6 +13,7 @@ module ppu (
     output logic [63:0] hdmi_palram_rddata,
     input  logic [8:0]  hdmi_palram_rdaddr,
     input  logic        rowram_swap,
+    input  logic [7:0]  next_row,
     input  logic        vblank_start,
     input  logic        vblank_end_soon,
 
@@ -70,6 +71,7 @@ module ppu (
         .hdmi_palram_rddata,
         .hdmi_palram_rdaddr,
         .rowram_swap(rowram_swap_disp),
+        .next_row,
         .vram_ppu_ifP_usr(vram_ppu_ifP.usr)
     );
 
