@@ -73,9 +73,10 @@ always_ff @(negedge clock, negedge reset_l) begin
 		state <= INIT;
 		i2s_ws <= 1'b1;
 	end else begin
-		state <= next_state;
 		bit_idx <= next_bit_idx;
 		active_sample <= next_active_sample;
+		state <= next_state;
+		i2s_ws <= next_i2s_ws;
 	end
 end
 

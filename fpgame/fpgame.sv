@@ -82,7 +82,7 @@ logic audio_rst_n, video_rst_n;
 logic sys_rst_n; // Reset which releases after both video and audio PLLs are finished
 assign sys_rst_n = audio_rst_n & video_rst_n;
 
-logic audio_clk, video_clk;
+logic video_clk;
 
 // hdmi_generator to ppu interconnect
 logic [9:0]  hdmi_rowram_rddata;
@@ -170,7 +170,7 @@ fpgame_soc u0 (
 i2s_pll ipll (
     .refclk(FPGA_CLK1_50),
     .rst(0), // TODO: Tie to a physical or CPU-related reset
-    .outclk_0(audio_clk),
+    .outclk_0(HDMI_SCLK),
     .locked(audio_rst_n)
 );
 
@@ -182,7 +182,6 @@ vga_pll vpll (
 );
 
 hdmi_generator hgen (
-    .audio_clk,
     .video_clk,
     .clk(FPGA_CLK1_50),
     .rst_n(sys_rst_n),
@@ -194,9 +193,6 @@ hdmi_generator hgen (
     .i2c_sclk(HDMI_I2C_SCL),
     .i2c_sda(HDMI_I2C_SDA),
     .hdmi_tx_int(HDMI_TX_INT),
-/*    .i2s_sclk(HDMI_SCLK),
-    .i2s_lrclk(HDMI_LRCLK),
-    .i2s_sda(HDMI_I2S), */
     .hdmi_rowram_rddata,
     .hdmi_rowram_rdaddr,
     .hdmi_palram_rddata,
@@ -211,8 +207,6 @@ logic mem_ack, mem_read_en;
 logic [63:0] mem_data;
 logic [28:0] mem_addr;
 
-assign HDMI_SCLK = audio_clk;
-
 apu u_apu (
 	.clock(FPGA_CLK1_50),
 	.reset_l(sys_rst_n),
@@ -222,12 +216,14 @@ apu u_apu (
 	.mem_ack,
 	.mem_addr,
 	.mem_read_en,
-	.i2s_clk(audio_clk),
+	.i2s_clk(HDMI_SCLK),
 	.i2s_ws(HDMI_LRCLK),
 	.i2s_out(HDMI_I2S)
 );
 
 sin_table atst (
+	.clock(FPGA_CLK1_50),
+	.reset_l(sys_rst_n),
 	.mem_data,
 	.mem_ack,
 	.mem_addr,
