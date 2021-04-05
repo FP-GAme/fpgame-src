@@ -17,3 +17,6 @@ hps_isw_handoff/
 .qsys_edit/
 linux-socfpga/
 spl_bsp/
+
+# Ignore Generated Files from .mif Generators
+mif_gen/output/
