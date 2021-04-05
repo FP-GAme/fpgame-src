@@ -9,7 +9,7 @@ module tile_engine_tb;
     logic [63:0] tilram_rddata;
     logic [11:0] patram_addr;
     logic [63:0] patram_rddata;
-    logic [7:0]  pixel_data;
+    logic [7:0]  pmxr_pixel_data;
 
     tile_engine #(
         .FG(0)
@@ -24,8 +24,8 @@ module tile_engine_tb;
         .scroll('0),
         .enable(1'b1),
         .prep,
-        .pixel_addr(9'd222),
-        .pixel_data,
+        .pmxr_pixel_addr(9'd222),
+        .pmxr_pixel_data,
         .done
     );
 

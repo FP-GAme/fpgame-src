@@ -11,12 +11,14 @@ module ppu_logic_tb;
     logic       rowram_swap;        // Essentially the "start" signal
     logic [7:0] next_row;           // Which row to prepare?
 
+    logic [31:0] bgscroll;
+
     assign hdmi_rowram_rdaddr = 9'b0;
     assign hdmi_palram_rdaddr = 9'b0;
 
     vram_if vram_ppu_ifP(); // VRAM interface used by ppu_logic
 
-    vram_sub_test vr (
+    vram_sub vr (
         .clk,
         .i_src(vram_ppu_ifP.src) // PPU-Logic-Facing VRAM
     );
@@ -30,7 +32,8 @@ module ppu_logic_tb;
         .hdmi_palram_rdaddr,
         .rowram_swap,
         .next_row,
-        .vram_ppu_ifP_usr(vram_ppu_ifP.usr)
+        .vram_ppu_ifP_usr(vram_ppu_ifP.usr),
+        .bgscroll
     );
 
     // 50MHz clock
@@ -44,6 +47,7 @@ module ppu_logic_tb;
     initial begin
         rowram_swap = 1'b0;
         next_row = 8'b0;
+        bgscroll = 31'd510;
 
         rst_n = 0;
         #1;

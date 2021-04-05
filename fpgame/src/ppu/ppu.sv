@@ -23,6 +23,7 @@ module ppu (
     input  logic [63:0] h2f_vram_wrdata,
     input  logic [7:0]  h2f_vram_byteena,
     output logic        cpu_vram_wr_irq,
+    input  logic [31:0] bgscroll,
     input  logic        cpu_wr_busy
 );
 
@@ -72,7 +73,8 @@ module ppu (
         .hdmi_palram_rdaddr,
         .rowram_swap(rowram_swap_disp),
         .next_row,
-        .vram_ppu_ifP_usr(vram_ppu_ifP.usr)
+        .vram_ppu_ifP_usr(vram_ppu_ifP.usr),
+        .bgscroll
     );
 
     // Decides who gets the access to the PPU-Facing and CPU-Facing VRAMs

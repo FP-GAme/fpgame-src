@@ -167,7 +167,7 @@ fpgame_soc u0 (
     .memory_oct_rzqin                   (HPS_DDR3_RZQ),
     .h2f_vram_interface_cpu_vram_wr_irq (cpu_vram_wr_irq),
     .cpu_wr_busy_export                 (cpu_wr_busy),
-    .ppu_bgscroll_export                (ppu_bgscroll),
+    .ppu_bgscroll_export                (), // TODO, set to ppu_bgscroll after demo
     .ppu_enable_export                  (ppu_enable),
     .ppu_bgcolor_export                 (ppu_bgcolor),
     .ppu_fgscroll_export                (ppu_fgscroll),
@@ -247,6 +247,7 @@ ppu u_ppu (
     .h2f_vram_wrdata,
     .h2f_vram_byteena,
     .cpu_vram_wr_irq,
+    .bgscroll(ppu_bgscroll),
     .cpu_wr_busy
 );
 
@@ -255,7 +256,8 @@ ioss u_ioss (
     .rst_n(sys_rst_n),
     .GPIO,
     .LED(LED[7:6]),
-    .con_state
+    .con_state(),
+    .scroll(ppu_bgscroll) // TODO: Remove after demo
 );
 
 endmodule : fpgame

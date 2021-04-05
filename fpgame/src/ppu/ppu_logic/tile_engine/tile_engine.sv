@@ -2,9 +2,14 @@
  * Implements a Tile-Engine (reusable for both Foreground and Background Tiles)
  */
 /* Overview
- * TODO: Document this JOE
+ * The Tile-Engine displays tile-graphics with color palettes, locations, and mirror-transformations
+ *   given by Tile-RAM, with the actual graphics coming from Pattern-RAM.
+ *
+ * When the prep signal is sent, the Tile-Engine will prepare its internal row-buffers by reading
+ *   from Tile-RAM and Pattern-RAM. When finished, it will assert the done signal, allowing the
+ *   Pixel-Mixer to read pixel values and color palette addresses from it like a RAM.
  */
-/* All About Scrolling
+/* Scrolling Theory
  * 
  * Scrolling is accomplished using an Double-Buffered 32-bit MMIO register set by the CPU during
  *   cpu_busy_write, and updated in this Tile-Engine afterwards during VBLANK.
@@ -23,11 +28,17 @@
  *
  * scroll_y is simply scroll[24:16]. This, similarly to scroll_x, can be split into a tile_scroll_y
  *   and pixel_scroll_y.
- * tile_scroll_y is scroll_y[8:3], a 6-bit number. This number tells us which out of the 64 tile
+ * tilerow_scroll_y is scroll_y[8:3], a 6-bit number. This number tells us which out of the 64 tile-
  *   rows to address in Tile RAM.
- * pixel_scroll_y is scroll_y[2:0]. We use this 3-bit number to determine which out of the 8 pixel
- *   rows to address in a tile row chosen by tile_scroll_y.
+ * pixelrow_scroll_y is scroll_y[2:0]. We use this 3-bit number to determine which out of the 8
+ *   pixel-rows to address in a tile-row chosen by tile_scroll_y.
+ * Notice the distinction between tile-row and pixel-row. "Tile-Rows" refer to the 64 rows of tiles,
+ *   each containing 8 pixel rows, whereas "Pixel-Rows" refers to the 512 rows of 512 pixels each.
  *
+ * The actual scrolling implementation in this Tile-Engine (especially x-scrolling) is not exactly
+ *   as straightforward as the notes above. This is due to how our memories are 64-bit data-width,
+ *   which causes us to fetch chunks of data, meaning we cannot address individual pixels or tiles
+ *   as easily.
  * For more detailed notes on how scrolling affects the accesses to Tile-RAM and Pattern-RAM, see
  *   the comments in this file under the tilram_fetcher and patram_fetcher modules.
  *
@@ -42,11 +53,13 @@
  *   which determine whether the tile is flipped vertically, horizontally, both, or neither.
  *
  * How is this actually accomplished?
- * It affects which pixels from Pattern RAM are buffered in the local pattern ram buffer.
- * When we use the base address for a tile from tile-data buffered in the local tile ram buffer, we
- *   have 4 possible choices for which 2 rows of that tile to grab (Recall 64-bit accesses means
- *   that we will store 2 rows (32-bits/row at 8px/row * 4b/px)). Example illustration:
+ * Mirror bits affect which pixels from Pattern RAM are buffered in patram_rbuf as well as their
+ *   ordering.
+ * When we use the base address for a tile from tilram_rbuf, we have 4 possible choices for which
+ *   2 rows of that tile to grab. (Recall 64-bit accesses means that we will store 2 rows
+ *   (32-bits/row at 8px/row * 4b/px)).
  *
+ * Example illustration:
  * Tile at base address A:
  *   A   |  ROW_0  |  |  ROW_1  |
  *   A+1 |  ROW_2  |  |  ROW_3  |
@@ -55,9 +68,9 @@
  * Which choice should we make? The answer is dependent on the y-pixel-scroll and y-mirror. Without
  *   considering y-mirror, we calculate the row to choose as follows:
  * y-pixel-scroll is 3-bits, which determine which out of 8-rows is to be displayed on a given tile
-     for a given scan-line. Since we must chose 2 rows, we effectively cut our choices in half. So
-     we take y-pixel-scroll / 2 to give us the offset from the tile's base address which determines
-     which 2 rows to buffer.
+ *   for a given scan-line. Since we must chose 2 rows, we effectively cut our choices in half. So
+ *   we take y-pixel-scroll / 2 to give us the offset from the tile's base address which determines
+ *   which 2 rows to buffer.
  * If we now apply the y-mirror. Our choice is the "opposite" of what it would have been.
  * Mathematically, this is the bitwise inverse of the 2-bit result we obtained without y-mirror.
  */
@@ -69,80 +82,102 @@ module tile_engine #(
     input  logic rst_n,
 
     // From ppu_logic (and technically hdmi_video_output)
-    input  logic [7:0]  next_row,
-    output logic [10:0] tilram_addr,
-    input  logic [63:0] tilram_rddata,
-    output logic [11:0] patram_addr,
-    input  logic [63:0] patram_rddata,
+    input  logic [7:0]  next_row,       // The row we should prepare to display
+    output logic [10:0] tilram_addr,    // Address to Tile-RAM
+    input  logic [63:0] tilram_rddata,  // Read-data from Tile-RAM
+    output logic [11:0] patram_addr,    // Address to Pattern-RAM
+    input  logic [63:0] patram_rddata,  // Read-data from Pattern-RAM
 
     // From Double-Buffered Control Registers
     input  logic [31:0] scroll,
     input  logic        enable,
 
     // from/to Pixel Mixer
-    input  logic       prep,
-    input  logic [8:0] pixel_addr,
-    output logic [7:0] pixel_data,
+    input  logic       prep,            // Start preparing a row corresponding to next_row
+    input  logic [8:0] pmxr_pixel_addr,
+    output logic [7:0] pmxr_pixel_data,
     output logic       done
 );
 
+    // =========================
+    // === Tile-Engine State ===
+    // =========================
     enum {TILENG_IDLE, TILENG_PREP} state;
     logic n_done;
 
-    // address to trt (acting as our address buffer)
-    logic [5:0] patram_fetcher_addr_abuf; // multiplexed into trt's address line
 
     // ==============================
     // === Scrolling Calculations ===
     // ==============================
     logic [8:0] scroll_x;
     assign scroll_x = scroll[8:0];
-    logic [8:0] effective_pixel; // Given a row of pixels, which pixel is accessed?
-    assign effective_pixel = pixel_addr + scroll_x; // Overflow is a feature
-    logic [5:0] effective_tile; // Given a row of tiles, which tile is accessed?
-    assign effective_tile = effective_pixel[8:3];
+    logic [5:0] tile_scroll_x;
+    assign tile_scroll_x = scroll_x[8:3];
+    logic [2:0] pixel_scroll_x;
+    assign pixel_scroll_x = scroll_x[2:0];
+
+    // Since tilram_rbuf contains groups of 4 tiles, PMXR needs to know which tile in the first
+    //   group of 4 to display first. pmxr_initial_tile designates this initial tile offset wrt. to
+    //   beginning of tilram_rbuf.
+    logic [1:0] initial_tile;
+    assign initial_tile = tile_scroll_x[1:0];
+
+    // The pixel in the current row chosen by pixel_scroll_x and pmxr's pixel_addr
+    logic [8:0] pixel_addr;
+    assign pixel_addr = pmxr_pixel_addr + pixel_scroll_x;
+
+    // The current tile chosen by the starting point (pmxr_initial_tile) and pmxr's pixel address
+    logic [5:0] tile_addr;
+    assign tile_addr = initial_tile + pixel_addr[8:3];
 
     logic [8:0] scroll_y;
     assign scroll_y = scroll[24:16];
-    logic [8:0] effective_pixelrow; // Given scanline and scroll, which row of pixels are we on?
-    assign effective_pixelrow = scroll_y + next_row; // Overflow is welcome here
-    logic [5:0] effective_tilerow; // Given which pixelrow we are on, which tilerow is it a part of?
-    assign effective_tilerow = effective_pixelrow[8:3]; // The tile for the current row + scrolling
 
-    // ===========
-    // === trt ===
-    // ===========
-    /* trt Module Overview
+    // Given scanline (next_row) and scroll, which row of pixels are we on?
+    logic [8:0] pixelrow;
+    assign pixelrow = scroll_y + next_row; // Overflow is welcome here
+
+    // Given which pixelrow we are on, which tilerow is it a part of?
+    logic [5:0] tilerow;
+    assign tilerow = pixelrow[8:3]; // The tile for the current row + scrolling
+
+
+    // ===================
+    // === tilram_rbuf ===
+    // ===================
+    /* tilram_rbuf Module Overview
      *
      * After start signal is sent to Tile-Engine, this tile-data row-buffer is filled with an entire
      *   row's worth of tile-data entries from Tile-RAM (+3 extras due to 64-bit read data width).
      *
-     * The tile-data in this buffer is used later to index into and read from Pattern RAM.
+     * The tile-data in this buffer is used later by the patram_fetcher to index into and read from
+     *   Pattern RAM.
      * This RAM is read from by Pixel-Mixer to get the color palette associated with a given pixel.
      */
 
     // Permanently attached to syncwriter/(tilram_fetcher)
-    logic [3:0]  trt_addr_a;
-    logic [63:0] trt_data_a;
-    logic        trt_wren_a;
+    logic [3:0]  tilram_rbuf_fetcher_wraddr;
+    logic [63:0] tilram_rbuf_fetcher_wrdata;
+    logic        tilram_rbuf_fetcher_wren;
 
-    // Multiplexed between the pixel-mixer (row+scrolling) (IDLE) and patram_fetcher (PREP)
-    logic [5:0] trt_addr_b;
-    assign trt_addr_b = (state == TILENG_PREP) ? patram_fetcher_addr_abuf : effective_tile;
+    // Read address multiplexed between the pixel-mixer (IDLE) and patram_fetcher (PREP)
+    logic [5:0] tilram_rbuf_rdaddr;
 
-    logic [15:0] trt_rddata_b; // Technically is hard-wired to both pixel-mixer and patram_fetcher
+    // Hard-wired to both pixel-mixer and patram_fetcher
+    logic [15:0] tilram_fetcher_pmxr_rddata;
 
-    tileng_rowdata_tilram trt (
-        .address_a(trt_addr_a),
-        .address_b(trt_addr_b),
+    tileng_rowdata_tilram tilram_rbuf (
+        .address_a(tilram_rbuf_fetcher_wraddr),
+        .address_b(tilram_rbuf_rdaddr),
         .clock(clk),
-        .data_a(trt_data_a),
-        .data_b('X),         // Ignored since nothing writes to this port
-        .wren_a(trt_wren_a),
-        .wren_b(1'b0),       // Disable writes to this port.
-        .q_a(),              // Left empty since nothing reads from the 64-bit port.
-        .q_b(trt_rddata_b)
+        .data_a(tilram_rbuf_fetcher_wrdata),
+        .data_b('X),                         // Ignored since nothing writes to this port
+        .wren_a(tilram_rbuf_fetcher_wren),
+        .wren_b(1'b0),                       // Disable writes to this port.
+        .q_a(),                              // Left empty since nothing reads from the 64-bit port.
+        .q_b(tilram_fetcher_pmxr_rddata)
     );
+
 
     // ======================
     // === tilram_fetcher ===
@@ -150,139 +185,181 @@ module tile_engine #(
     /* tilram_fetcher Module Overview
      *
      * When the prep signal is given, we will use a sync-writer module to copy linearly from the
-     *   Tile-RAM to our local tile-data buffer, which holds just enough data to allow us to display
-     *   the current row of pixels.
+     *   Tile-RAM to our local tile-data buffer, tilram_rbuf, which holds just enough data to allow
+     *   us to display the current row of pixels.
      *
      * We require 41 tiles, since 40 8px tile segments are visible on the screen on a single row,
      *   but since our accesses are 64-bit, and the Tile-Data is 16-bits per tile, we will end up
-     *   fetching 44 tiles, which means 3 tiles of data are wasted.
+     *   fetching 44 tiles, which means 3 tiles of data are unused at any given time.
      *
      * We will tell the sync writer to start at tile_base_addr and copy 11/16 adjacent tile chunks.
      * If the start address is high enough such that the sync writer would begin to read the tiles
      *   belonging to the next row (or overflow), then we wrap around to tile at the beginning of
      *   the current row.
      */
-    /* Concrete Example of Address Calculation and Tile Fetch
-     * Example: There are 64 tiles, we read in chunks of 4 tiles. And we need 41, so we must make
-     *   11 accesses to Tile-RAM. Say the scroll_x is 319 (decimal), scroll_y is 50(decimal), and
-     *   the current scanline/row is 120.
-     * Calculate the base address for the current row: This is where the sync-writer will start the
-     *   copy, (plus some offset dependent on scroll_x, but more on this after).
-     * base_addr = (scroll_y + current_row)/8 (truncated) * 16 = 21 * 4 = 336, (decimal);
-     * Note, there are only 16 entries per row of tiles in Tile-RAM, since our accesses are 64-bit.
-     * If our accesses were 16-bit (1 address per-tile instead of 1 address per 4 tiles)), we would
-     *   need to multiply scroll_y by 64 to get the base address.
-     * Now, consider our scroll_x. Which tile should be the first tile to copy?
-     *   -> 319px / 8px/tile = 39 tiles (truncated). We should start at the 39th tile in this row,
-     *   since we have some pixels that need to be displayed in the 39th tile.
-     * This calculation can be formalized as follows: chunk_offset = scroll_x >> 3;
-     * However, remember that our accesses are 64-bits wide, so we copy chunks of 4 tiles at a time.
-     * Which tile chunk does the 39th tile belong to? This is the first chunk we must copy...
-     *   -> 39th tile / 4 tiles per chunk (truncated) = 9th chunk.
-     * Thus, we must tell the sync-writer to start at base_addr + chunk_offset = 336 + 9 = 345.
-     * The sync writer will then copy 11 tile-data chunks, starting from address 345 (decimal).
-     * We will have copied chunks 345, 346, 347, 348, 349, 350, 351, 336, 337, 338, 339.
-     * Notice that at the last chunk in a row (351), we must wrap back around to the start of the
-     *   row (336) (recall that each tile row has 64 tiles, and thus 16 tile chunks). This allows
-     *   us to implement scrolling of larger worlds.
-     */
-    
+
     logic tilram_fetcher_start;
     logic tilram_fetcher_done;
+
+    // The partial address (counter) generated from the sync-writer module. The full address
+    //   (tilram_addr) incorporates scrolling and whether this is a BG or FG Tile-Engine.
     logic [3:0] tilram_fetcher_partaddr;
-    logic [3:0] tilram_fetcher_tilechunk; // Where in a row of 16 tile chunks to start copying?
-    assign tilram_fetcher_tilechunk = scroll_x[8:5] + tilram_fetcher_partaddr; // Overflow is fine
-    assign tilram_addr = {FG[0], effective_tilerow, tilram_fetcher_tilechunk};
+
+    // Where in a row of 16 tile chunks to start copying?
+    logic [3:0] tilram_fetcher_tilechunk;
+    assign tilram_fetcher_tilechunk = tile_scroll_x[5:2] + tilram_fetcher_partaddr; // Overflow is fine // TODO: tile_scroll_x[3:0] old: scroll_x[8:5]
+
+    // Final address to tile-RAM incorporating scrolling and BG/FG status
+    assign tilram_addr = {FG[0], tilerow, tilram_fetcher_tilechunk};
 
     sync_writer #(
         .DATA_WIDTH(64),
         .ADDR_WIDTH(4), // Tile-RAM has 11-bit addresses, though we keep the 7MSBs fixed
-        .MAX_ADDR(10) // Make 11 reads, since we need 41 tiles for scrolling (3 unused extra)
+        .MAX_ADDR(10)   // Make 11 reads, since we need 41 tiles for scrolling (3 unused extra)
     ) tilram_fetcher (
         .clk,
         .rst_n,
         .sync(tilram_fetcher_start),
         .done(tilram_fetcher_done),
         .clr_done(tilram_fetcher_done),
-        .addr_from(tilram_fetcher_partaddr), // This is a partial address (counter).
-        .wren_from(),                 // ppu_logic automatically sets tile-ram wren to 0 for us
+        .addr_from(tilram_fetcher_partaddr),    // This is a partial address (counter).
+        .wren_from(),                           // ppu_logic already sets tile-RAM wren to 0 for us
         .rddata_from(tilram_rddata),
-        .addr_to(trt_addr_a),
-        .byteena_to(),                // trt doesn't have a byteenable. Leave floating (unused)
-        .wrdata_to(trt_data_a),
-        .wren_to(trt_wren_a)
+        .addr_to(tilram_rbuf_fetcher_wraddr),
+        .byteena_to(),                          // tilram_rbuf has no byteenable. Leave floating
+        .wrdata_to(tilram_rbuf_fetcher_wrdata),
+        .wren_to(tilram_rbuf_fetcher_wren)
     );
 
-    // ===========
-    // === trp ===
-    // ===========
-    /* trp Module Overview
+
+    // ===================
+    // === patram_rbuf ===
+    // ===================
+    /* patram_rbuf Module Overview
      *
-     * After the trt module finishes gathering tile-data, pattern addresses in those tile-data
-     *   entries are used to download pixel values for the current row into this local RAM.
+     * After the tilram_rowbuf module finishes gathering tile-data, pattern addresses in those
+     *   tile-data entries are used to download pixel values for the current row into this local
+     *   RAM.
      * We must store the equivalent of 41 rows of pixel data, or 41*8 = 328 pixels.
      * However, due to how Pattern memory is laid out, as well as due to our 64-bit readdata width,
      *   we will inevitably need to make 41 separate accesses to Pattern RAM, each containing extra
      *   pixel rows we do not need.
      * Each access to Pattern RAM gives us 2 8-pixel-4bpp rows in a target tile (who's base address
-     *   is determined by the address stored in trt).
+     *   is determined by the address stored in tilram_rowbuf).
      */
 
-    // Permanently attached to indirect_syncwriter/(patram_fetcher)
-    logic [5:0]  trp_addr_a;
-    logic        trp_wren_a;
-    logic [63:0] trp_wrdata_a;
-    // In order to mirror in the x direction, we simply subtract pixel_addr[2:0] from 3'b111
-    logic x_mirror;
-    assign x_mirror = trt_rddata_b[0];
-    // The solution is to buffer x_mirror trt_rddata_b to match with the final values.
-    logic [63:0] trp_wrdata_a_mirrored;
-    assign trp_wrdata_a_mirrored = {
-        // 2nd row mirrored
-        trp_wrdata_a[35:32],
-        trp_wrdata_a[39:36],
-        trp_wrdata_a[43:40],
-        trp_wrdata_a[47:44],
-        trp_wrdata_a[51:48],
-        trp_wrdata_a[55:52],
-        trp_wrdata_a[59:56],
-        trp_wrdata_a[63:60],
-        // 1st row mirrored (most significant 4-bit chunk becomes least significant)
-        trp_wrdata_a[3:0],
-        trp_wrdata_a[7:4],
-        trp_wrdata_a[11:8],
-        trp_wrdata_a[15:12],
-        trp_wrdata_a[19:16],
-        trp_wrdata_a[23:20],
-        trp_wrdata_a[27:24],
-        trp_wrdata_a[31:28]
-    };
-    logic x_mirror_buf1; // Note that we must delay this signal until our final readdata comes back
-    logic x_mirror_buf2;
+    // Address to tilram_rbuf (acting as our address buffer)
+    logic [5:0] patram_fetcher_addr_abuf; // multiplexed into tilram_rowbuf's address line
 
-    logic [63:0] trp_wrdata_a_final;
-    assign trp_wrdata_a_final = (x_mirror_buf2) ? trp_wrdata_a_mirrored : trp_wrdata_a;
+    // Permanently attached to indirect_syncwriter/(patram_fetcher)
+    logic [5:0]  patram_rbuf_fetcher_wraddr;
+    logic [63:0] patram_rbuf_fetcher_wrdata;
+    logic        patram_rbuf_fetcher_wren;
+
+    // Note that we must delay the mirror signals until our final readdata comes back
+    logic x_mirror, x_mirror_buf1, x_mirror_buf2;
+    assign x_mirror = tilram_fetcher_pmxr_rddata[0];
+    logic y_mirror_buf1, y_mirror_buf2;
+
+    // patram_rbuf_fetcher_wrdata, but with only x-mirror applied
+    logic [63:0] patram_rbuf_fetcher_wrdata_mir_x;
+    assign patram_rbuf_fetcher_wrdata_mir_x = {
+        // 2nd row mirrored
+        patram_rbuf_fetcher_wrdata[35:32],
+        patram_rbuf_fetcher_wrdata[39:36],
+        patram_rbuf_fetcher_wrdata[43:40],
+        patram_rbuf_fetcher_wrdata[47:44],
+        patram_rbuf_fetcher_wrdata[51:48],
+        patram_rbuf_fetcher_wrdata[55:52],
+        patram_rbuf_fetcher_wrdata[59:56],
+        patram_rbuf_fetcher_wrdata[63:60],
+        // 1st row mirrored (most significant 4-bit chunk becomes least significant)
+        patram_rbuf_fetcher_wrdata[3:0],
+        patram_rbuf_fetcher_wrdata[7:4],
+        patram_rbuf_fetcher_wrdata[11:8],
+        patram_rbuf_fetcher_wrdata[15:12],
+        patram_rbuf_fetcher_wrdata[19:16],
+        patram_rbuf_fetcher_wrdata[23:20],
+        patram_rbuf_fetcher_wrdata[27:24],
+        patram_rbuf_fetcher_wrdata[31:28]
+    };
+    // patram_rbuf_fetcher_wrdata, but with only y-mirror applied
+    logic [63:0] patram_rbuf_fetcher_wrdata_mir_y;
+    assign patram_rbuf_fetcher_wrdata_mir_y = {
+        // 1st row mirrored (most significant 4-bit chunk becomes least significant)
+        patram_rbuf_fetcher_wrdata[31:28],
+        patram_rbuf_fetcher_wrdata[27:24],
+        patram_rbuf_fetcher_wrdata[23:20],
+        patram_rbuf_fetcher_wrdata[19:16],
+        patram_rbuf_fetcher_wrdata[15:12],
+        patram_rbuf_fetcher_wrdata[11:8],
+        patram_rbuf_fetcher_wrdata[7:4],
+        patram_rbuf_fetcher_wrdata[3:0],
+        // 2nd row mirrored
+        patram_rbuf_fetcher_wrdata[63:60],
+        patram_rbuf_fetcher_wrdata[59:56],
+        patram_rbuf_fetcher_wrdata[55:52],
+        patram_rbuf_fetcher_wrdata[51:48],
+        patram_rbuf_fetcher_wrdata[47:44],
+        patram_rbuf_fetcher_wrdata[43:40],
+        patram_rbuf_fetcher_wrdata[39:36],
+        patram_rbuf_fetcher_wrdata[35:32]
+    };
+    // patram_rbuf_fetcher_wrdata, but with both x and y-mirror applied
+    logic [63:0] patram_rbuf_fetcher_wrdata_mir_xy;
+    assign patram_rbuf_fetcher_wrdata_mir_xy = {
+        // 1st row mirrored (most significant 4-bit chunk becomes least significant)
+        patram_rbuf_fetcher_wrdata[3:0],
+        patram_rbuf_fetcher_wrdata[7:4],
+        patram_rbuf_fetcher_wrdata[11:8],
+        patram_rbuf_fetcher_wrdata[15:12],
+        patram_rbuf_fetcher_wrdata[19:16],
+        patram_rbuf_fetcher_wrdata[23:20],
+        patram_rbuf_fetcher_wrdata[27:24],
+        patram_rbuf_fetcher_wrdata[31:28],
+        // 2nd row mirrored
+        patram_rbuf_fetcher_wrdata[35:32],
+        patram_rbuf_fetcher_wrdata[39:36],
+        patram_rbuf_fetcher_wrdata[43:40],
+        patram_rbuf_fetcher_wrdata[47:44],
+        patram_rbuf_fetcher_wrdata[51:48],
+        patram_rbuf_fetcher_wrdata[55:52],
+        patram_rbuf_fetcher_wrdata[59:56],
+        patram_rbuf_fetcher_wrdata[63:60]
+    };
+
+    // Final write-data to patram_rbuf after any mirror transformations are applied
+    logic [63:0] patram_rbuf_fetcher_wrdata_final;
+    always_comb begin
+        case ({y_mirror_buf2, x_mirror_buf2})
+            2'b01: patram_rbuf_fetcher_wrdata_final = patram_rbuf_fetcher_wrdata_mir_x;
+            2'b10: patram_rbuf_fetcher_wrdata_final = patram_rbuf_fetcher_wrdata_mir_y;
+            2'b11: patram_rbuf_fetcher_wrdata_final = patram_rbuf_fetcher_wrdata_mir_xy;
+            default: patram_rbuf_fetcher_wrdata_final = patram_rbuf_fetcher_wrdata;
+        endcase
+    end
     
     // Permanently attached to pixel-mixer (through some special access logic for scrolling)
-    logic [9:0]  trp_addr_b;
-    // effective_pixelrow[0] toggles between the 1st and 2nd rows (32b each) we buffered
-    // pixel_addr[8:3] selects 1 out of 64 (technically 41) tile-rows (tile-slices) of pixels
-    // pixel_addr[2:0] selects 1 out of the 8 pixels
-    assign trp_addr_b = { pixel_addr[8:3], effective_pixelrow[0], pixel_addr[2:0] };
+    logic [9:0]  patram_rbuf_pmxr_rdaddr;
+    // pixelrow[0] toggles between the 1st and 2nd rows (32b each) we buffered in tilram_rbuf
+    // tile_addr selects 1 out of 64 (technically 41) tile-slices of pixels
+    // pixel_addr[2:0] selects 1 out of the 8 pixels in the chosen tile-slice
+    assign patram_rbuf_pmxr_rdaddr = { tile_addr, pixelrow[0], pixel_addr[2:0] };
 
-    logic [3:0]  trp_rddata_b;
+    logic [3:0]  patram_rbuf_pmxr_rddata;
     
-    tileng_rowdata_patram trp (
-        .address_a(trp_addr_a),
-        .address_b(trp_addr_b),
+    tileng_rowdata_patram patram_rbuf (
+        .address_a(patram_rbuf_fetcher_wraddr),
+        .address_b(patram_rbuf_pmxr_rdaddr),
         .clock(clk),
-        .data_a(trp_wrdata_a_final),
+        .data_a(patram_rbuf_fetcher_wrdata_final),
         .data_b('X),         // Read-only port for pixel-mixer
-        .wren_a(trp_wren_a),
+        .wren_a(patram_rbuf_fetcher_wren),
         .wren_b(1'b0),       // Read-only port for pixel-mixer
         .q_a(),              // Port-A is used by patram_fetcher, which only writes (leave unused)
-        .q_b(trp_rddata_b)
+        .q_b(patram_rbuf_pmxr_rddata)
     );
+
 
     // ======================
     // === patram_fetcher ===
@@ -300,22 +377,22 @@ module tile_engine #(
 
     // What tile should we copy pixel rows from?
     logic [9:0] pattern_addr_base;
-    assign pattern_addr_base = trt_rddata_b[15:6];
+    assign pattern_addr_base = tilram_fetcher_pmxr_rddata[15:6];
 
     // Vertical mirror bit. Used to determine pattern_addr_offset
     logic y_mirror;
-    assign y_mirror = trt_rddata_b[1];
+    assign y_mirror = tilram_fetcher_pmxr_rddata[1];
 
     // Given a tile's base address into pattern RAM, which 2/8 rows to copy to our local pattern buf
     logic [1:0] pattern_addr_offset;
-    assign pattern_addr_offset = (y_mirror) ? ~(effective_pixelrow[2:1]) : effective_pixelrow[2:1];
+    assign pattern_addr_offset = (y_mirror) ? ~(pixelrow[2:1]) : pixelrow[2:1];
 
     logic [11:0] rddata_abuf;
     assign rddata_abuf = {pattern_addr_base, pattern_addr_offset};
 
     indirect_sync_writer #(
         .ABUF_ADDR_WIDTH(6),
-        .ABUF_NUM_ADDR(41),
+        .ABUF_NUM_ADDR(44),
         .DATA_WIDTH(64),
         .SRC_ADDR_WIDTH(12),
         .TARG_ADDR_WIDTH(6)
@@ -324,27 +401,35 @@ module tile_engine #(
         .rst_n,
         .sync(patram_fetcher_start),
         .done(patram_fetcher_done),
-        .addr_abuf(patram_fetcher_addr_abuf), // This is connected to trt_addr_b during prep
+        .addr_abuf(patram_fetcher_addr_abuf), // This is connected to tilram_rbuf_rdaddr during prep
         .rddata_abuf,
         .addr_src(patram_addr),
         .wren_src(), // We only read from Pattern-RAM. This is already taken care of by ppu_logic
         .rddata_src(patram_rddata),
-        .addr_targ(trp_addr_a),
-        .wrdata_targ(trp_wrdata_a),
-        .wren_targ(trp_wren_a)
+        .addr_targ(patram_rbuf_fetcher_wraddr),
+        .wrdata_targ(patram_rbuf_fetcher_wrdata),
+        .wren_targ(patram_rbuf_fetcher_wren)
     );
 
-    // =============================
-    // === Output to Pixel-Mixer ===
-    // =============================
+
+    // =======================
+    // === Pixel-Mixer I/O ===
+    // =======================
+    // This read-address port into tilram_rbuf is multiplexed between the patram_fetcher and pmxr.
+    assign tilram_rbuf_rdaddr = (state == TILENG_PREP) ? patram_fetcher_addr_abuf : pmxr_pixel_addr[8:3];
+    // Notice, scrolling is not applied here since scrolling was applied when we fetched the tiles.
+    // In other words, pixel-mixer will always fetch the range (0-40), but the range (0-40) itself
+    //   already has the correctly shifted tiles. (0 may correspond to the 63rd tile, for instance)
+    // TODO, we may actually need to incorporate a pixel-scrolling offset. Test by scrolling around and watching two adjacent tiles with different palettes.
+
     // This contains valid data with 1-cycle of read latency during the IDLE state
     // The MSBs form a color palette address, the LSBs form the pixel color
-    assign pixel_data = {trt_rddata_b[5:2], trp_rddata_b};
+    assign pmxr_pixel_data = {tilram_fetcher_pmxr_rddata[5:2], patram_rbuf_pmxr_rddata};
+
 
     // ===========
     // === FSM ===
     // ===========
-
     always_ff @(posedge clk, negedge rst_n) begin
         if (!rst_n) begin
             // Reset state
@@ -354,12 +439,16 @@ module tile_engine #(
             tilram_fetcher_start <= 1'b0;
             x_mirror_buf1 <= 1'b0;
             x_mirror_buf2 <= 1'b0;
+            y_mirror_buf1 <= 1'b0;
+            y_mirror_buf2 <= 1'b0;
         end
         else begin
 
-            // implement x-mirror signal delay
+            // implement x-mirror amd y-mirror signal delay
             x_mirror_buf1 <= x_mirror;
             x_mirror_buf2 <= x_mirror_buf1;
+            y_mirror_buf1 <= y_mirror;
+            y_mirror_buf2 <= y_mirror_buf1;
 
             done <= n_done; // Delay the done signal by 1 so that we are in IDLE when it is asserted
 

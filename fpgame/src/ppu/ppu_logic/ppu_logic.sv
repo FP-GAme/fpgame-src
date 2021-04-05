@@ -14,10 +14,12 @@ module ppu_logic (
     input  logic        rowram_swap,
     input  logic [7:0]  next_row,
 
-    vram_if.usr vram_ppu_ifP_usr
+    vram_if.usr vram_ppu_ifP_usr,
+
+    input  logic [31:0] bgscroll
 );
 
-    logic [8:0] pixel_addr;
+    logic [8:0] pmxr_pixel_addr;
     logic [7:0] fg_pixel_data;
     logic [7:0] bg_pixel_data;
     logic [8:0] sp_pixel_data;
@@ -39,11 +41,11 @@ module ppu_logic (
         .tilram_rddata(vram_ppu_ifP_usr.tilram_rddata_a),
         .patram_addr(vram_ppu_ifP_usr.patram_addr_a),
         .patram_rddata(vram_ppu_ifP_usr.patram_rddata_a),
-        .scroll(32'b0),      // TODO. From MMIO Ctrl Regs.
+        .scroll(bgscroll),      // TODO. From MMIO Ctrl Regs.
         .enable(1'b1),      // TODO. From MMIO Ctrl Regs.
         .prep(rowram_swap), // Start preparing buffer when the swap occurs
-        .pixel_addr,
-        .pixel_data(bg_pixel_data),
+        .pmxr_pixel_addr,
+        .pmxr_pixel_data(bg_pixel_data),
         .done(bgte_done)
     );
     /*tile_engine fgte (
@@ -63,7 +65,7 @@ module ppu_logic (
     pixel_mixer pmxr (
         .clk,
         .rst_n,
-        .pixel_addr,
+        .pixel_addr(pmxr_pixel_addr),
         .fg_pixel_data,
         .bg_pixel_data,
         .sp_pixel_data,
@@ -74,7 +76,6 @@ module ppu_logic (
         .pmxr_rowram_wrdata,
         .pmxr_rowram_wraddr,
         .pmxr_rowram_wren
-
     );
 
     // Depending on which rowram is visible to the hardware, we must multiplex inputs and outputs.

@@ -3,7 +3,8 @@ module ioss (
     input  logic        rst_n,
     inout  logic [35:0] GPIO,
     output logic [1:0]  LED,
-    output logic [15:0] con_state
+    output logic [15:0] con_state,
+    output logic [31:0] scroll // TODO: Remove once demo is over
 );
 
     logic con_serial, con_clock, con_latch;
@@ -20,6 +21,13 @@ module ioss (
         .con_clock,
         .con_latch,
         .con_state
+    );
+
+    scrolling_demo sd ( // TODO: Remove once demo is over
+        .clk,
+        .rst_n,
+        .con_state,
+        .scroll
     );
 
 endmodule : ioss
