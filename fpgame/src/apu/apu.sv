@@ -18,8 +18,10 @@
 module apu
 (
 	input  logic        clock, reset_l, /* 50KHz clock. */
-	input  logic [31:0] control,
+	input  logic [2:0]  control,
 	input  logic        control_valid,  /* Control from MMIO. */
+	input  logic [28:0] buf_base,
+	input  logic        buf_valid,      /* New buf from MMIO. */
 	output logic        buf_irq,
 
 	input  logic [63:0] mem_data,
@@ -38,7 +40,7 @@ logic apu_en, next_apu_en;
 logic enq_base;
 logic irq_en, next_irq_en, irq_ack, irq_req, next_buf_irq;
 
-logic [22:0] queued_base, next_queued_base;
+logic [28:0] queued_base, next_queued_base;
 logic queued_base_valid, next_queued_base_valid;
 logic queued_base_ack;
 
@@ -86,8 +88,7 @@ assign i2s_sample = (apu_en) ? { sample, 8'd0 } : 16'd0;
 
 assign irq_ack = control_valid & control[0];
 assign irq_req = control_valid & control[1];
-assign enq_base = control_valid & control[2];
-assign next_apu_en = control_valid & control[3];
+assign next_apu_en = control_valid & control[2];
 
 assign next_irq_en = (irq_ack) ? 1'b0 : ((irq_req) ? 1'b1 : irq_en);
 assign next_buf_irq = (irq_ack) ? 1'b0 : (irq_en & ~queued_base_valid);
@@ -96,8 +97,8 @@ always_comb begin
 	next_queued_base = queued_base;
 	next_queued_base_valid = queued_base_valid;
 
-	if (enq_base) begin
-		next_queued_base = control[31:9];
+	if (buf_valid) begin
+		next_queued_base = buf_base;
 		next_queued_base_valid = 1'b1;
 	end else if (queued_base_ack) begin
 		next_queued_base_valid = 1'b0;

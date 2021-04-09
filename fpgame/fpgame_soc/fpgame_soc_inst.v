@@ -8,6 +8,12 @@
 		.h2f_vram_interface_export_wrdata    (<connected-to-h2f_vram_interface_export_wrdata>),    //                               .export_wrdata
 		.h2f_vram_interface_export_byteena   (<connected-to-h2f_vram_interface_export_byteena>),   //                               .export_byteena
 		.h2f_vram_interface_cpu_vram_wr_irq  (<connected-to-h2f_vram_interface_cpu_vram_wr_irq>),  // h2f_vram_interface_cpu_vram_wr.irq
+		.hps_0_f2h_sdram0_data_address       (<connected-to-hps_0_f2h_sdram0_data_address>),       //          hps_0_f2h_sdram0_data.address
+		.hps_0_f2h_sdram0_data_burstcount    (<connected-to-hps_0_f2h_sdram0_data_burstcount>),    //                               .burstcount
+		.hps_0_f2h_sdram0_data_waitrequest   (<connected-to-hps_0_f2h_sdram0_data_waitrequest>),   //                               .waitrequest
+		.hps_0_f2h_sdram0_data_readdata      (<connected-to-hps_0_f2h_sdram0_data_readdata>),      //                               .readdata
+		.hps_0_f2h_sdram0_data_readdatavalid (<connected-to-hps_0_f2h_sdram0_data_readdatavalid>), //                               .readdatavalid
+		.hps_0_f2h_sdram0_data_read          (<connected-to-hps_0_f2h_sdram0_data_read>),          //                               .read
 		.hps_io_hps_io_sdio_inst_CMD         (<connected-to-hps_io_hps_io_sdio_inst_CMD>),         //                         hps_io.hps_io_sdio_inst_CMD
 		.hps_io_hps_io_sdio_inst_D0          (<connected-to-hps_io_hps_io_sdio_inst_D0>),          //                               .hps_io_sdio_inst_D0
 		.hps_io_hps_io_sdio_inst_D1          (<connected-to-hps_io_hps_io_sdio_inst_D1>),          //                               .hps_io_sdio_inst_D1
@@ -49,11 +55,8 @@
 		.ppu_bgscroll_export                 (<connected-to-ppu_bgscroll_export>),                 //                   ppu_bgscroll.export
 		.ppu_enable_export                   (<connected-to-ppu_enable_export>),                   //                     ppu_enable.export
 		.ppu_fgscroll_export                 (<connected-to-ppu_fgscroll_export>),                 //                   ppu_fgscroll.export
-		.hps_0_f2h_sdram0_data_address       (<connected-to-hps_0_f2h_sdram0_data_address>),       //          hps_0_f2h_sdram0_data.address
-		.hps_0_f2h_sdram0_data_burstcount    (<connected-to-hps_0_f2h_sdram0_data_burstcount>),    //                               .burstcount
-		.hps_0_f2h_sdram0_data_waitrequest   (<connected-to-hps_0_f2h_sdram0_data_waitrequest>),   //                               .waitrequest
-		.hps_0_f2h_sdram0_data_readdata      (<connected-to-hps_0_f2h_sdram0_data_readdata>),      //                               .readdata
-		.hps_0_f2h_sdram0_data_readdatavalid (<connected-to-hps_0_f2h_sdram0_data_readdatavalid>), //                               .readdatavalid
-		.hps_0_f2h_sdram0_data_read          (<connected-to-hps_0_f2h_sdram0_data_read>)           //                               .read
+		.apu_buf_export_valid                (<connected-to-apu_buf_export_valid>),                //                        apu_buf.export_valid
+		.apu_buf_export_data                 (<connected-to-apu_buf_export_data>),                 //                               .export_data
+		.f2h_irq0_irq                        (<connected-to-f2h_irq0_irq>)                         //                       f2h_irq0.irq
 	);
 

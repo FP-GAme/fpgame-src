@@ -113,9 +113,10 @@ logic [15:0] con_state;
 
 /* APU to CPU interconnect */
 logic [63:0] apu_mem_data;
-logic [31:0] apu_control;
+logic [31:0] apu_control, apu_buf;
 logic [28:0] apu_mem_addr;
-logic apu_control_valid, apu_mem_read_en, apu_mem_ack;
+logic apu_control_valid, apu_buf_valid, apu_mem_read_en, apu_mem_ack,
+	apu_buf_irq;
 
 assign GPIO[10] = cpu_wr_busy; // TODO: Remove after debug
 
@@ -173,6 +174,9 @@ fpgame_soc u0 (
     .ppu_fgscroll_export                (ppu_fgscroll),
     .apu_control_export_data		(apu_control),
     .apu_control_export_valid		(apu_control_valid),
+    .apu_buf_export_data		(apu_buf),
+    .apu_buf_export_valid		(apu_buf_valid),
+    .f2h_irq0_irq			({ 31'd0, apu_buf_irq }),
     .hps_0_f2h_sdram0_data_burstcount    ('d4),
     .hps_0_f2h_sdram0_data_waitrequest   ('b0),
     .hps_0_f2h_sdram0_data_address       (apu_mem_addr),
@@ -220,8 +224,11 @@ hdmi_generator hgen (
 apu u_apu (
 	.clock(FPGA_CLK1_50),
 	.reset_l(sys_rst_n),
-	.control(apu_control),
+	.control(apu_control[2:0]),
 	.control_valid(apu_control_valid),
+	.buf_base(apu_buf[31:3]),
+	.buf_valid(apu_buf_valid),
+	.buf_irq(apu_buf_irq),
 	.mem_data(apu_mem_data),
 	.mem_ack(apu_mem_ack),
 	.mem_addr(apu_mem_addr),

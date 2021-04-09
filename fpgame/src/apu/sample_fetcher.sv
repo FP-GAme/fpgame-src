@@ -20,7 +20,7 @@ module sample_fetcher
 	output logic        chunk_valid,
 	input  logic        chunk_ack,
 
-	input  logic [22:0] base,
+	input  logic [28:0] base,
 	input  logic        base_valid,
 	output logic        base_ack
 );
@@ -52,7 +52,7 @@ always_comb begin
 	next_addr = (base_ack) ? base : addr;
 	next_addr_valid = mem_read_en & (next_chunk_addr == 'd0);
 
-	mem_addr = { addr, chunk_addr };
+	mem_addr = addr + { 23'd0, chunk_addr };
 	unique case (ram_state)
 	IDLE: begin
 		mem_read_en = (~chunk_valid);

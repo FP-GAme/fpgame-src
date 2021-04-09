@@ -9,15 +9,46 @@
    categories="System" />
  <parameter name="bonusData"><![CDATA[bonusData 
 {
-   element PIO_with_async_write_0
+   element apu_buf
+   {
+      datum _sortIndex
+      {
+         value = "10";
+         type = "int";
+      }
+      datum sopceditor_expanded
+      {
+         value = "0";
+         type = "boolean";
+      }
+   }
+   element apu_buf.avs_s0
+   {
+      datum _lockedAddress
+      {
+         value = "1";
+         type = "boolean";
+      }
+      datum baseAddress
+      {
+         value = "32";
+         type = "String";
+      }
+   }
+   element apu_control
    {
       datum _sortIndex
       {
          value = "9";
          type = "int";
       }
+      datum sopceditor_expanded
+      {
+         value = "0";
+         type = "boolean";
+      }
    }
-   element PIO_with_async_write_0.avs_s0
+   element apu_control.avs_s0
    {
       datum _lockedAddress
       {
@@ -60,7 +91,7 @@
       }
       datum baseAddress
       {
-         value = "32";
+         value = "48";
          type = "String";
       }
    }
@@ -159,7 +190,7 @@
       }
       datum baseAddress
       {
-         value = "64";
+         value = "80";
          type = "String";
       }
    }
@@ -185,7 +216,7 @@
       }
       datum baseAddress
       {
-         value = "96";
+         value = "112";
          type = "String";
       }
    }
@@ -211,7 +242,7 @@
       }
       datum baseAddress
       {
-         value = "80";
+         value = "96";
          type = "String";
       }
    }
@@ -237,7 +268,7 @@
       }
       datum baseAddress
       {
-         value = "48";
+         value = "64";
          type = "String";
       }
    }
@@ -263,8 +294,13 @@
  <parameter name="useTestBenchNamingPattern" value="false" />
  <instanceScript></instanceScript>
  <interface
+   name="apu_buf"
+   internal="apu_buf.conduit_end"
+   type="conduit"
+   dir="end" />
+ <interface
    name="apu_control"
-   internal="PIO_with_async_write_0.conduit_end"
+   internal="apu_control.conduit_end"
    type="conduit"
    dir="end" />
  <interface name="clk" internal="clk_0.clk_in" type="clock" dir="end" />
@@ -273,6 +309,11 @@
    internal="cpu_wr_busy_pio.external_connection"
    type="conduit"
    dir="end" />
+ <interface
+   name="f2h_irq0"
+   internal="hps_0.f2h_irq0"
+   type="interrupt"
+   dir="start" />
  <interface
    name="h2f_vram_interface"
    internal="h2f_vram_interface_0.external"
@@ -317,8 +358,9 @@
    internal="ppu_fgscroll_pio.external_connection"
    type="conduit"
    dir="end" />
+ <module name="apu_buf" kind="PIO_with_async_write" version="4.20" enabled="1" />
  <module
-   name="PIO_with_async_write_0"
+   name="apu_control"
    kind="PIO_with_async_write"
    version="4.20"
    enabled="1" />
@@ -980,9 +1022,18 @@
    kind="avalon"
    version="20.1"
    start="hps_0.h2f_lw_axi_master"
-   end="PIO_with_async_write_0.avs_s0">
+   end="apu_control.avs_s0">
   <parameter name="arbitrationPriority" value="1" />
   <parameter name="baseAddress" value="0x0010" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="20.1"
+   start="hps_0.h2f_lw_axi_master"
+   end="apu_buf.avs_s0">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0020" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1000,7 +1051,7 @@
    start="hps_0.h2f_lw_axi_master"
    end="cpu_wr_busy_pio.s1">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0020" />
+  <parameter name="baseAddress" value="0x0030" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1009,7 +1060,7 @@
    start="hps_0.h2f_lw_axi_master"
    end="ppu_bgscroll_pio.s1">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0060" />
+  <parameter name="baseAddress" value="0x0070" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1018,7 +1069,7 @@
    start="hps_0.h2f_lw_axi_master"
    end="ppu_enable_pio.s1">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0050" />
+  <parameter name="baseAddress" value="0x0060" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1027,7 +1078,7 @@
    start="hps_0.h2f_lw_axi_master"
    end="ppu_bgcolor_pio.s1">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0040" />
+  <parameter name="baseAddress" value="0x0050" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1036,7 +1087,7 @@
    start="hps_0.h2f_lw_axi_master"
    end="ppu_fgscroll_pio.s1">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0030" />
+  <parameter name="baseAddress" value="0x0040" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection kind="clock" version="20.1" start="clk_0.clk" end="input_pio.clk" />
@@ -1070,11 +1121,8 @@
    version="20.1"
    start="clk_0.clk"
    end="h2f_vram_interface_0.clock" />
- <connection
-   kind="clock"
-   version="20.1"
-   start="clk_0.clk"
-   end="PIO_with_async_write_0.clock" />
+ <connection kind="clock" version="20.1" start="clk_0.clk" end="apu_control.clock" />
+ <connection kind="clock" version="20.1" start="clk_0.clk" end="apu_buf.clock" />
  <connection
    kind="clock"
    version="20.1"
@@ -1129,7 +1177,12 @@
    kind="reset"
    version="20.1"
    start="clk_0.clk_reset"
-   end="PIO_with_async_write_0.reset" />
+   end="apu_control.reset" />
+ <connection
+   kind="reset"
+   version="20.1"
+   start="clk_0.clk_reset"
+   end="apu_buf.reset" />
  <connection
    kind="reset"
    version="20.1"
