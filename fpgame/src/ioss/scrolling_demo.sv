@@ -22,22 +22,22 @@ module scrolling_demo (
 
     assign scroll = {7'b0, scroll_y, 7'b0, scroll_x};
 
-    timer #(.PERIOD(6250000)) ut (
+    timer #(.PERIOD(1562500)) ut (
         .clock(clk),
         .reset(!con_state[UP]),
         .tick(v_inc_en)
     );
-    timer #(.PERIOD(6250000)) dt (
+    timer #(.PERIOD(1562500)) dt (
         .clock(clk),
         .reset(!con_state[DOWN]),
         .tick(v_dec_en)
     );
-    timer #(.PERIOD(6250000)) lt (
+    timer #(.PERIOD(1562500)) lt (
         .clock(clk),
         .reset(!con_state[LEFT]),
         .tick(h_dec_en)
     );
-    timer #(.PERIOD(6250000)) rt (
+    timer #(.PERIOD(1562500)) rt (
         .clock(clk),
         .reset(!con_state[RIGHT]),
         .tick(h_inc_en)
