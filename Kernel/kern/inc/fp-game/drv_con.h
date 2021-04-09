@@ -1,11 +1,11 @@
 /**
- * @file ioctl_con.h
+ * @file drv_con.h
  * @author Andrew Spaulding
  * @brief IOCTL macros necessary for using the controller driver.
  */
 
-#ifndef _FP_GAME_IOCTL_CON_H_
-#define _FP_GAME_IOCTL_CON_H_
+#ifndef _FP_GAME_DRV_CON_H_
+#define _FP_GAME_DRV_CON_H_
 
 #include <linux/ioctl.h>
 
@@ -24,6 +24,6 @@
 #define IOCTL_CON_GET_STATE _IO(CON_MAJOR_NUM, 0)
 
 /** @brief The device file used to access the controller driver. */
-#define CON_DEV_FILE "fp_game_controller"
+#define CON_DEV_FILE "/dev/fp_game_con"
 
-#endif /* _FP_GAME_IOCTL_CON_H_ */
+#endif /* _FP_GAME_DRV_CON_H_ */
