@@ -26,9 +26,9 @@ module apu
 
 	input  logic [63:0] mem_data,
 	input  logic        mem_ack,        /* DDR3 data is valid. */
+	input  logic        mem_wait,
 	output logic [28:0] mem_addr,
 	output logic        mem_read_en,
-	output logic        mem_wait,
 
 	input  logic        i2s_clk,
 	output logic        i2s_out,

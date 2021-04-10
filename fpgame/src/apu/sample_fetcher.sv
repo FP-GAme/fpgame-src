@@ -13,9 +13,9 @@ module sample_fetcher
 
 	input  logic [63:0] mem_data,
 	input  logic        mem_ack,
+	input  logic        mem_wait,
 	output logic [28:0] mem_addr,
 	output logic        mem_read_en,
-	output logic        mem_wait,
 
 	output logic [63:0] chunk,
 	output logic        chunk_valid,
@@ -47,7 +47,6 @@ enum { IDLE, READ_WAIT } ram_state, next_ram_state;
 
 always_comb begin
 	chunk_reset = (chunk_addr == 6'h3f);
-	mem_wait = 1'b0;
 
 	base_ack = ~addr_valid & base_valid;
 	next_addr = (base_ack) ? base : addr;
@@ -59,7 +58,7 @@ always_comb begin
 	unique case (ram_state)
 	IDLE: begin
 		mem_read_en = (~chunk_valid & addr_valid);
-		next_ram_state = (mem_read_en) ? READ_WAIT : IDLE;
+		next_ram_state = (mem_read_en & ~mem_wait) ? READ_WAIT : IDLE;
 
 		next_chunk = chunk;
 		next_chunk_valid = ~chunk_ack & chunk_valid;
