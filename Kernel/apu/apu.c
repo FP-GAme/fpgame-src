@@ -18,6 +18,12 @@
 #include <linux/fs.h>
 #include <linux/io-mapping.h>
 #include <linux/atomic.h>
+#include <linux/init.h>
+#include <linux/interrupt.h>
+#include <linux/sched.h>
+#include <linux/platform_device.h>
+#include <linux/io.h>
+#include <linux/of.h>
 #include <asm-generic/io.h>
 #include <asm/io.h>
 #include <asm/uaccess.h>
@@ -31,9 +37,6 @@
 #define APU_CONFIG_OFFSET 0x00
 #define APU_BUF_OFFSET 0x10
 //@}
-
-/** @brief The IRQ number the apu uses. */
-#define APU_IRQ_ID /* FIXME */
 
 /** @brief The name of the apu device. */
 #define APU_DEV_NAME "fp_game_apu"
@@ -64,18 +67,46 @@ static unsigned char *sample_buf[2];
 static unsigned active_buf;
 
 /* Module Functions */
-int apu_init(void);
-int apu_open(struct inode *inode, struct file *file);
-long apu_ioctl(struct file *file, unsigned ioctl_num,
-               unsigned long ioctl_param);
-ssize_t apu_write(struct file *file, const char __user *buf,
-                  size_t elt_size, loff_t len);
-int apu_release(struct inode *inode, struct file *file);
-void apu_clean(void);
+static int apu_probe(struct platform_device *pdev);
+static irqreturn_t apu_irq(int irq, void *dev_id);
+static int apu_open(struct inode *inode, struct file *file);
+static long apu_ioctl(struct file *file, unsigned ioctl_num,
+                      unsigned long ioctl_param);
+static ssize_t apu_write(struct file *file, const char __user *buf,
+                         size_t len, loff_t *offset);
+static int apu_release(struct inode *inode, struct file *file);
+static int apu_remove(struct platform_device *pdev);
 
 /* Helper Functions */
 static void mmio_write(unsigned addr, unsigned val);
 static void send_user_interrupt(pid_t pid, int code);
+
+/**
+ * @brief Interrupt table structure thing.
+ *
+ * Defines the device our kernel module is compatible with, which is used
+ * to get linux to call probe on us so we can register our interrupt handler.
+ */
+static const struct of_device_id apu_int_table[] = {
+	{.compatible = "altr,socfpga-fpgameapu"},
+	{},
+};
+
+/**
+ * @brief Platform driver structure.
+ *
+ * Sets up our kernel module as the platform driver for the APU.
+ */
+static struct platform_driver apu_platform = {
+	.driver = {
+		.name = APU_DEV_NAME,
+		.owner = THIS_MODULE,
+		.of_match_table = of_match_ptr(apu_int_table),
+	},
+	.probe = apu_probe,
+	.remove = apu_remove,
+};
+
 
 /**
  * @brief File operations structure.
@@ -83,21 +114,25 @@ static void send_user_interrupt(pid_t pid, int code);
  * This structure is used to inform the linux kernel which system calls our
  * device driver implements.
  */
-struct file_operations fops = {
+static struct file_operations fops = {
 	.open = apu_open,
 	.unlocked_ioctl = apu_ioctl,
 	.write = apu_write,
-	.release = apu_release
+	.release = apu_release,
 };
 
 /**
  * @brief Initializes the apu kernel module.
- * @return 0 on success, and a negative integer on failure.
+ * @param pdev The platform device for the apu.
+ * @return 0 on success, or a negative integer on failure.
  */
-int apu_init(void)
+static int apu_probe(struct platform_device *pdev)
 {
+	int ret;
+	int irq;
+
 	/* Register our driver with the kernel. */
-	int ret = register_chrdev(APU_MAJOR_NUM, APU_DEV_NAME, &fops);
+	ret = register_chrdev(APU_MAJOR_NUM, APU_DEV_NAME, &fops);
 
 	if (ret < 0) {
 		printk(KERN_ALERT "Initializing FP-GAme apu module failed: %d",
@@ -116,14 +151,14 @@ int apu_init(void)
 		return -1;
 	}
 
-	/* Setup interrupt handler */
-	if (request_irq(APU_IRQ_ID, apu_irq, 0, APU_DEV_NAME, apu_irq) < 0)
+	irq = platform_get_irq(pdev, 0);
+	ret = request_irq(irq, apu_irq, 0, APU_DEV_NAME, apu_irq);
+
+	if (ret < 0) {
 		printk(KERN_ALERT "FP-GAme apu failed to register irq");
-		kfree(sample_buf[0]);
-		return -1;
 	}
 
-	return 0;
+	return ret;
 }
 
 /**
@@ -136,14 +171,12 @@ int apu_init(void)
  *
  * @param irq Ignored.
  * @param dev_id Ignored.
- * @param regs Ignored.
  * @return IRQ_HANDLED, signaling the successful handling of the irq.
  */
-irqreturn_t apu_irq(int irq, void *dev_id, struct pt_regs *regs)
+static irqreturn_t apu_irq(int irq, void *dev_id)
 {
 	(void)irq;
 	(void)dev_id;
-	(void)regs;
 
 	/* Switch the active buffer */
 	active_buf = !active_buf;
@@ -152,7 +185,9 @@ irqreturn_t apu_irq(int irq, void *dev_id, struct pt_regs *regs)
 	mmio_write(APU_CONFIG_OFFSET, APU_IRQ_ACK | APU_ENABLE);
 
 	/* Signal the user process that we need more samples. */
-	if (pid) { send_user_interrupt(callback_pid, APU_MAJOR_NUM); }
+	if (callback_pid) { send_user_interrupt(callback_pid, APU_MAJOR_NUM); }
+
+	return IRQ_HANDLED;
 }
 
 /**
@@ -162,7 +197,7 @@ irqreturn_t apu_irq(int irq, void *dev_id, struct pt_regs *regs)
  *
  * @return 0 on success, -1 on error.
  */
-int apu_open(struct inode *inode, struct file *file)
+static int apu_open(struct inode *inode, struct file *file)
 {
 	/* Acquire the apu. */
 	return (atomic_xchg(&apu_lock, 1) == 0) ? 0 : -EBUSY;
@@ -178,8 +213,8 @@ int apu_open(struct inode *inode, struct file *file)
  *
  * @return 0 on success, or -1 on failure.
  */
-long apu_ioctl(struct file *file, unsigned ioctl_num,
-               unsigned long ioctl_param)
+static long apu_ioctl(struct file *file, unsigned ioctl_num,
+                      unsigned long ioctl_param)
 {
 	(void)file;
 
@@ -200,39 +235,39 @@ long apu_ioctl(struct file *file, unsigned ioctl_num,
  *
  * @param file Ignored.
  * @param buf The user supplied sample buffer.
- * @param elt_size The size of each element to write.
- * @param len The number of elements to write.
+ * @param elt_size The size of the given buffer.
+ * @param len Ignored.
  * @return 0 on success, or a negative integer on error.
  */
-ssize_t apu_write(struct file *file, const char __user *buf,
-                  size_t elt_size, loff_t len)
+static ssize_t apu_write(struct file *file, const char __user *buf,
+                         size_t len, loff_t *offset)
 {
+	static int passive_buf;
+	static atomic_t write_lock;
+	(void)offset;
+
 	/* Verify length arguments */
-	int to_copy = elt_size * len;
-	if ((elt_size >= APU_BUF_SIZE) || (len < 0)
-			|| (len > APU_BUF_SIZE) || (to_copy > APU_BUF_SIZE)) {
+	if (len > APU_BUF_SIZE) {
 		return -EINVAL;
 	}
 
 	/* Disallow concurrent writes to the sample buffer. */
-	static atomic_t write_lock = 0;
 	if (atomic_xchg(&write_lock, 1) == 1) { return -EBUSY; }
 
 	/* Ensure that the buffer is only written to once per sample request. */
-	static int passive_buf = 0;
 	if (passive_buf == active_buf) {
-		atomic_write(&write_lock, 0);
+		atomic_set(&write_lock, 0);
 		return -EBUSY;
 	}
 
 	// Copy from user memory. Clear unspecified samples.
-	if (copy_from_user(sample_buf[passive_buf], buf, to_copy) != 0) {
+	if (copy_from_user(sample_buf[passive_buf], buf, len) != 0) {
 		memset(sample_buf[passive_buf], 0, APU_BUF_SIZE);
-		atomic_write(&write_lock, 0);
+		atomic_set(&write_lock, 0);
 		return -EFAULT;
 	} else {
-		memset(&sample_buf[passive_buf][to_copy], 0,
-			APU_BUF_SIZE - to_copy);
+		memset(&sample_buf[passive_buf][len], 0,
+			APU_BUF_SIZE - len);
 	}
 
 	/* Send the new buffer and enable audio output and irqs */
@@ -242,7 +277,7 @@ ssize_t apu_write(struct file *file, const char __user *buf,
 	/* Flip passive buf to disallow new samples until the next irq. */
 	passive_buf = !passive_buf;
 
-	atomic_write(&write_lock, 0);
+	atomic_set(&write_lock, 0);
 	return 0;
 }
 
@@ -254,7 +289,7 @@ ssize_t apu_write(struct file *file, const char __user *buf,
  *
  * @return 0 on success, -1 on error.
  */
-int apu_release(struct inode *inode, struct file *file)
+static int apu_release(struct inode *inode, struct file *file)
 {
 	/* Release the apu. */
 	if (atomic_xchg(&apu_lock, 0) == 0) { return -EIO; }
@@ -267,16 +302,19 @@ int apu_release(struct inode *inode, struct file *file)
 
 /**
  * @brief Cleans up the apu kernel module.
- * @return Void.
+ * @param pdev The platform device of the apu.
+ * @return 0.
  */
-void apu_clean(void)
+static int apu_remove(struct platform_device *pdev)
 {
-	mmio_write(APU_CONFIG_OFFSET, 0);
-
 	unregister_chrdev(APU_MAJOR_NUM, APU_DEV_NAME);
 	io_mapping_free(apu_io);
-	free_irq(APU_IRQ_ID, apu_irq);
 	kfree(sample_buf[0]);
+
+	mmio_write(APU_CONFIG_OFFSET, 0);
+	free_irq(platform_get_irq(pdev, 0), NULL);
+
+	return 0;
 }
 
 /**
@@ -287,9 +325,12 @@ void apu_clean(void)
  */
 static void mmio_write(unsigned offset, unsigned val)
 {
-	void *addr = io_mapping_map_local_wc(offset, 0, sizeof(unsigned));
+	void *addr;
+
+	/* WARNING: This function disables preemption! */
+	addr = io_mapping_map_atomic_wc(apu_io, offset);
 	writel(val, addr);
-	io_mapping_unmap_local(addr);
+	io_mapping_unmap_atomic(addr);
 }
 
 /**
@@ -300,8 +341,10 @@ static void mmio_write(unsigned offset, unsigned val)
  */
 static void send_user_interrupt(pid_t pid, int code)
 {
+	struct task_struct *task;
+
 	/* Construct the siginfo to be sent */
-	struct siginfo info = {
+	struct kernel_siginfo info = {
 		.si_signo = APU_CALLBACK_SIG,
 		.si_code = SI_KERNEL,
 		.si_int = 0,
@@ -309,8 +352,7 @@ static void send_user_interrupt(pid_t pid, int code)
 
 	/* Find the task associated with our current PID */
 	rcu_read_lock();
-	struct task_struct *task = pid_task(find_pid_ns(pid, &init_pid_ns),
-					    PIDTYPE_PID);
+	task = pid_task(find_pid_ns(pid, &init_pid_ns), PIDTYPE_PID);
 	rcu_read_unlock();
 
 	/* Bad task, probably the users fault. */
@@ -325,8 +367,7 @@ static void send_user_interrupt(pid_t pid, int code)
 	}
 }
 
-module_init(apu_init);
-module_exit(apu_clean);
+module_platform_driver(apu_platform);
 
 MODULE_AUTHOR("Andrew Spaulding");
 MODULE_DESCRIPTION("THEIR SCREAMS ARE MUSIC TO MY AUDIO RECEPTORS!!!");

@@ -83,9 +83,9 @@ long con_ioctl(struct file *file, unsigned ioctl_num,
 	 * Map our address. This holds a lock, so we must unmap it after
 	 * reading the controller state.
 	 */
-	void *con_addr = io_mapping_map_local_wc(con_io, 0, sizeof(int));
+	void *con_addr = io_mapping_map_atomic_wc(con_io, 0);
 	int state = readl(con_addr);
-	io_mapping_unmap_local(con_addr);
+	io_mapping_unmap_atomic(con_addr);
 
 	return state;
 }

@@ -1,6 +1,11 @@
 *.wav
 *.mp3
 *.o
+*.ko
+*.mod
+*.cmd
+*.*.swp
+*.mod.c
 *.d
 *.a
 *.bin

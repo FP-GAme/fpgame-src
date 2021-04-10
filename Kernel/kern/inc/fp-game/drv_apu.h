@@ -8,8 +8,7 @@
 #define _FP_GAME_DRV_APU_H_
 
 #include <linux/ioctl.h>
-#include <sys/types.h>
-#include <signal.h>
+#include <linux/types.h>
 
 /**
  * @brief The major number for the apu driver.
@@ -26,7 +25,7 @@
 #define IOCTL_APU_SET_CALLBACK_PID _IOR(APU_MAJOR_NUM, 0, pid_t)
 
 /** @brief The signal which is used to launch the callback function. */
-#define APU_CALLBACK_SIG SIGRTMAX
+#define APU_CALLBACK_SIG 64 /* <-- SIGRTMAX */
 
 /** @brief The device file used to access the apu driver. */
 #define APU_DEV_FILE "/dev/fp_game_apu"
