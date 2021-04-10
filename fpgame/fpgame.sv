@@ -116,7 +116,7 @@ logic [63:0] apu_mem_data;
 logic [31:0] apu_control, apu_buf;
 logic [28:0] apu_mem_addr;
 logic apu_control_valid, apu_buf_valid, apu_mem_read_en, apu_mem_ack,
-	apu_buf_irq;
+	apu_buf_irq, apu_mem_wait;
 
 assign GPIO[10] = cpu_wr_busy; // TODO: Remove after debug
 
@@ -177,8 +177,8 @@ fpgame_soc u0 (
     .apu_buf_export_data		(apu_buf),
     .apu_buf_export_valid		(apu_buf_valid),
     .f2h_irq0_irq			({ 31'd0, apu_buf_irq }),
-    .hps_0_f2h_sdram0_data_burstcount    ('d4),
-    .hps_0_f2h_sdram0_data_waitrequest   ('b0),
+    .hps_0_f2h_sdram0_data_burstcount    ('d1),
+    .hps_0_f2h_sdram0_data_waitrequest   (apu_mem_wait),
     .hps_0_f2h_sdram0_data_address       (apu_mem_addr),
     .hps_0_f2h_sdram0_data_readdata      (apu_mem_data),
     .hps_0_f2h_sdram0_data_readdatavalid (apu_mem_ack),
@@ -233,6 +233,7 @@ apu u_apu (
 	.mem_ack(apu_mem_ack),
 	.mem_addr(apu_mem_addr),
 	.mem_read_en(apu_mem_read_en),
+	.mem_wait(apu_mem_wait),
 	.i2s_clk(HDMI_SCLK),
 	.i2s_ws(HDMI_LRCLK),
 	.i2s_out(HDMI_I2S)

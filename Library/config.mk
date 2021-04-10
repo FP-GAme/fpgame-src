@@ -5,7 +5,7 @@ TARGET = libfpgame.a
 ARCH = arm
 
 # The objects to be compiled from .c and .S source files
-COBJ = $(patsubst %.c,%.o,$(shell find . -name '*.c'))
+COBJ = $(patsubst %.c,%.o,$(shell find ./src -name '*.c'))
 ASMOBJ =
 
 # The folders to include headers from, reletive to make
@@ -17,4 +17,4 @@ OUTDIR = usr
 # The compiler to be used and its C flags.
 AR = ar
 CC = arm-none-linux-gnueabihf-gcc
-CFLAGS = -std=c99
+CFLAGS = -std=gnu99

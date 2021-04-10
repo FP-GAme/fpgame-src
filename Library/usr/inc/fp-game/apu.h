@@ -44,10 +44,13 @@
  * Fails if the APU is already owned by another process.
  * It is illegal to provide this function with an invalid callback.
  *
+ * The caller of this function must call apu_disable before program exit to
+ * prevent resource leaks.
+ *
  * @param callback The callback function to be called for more samples.
  * @return 0 on success, or -1 on error.
  */
-int apu_enable(void (*callback)(int8_t **buf, int *buf_size));
+int apu_enable(void (*callback)(const int8_t **buf, int *buf_size));
 
 /**
  * @brief Disables the APU.

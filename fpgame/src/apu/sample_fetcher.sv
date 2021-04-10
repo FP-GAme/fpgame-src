@@ -15,6 +15,7 @@ module sample_fetcher
 	input  logic        mem_ack,
 	output logic [28:0] mem_addr,
 	output logic        mem_read_en,
+	output logic        mem_wait,
 
 	output logic [63:0] chunk,
 	output logic        chunk_valid,
@@ -28,11 +29,12 @@ module sample_fetcher
 /*** Wires ***/
 
 /* Stored base address for fetching samples */
-logic [22:0] addr, next_addr;
+logic [28:0] addr, next_addr;
 logic addr_valid, next_addr_valid;
 
 /* The address of the next chunk to fetch. */
 logic [5:0] chunk_addr, next_chunk_addr;
+logic chunk_reset;
 
 /* Samples which have been read from RAM and are pending being sent to I2S */
 logic [63:0] next_chunk;
@@ -44,24 +46,32 @@ enum { IDLE, READ_WAIT } ram_state, next_ram_state;
 /*** Combonational Logic ***/
 
 always_comb begin
-	next_chunk = (mem_ack) ? mem_data : chunk;
-	next_chunk_addr = (mem_read_en) ? chunk_addr + 'd1 : chunk_addr;
-	next_chunk_valid = (mem_ack) ? 1'b1 : ((chunk_ack) ? 1'b0 : chunk_valid);
+	chunk_reset = (chunk_addr == 6'h3f);
+	mem_wait = 1'b0;
 
-	base_ack = ~next_addr_valid & base_valid;
+	base_ack = ~addr_valid & base_valid;
 	next_addr = (base_ack) ? base : addr;
-	next_addr_valid = mem_read_en & (next_chunk_addr == 'd0);
+	next_addr_valid = (base_ack)
+	                ? 1'b1
+			: ((mem_ack & chunk_reset) ? 1'b0 : addr_valid);
 
 	mem_addr = addr + { 23'd0, chunk_addr };
 	unique case (ram_state)
 	IDLE: begin
-		mem_read_en = (~chunk_valid);
-		next_ram_state = (mem_read_en & ~mem_ack) ? READ_WAIT : IDLE;
+		mem_read_en = (~chunk_valid & addr_valid);
+		next_ram_state = (mem_read_en) ? READ_WAIT : IDLE;
 
+		next_chunk = chunk;
+		next_chunk_valid = ~chunk_ack & chunk_valid;
+		next_chunk_addr = chunk_addr;
 	end
 	READ_WAIT: begin
 		mem_read_en = 'b0;
 		next_ram_state = (mem_ack) ? IDLE : READ_WAIT;
+
+		next_chunk = mem_data;
+		next_chunk_valid = mem_ack;
+		next_chunk_addr = (mem_ack) ? chunk_addr + 'd1 : chunk_addr;
 	end
 	endcase
 end

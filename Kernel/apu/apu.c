@@ -66,6 +66,9 @@ static unsigned char *sample_buf[2];
 /** @brief Indicates which buffer the user should write to. */
 static unsigned active_buf;
 
+/** @brief Indicates that the device currently wants more samples. */
+static unsigned sample_req;
+
 /* Module Functions */
 static int apu_probe(struct platform_device *pdev);
 static irqreturn_t apu_irq(int irq, void *dev_id);
@@ -180,6 +183,7 @@ static irqreturn_t apu_irq(int irq, void *dev_id)
 
 	/* Switch the active buffer */
 	active_buf = !active_buf;
+	sample_req = 1;
 
 	/* Acknowledge the interrupt, dropping the IRQ line. */
 	mmio_write(APU_CONFIG_OFFSET, APU_IRQ_ACK | APU_ENABLE);
@@ -221,6 +225,7 @@ static long apu_ioctl(struct file *file, unsigned ioctl_num,
 	if (ioctl_num != IOCTL_APU_SET_CALLBACK_PID) { return -EINVAL; }
 
 	callback_pid = ioctl_param;
+	mmio_write(APU_CONFIG_OFFSET, APU_ENABLE | APU_IRQ_REQ);
 	return 0;
 }
 
@@ -242,7 +247,6 @@ static long apu_ioctl(struct file *file, unsigned ioctl_num,
 static ssize_t apu_write(struct file *file, const char __user *buf,
                          size_t len, loff_t *offset)
 {
-	static int passive_buf;
 	static atomic_t write_lock;
 	(void)offset;
 
@@ -255,29 +259,31 @@ static ssize_t apu_write(struct file *file, const char __user *buf,
 	if (atomic_xchg(&write_lock, 1) == 1) { return -EBUSY; }
 
 	/* Ensure that the buffer is only written to once per sample request. */
-	if (passive_buf == active_buf) {
+	if (!sample_req) {
 		atomic_set(&write_lock, 0);
 		return -EBUSY;
 	}
 
 	// Copy from user memory. Clear unspecified samples.
-	if (copy_from_user(sample_buf[passive_buf], buf, len) != 0) {
-		memset(sample_buf[passive_buf], 0, APU_BUF_SIZE);
+	if (copy_from_user(sample_buf[!active_buf], buf, len) != 0) {
+		memset(sample_buf[!active_buf], 0, APU_BUF_SIZE);
 		atomic_set(&write_lock, 0);
 		return -EFAULT;
 	} else {
-		memset(&sample_buf[passive_buf][len], 0,
+		memset(&sample_buf[!active_buf][len], 0,
 			APU_BUF_SIZE - len);
 	}
 
-	/* Send the new buffer and enable audio output and irqs */
-	mmio_write(APU_BUF_OFFSET, virt_to_phys(sample_buf[passive_buf]));
-	mmio_write(APU_CONFIG_OFFSET, APU_ENABLE | APU_IRQ_REQ);
+	/* Disallow new samples until the next irq. */
+	sample_req = 0;
 
-	/* Flip passive buf to disallow new samples until the next irq. */
-	passive_buf = !passive_buf;
+	/* Send the new buffer. */
+	mmio_write(APU_BUF_OFFSET, virt_to_phys(sample_buf[!active_buf]));
 
 	atomic_set(&write_lock, 0);
+
+	/* Enable IRQs now that we've released the lock. */
+	mmio_write(APU_CONFIG_OFFSET, APU_ENABLE | APU_IRQ_REQ);
 	return 0;
 }
 

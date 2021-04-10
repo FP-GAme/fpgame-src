@@ -22,6 +22,9 @@ hps_isw_handoff/
 .qsys_edit/
 linux-socfpga/
 spl_bsp/
+ctests/con_mod/con_test
+ctests/apu_mod/apu_test
+ctests/apu_mod_polled/apu_poll
 
 # Ignore Generated Files from .mif Generators
 mif_gen/output/
