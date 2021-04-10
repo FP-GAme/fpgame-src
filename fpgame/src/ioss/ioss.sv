@@ -2,7 +2,6 @@ module ioss (
     input  logic        clk,
     input  logic        rst_n,
     inout  logic [35:0] GPIO,
-    output logic [1:0]  LED,
     output logic [15:0] con_state,
     output logic [31:0] scroll // TODO: Remove once demo is over
 );
@@ -11,8 +10,6 @@ module ioss (
     assign GPIO[8] = con_clock;
     assign GPIO[6] = con_latch;
     assign con_serial = GPIO[4];
-
-    assign LED[1:0] = {con_state[8], con_state[0]};
 
     snes_controller ctrl (
         .con_serial,

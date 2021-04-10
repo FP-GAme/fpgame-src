@@ -1,14 +1,14 @@
 
 module fpgame_soc (
+	apu_buf_export_valid,
+	apu_buf_export_data,
 	apu_control_export_valid,
 	apu_control_export_data,
 	clk_clk,
-	cpu_wr_busy_export,
-	h2f_vram_interface_export_wraddr,
-	h2f_vram_interface_export_wren,
-	h2f_vram_interface_export_wrdata,
-	h2f_vram_interface_export_byteena,
-	h2f_vram_interface_cpu_vram_wr_irq,
+	f2h_irq0_irq,
+	h2f_vram_wraddr,
+	h2f_vram_wren,
+	h2f_vram_wrdata,
 	hps_0_f2h_sdram0_data_address,
 	hps_0_f2h_sdram0_data_burstcount,
 	hps_0_f2h_sdram0_data_waitrequest,
@@ -54,21 +54,23 @@ module fpgame_soc (
 	memory_oct_rzqin,
 	ppu_bgcolor_export,
 	ppu_bgscroll_export,
+	ppu_dma_waitrequest,
+	ppu_dma_wraddr,
+	ppu_dma_wren,
+	ppu_dma_wrdata,
+	ppu_dma_finish_irq,
 	ppu_enable_export,
-	ppu_fgscroll_export,
-	apu_buf_export_valid,
-	apu_buf_export_data,
-	f2h_irq0_irq);	
+	ppu_fgscroll_export);	
 
+	output		apu_buf_export_valid;
+	output	[31:0]	apu_buf_export_data;
 	output		apu_control_export_valid;
 	output	[31:0]	apu_control_export_data;
 	input		clk_clk;
-	output		cpu_wr_busy_export;
-	output	[12:0]	h2f_vram_interface_export_wraddr;
-	output		h2f_vram_interface_export_wren;
-	output	[63:0]	h2f_vram_interface_export_wrdata;
-	output	[7:0]	h2f_vram_interface_export_byteena;
-	output		h2f_vram_interface_cpu_vram_wr_irq;
+	input	[31:0]	f2h_irq0_irq;
+	output	[11:0]	h2f_vram_wraddr;
+	output		h2f_vram_wren;
+	output	[127:0]	h2f_vram_wrdata;
 	input	[28:0]	hps_0_f2h_sdram0_data_address;
 	input	[7:0]	hps_0_f2h_sdram0_data_burstcount;
 	output		hps_0_f2h_sdram0_data_waitrequest;
@@ -114,9 +116,11 @@ module fpgame_soc (
 	input		memory_oct_rzqin;
 	output	[23:0]	ppu_bgcolor_export;
 	output	[31:0]	ppu_bgscroll_export;
+	output		ppu_dma_waitrequest;
+	input	[2:0]	ppu_dma_wraddr;
+	input		ppu_dma_wren;
+	input	[31:0]	ppu_dma_wrdata;
+	output		ppu_dma_finish_irq;
 	output	[2:0]	ppu_enable_export;
 	output	[31:0]	ppu_fgscroll_export;
-	output		apu_buf_export_valid;
-	output	[31:0]	apu_buf_export_data;
-	input	[31:0]	f2h_irq0_irq;
 endmodule

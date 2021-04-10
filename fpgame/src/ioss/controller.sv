@@ -22,18 +22,18 @@ logic [3:0] next_sample_counter, sample_counter;
 
 /* Used to poll the controller regularly. */
 logic tick60;
-timer #(`PERIOD_60HZ) (.clock, .reset, .tick(tick60));
+timer #(`PERIOD_60HZ) t0 (.clock, .reset, .tick(tick60));
 
 /* Used to create the controller protocol clock. */
 logic pos_change, neg_change, div_clk;
-clock_div #(`LEVEL_WIDTH_SNES) (.clock, .reset, .pos_change,
+clock_div #(`LEVEL_WIDTH_SNES) cdiv0 (.clock, .reset, .pos_change,
 		.neg_change, .div_clk);
 
 /* Used to hold incoming controller input. */
 logic [15:0] new_input;
 logic sample_en, finish;
-shift_reg #(16) (.clock, .reset, .ld_en(sample_en), .in(con_serial),
-		.out(new_input));
+shift_reg #(16) sreg0 (.clock, .reset, .ld_en(sample_en), .in(con_serial),
+					  .out(new_input));
 
 logic [15:0] next_con_state;
 

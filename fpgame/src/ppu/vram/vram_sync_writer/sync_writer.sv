@@ -1,3 +1,11 @@
+/* sync_writer.sv
+ * Upon receiveing the sync signal, reads from a source memory and writes to a destination memory,
+ *   effectively synchronizing the contents.
+ * Tweak the read/write data widths (which must be identical), using the DATA_WIDTH parameter.
+ * The addressable area and area copied are controlled by ADDR_WIDTH and MAX_ADDR respectively.
+ * Note, MAX_ADDR must be < 2^ADDR_WIDTH.
+ */
+
 module sync_writer #(
     parameter DATA_WIDTH = 64,
     parameter ADDR_WIDTH = 11,

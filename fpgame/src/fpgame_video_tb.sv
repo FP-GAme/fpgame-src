@@ -1,5 +1,7 @@
 `timescale 1ns/1ns
 
+/* TODO: This testbench is obsolete now that the CPU-PPU Communication is changed */
+
 module fpgame_video_tb;
     // Inputs / Controls
     logic clk, video_clk;
@@ -7,7 +9,6 @@ module fpgame_video_tb;
     logic [12:0] h2f_vram_wraddr;
     logic        h2f_vram_wren;
     logic [63:0] h2f_vram_wrdata;
-    logic [7:0]  h2f_vram_byteena;
 
     // Outputs / Interconnect
     logic [9:0]  hdmi_rowram_rddata;
@@ -17,8 +18,6 @@ module fpgame_video_tb;
     logic        rowram_swap;
     logic        vblank_start;
     logic        vblank_end_soon;
-    logic        cpu_vram_wr_irq;
-    logic        cpu_wr_busy;
 
     hdmi_video_output hvo (
         .video_clk,
@@ -50,16 +49,11 @@ module fpgame_video_tb;
         .h2f_vram_wraddr(h2f_vram_wraddr),
         .h2f_vram_wren(h2f_vram_wren),
         .h2f_vram_wrdata(h2f_vram_wrdata),
-        .h2f_vram_byteena(h2f_vram_byteena),
-        .cpu_vram_wr_irq,
-        .cpu_wr_busy
     );
 
     cpu_dummy_writer dummy_cpu (
         .clk,
         .rst_n,
-        .cpu_vram_wr_irq,
-        .cpu_wr_busy,
         .h2f_vram_wraddr,
         .h2f_vram_wren,
         .h2f_vram_wrdata,
