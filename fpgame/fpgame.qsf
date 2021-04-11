@@ -127,7 +127,7 @@ set_global_assignment -name EDA_SIMULATION_TOOL "ModelSim-Altera (SystemVerilog)
 set_global_assignment -name EDA_OUTPUT_DATA_FORMAT "SYSTEMVERILOG HDL" -section_id eda_simulation
 set_global_assignment -name EDA_TIME_SCALE "1 ps" -section_id eda_simulation
 set_global_assignment -name EDA_TEST_BENCH_ENABLE_STATUS TEST_BENCH_MODE -section_id eda_simulation
-set_global_assignment -name EDA_NATIVELINK_SIMULATION_TEST_BENCH ppu_logic_tb -section_id eda_simulation
+set_global_assignment -name EDA_NATIVELINK_SIMULATION_TEST_BENCH fetcher_tester -section_id eda_simulation
 set_global_assignment -name EDA_TEST_BENCH_NAME hdmi_video_output_tb -section_id eda_simulation
 set_global_assignment -name EDA_DESIGN_INSTANCE_NAME NA -section_id hdmi_video_output_tb
 set_global_assignment -name EDA_TEST_BENCH_MODULE_NAME hdmi_video_output_tb -section_id hdmi_video_output_tb
@@ -149,6 +149,10 @@ set_global_assignment -name EDA_TEST_BENCH_MODULE_NAME tile_engine_tb -section_i
 set_global_assignment -name EDA_TEST_BENCH_NAME ppu_logic_tb -section_id eda_simulation
 set_global_assignment -name EDA_DESIGN_INSTANCE_NAME NA -section_id ppu_logic_tb
 set_global_assignment -name EDA_TEST_BENCH_MODULE_NAME ppu_logic_tb -section_id ppu_logic_tb
+set_global_assignment -name EDA_TEST_BENCH_NAME fetcher_tester -section_id eda_simulation
+set_global_assignment -name EDA_DESIGN_INSTANCE_NAME NA -section_id fetcher_tester
+set_global_assignment -name EDA_TEST_BENCH_MODULE_NAME fetcher_tester -section_id fetcher_tester
+set_global_assignment -name SYSTEMVERILOG_FILE src/apu/fetcher_tester.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/ioss/scrolling_demo.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/common/debounce.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/common/posedge_detect.sv
@@ -231,6 +235,10 @@ set_global_assignment -name EDA_TEST_BENCH_FILE src/fpgame_video_tb.sv -section_
 set_global_assignment -name EDA_TEST_BENCH_FILE src/ppu/ppu_logic/indirect_sync_writer/indirect_sync_writer_tb.sv -section_id indirect_sync_writer_tb
 set_global_assignment -name EDA_TEST_BENCH_FILE src/ppu/ppu_logic/tile_engine/tile_engine_tb.sv -section_id tile_engine_tb
 set_global_assignment -name EDA_TEST_BENCH_FILE src/ppu/ppu_logic/ppu_logic_tb.sv -section_id ppu_logic_tb
+set_global_assignment -name EDA_TEST_BENCH_FILE src/apu/fetcher_tester.sv -section_id fetcher_tester
+set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
+set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to FPGA_CLK1_50
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to FPGA_CLK2_50
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to FPGA_CLK3_50
@@ -633,7 +641,4 @@ set_instance_assignment -name GLOBAL_SIGNAL OFF -to u0|hps_0|hps_io|border|hps_s
 set_instance_assignment -name GLOBAL_SIGNAL OFF -to u0|hps_0|hps_io|border|hps_sdram_inst|p0|umemphy|uread_datapath|reset_n_fifo_wraddress[3] -tag __hps_sdram_p0
 set_instance_assignment -name ENABLE_BENEFICIAL_SKEW_OPTIMIZATION_FOR_NON_GLOBAL_CLOCKS ON -to u0|hps_0|hps_io|border|hps_sdram_inst -tag __hps_sdram_p0
 set_instance_assignment -name PLL_COMPENSATION_MODE DIRECT -to u0|hps_0|hps_io|border|hps_sdram_inst|pll0|fbout -tag __hps_sdram_p0
-set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
-set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
-set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

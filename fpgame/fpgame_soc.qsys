@@ -9,6 +9,14 @@
    categories="System" />
  <parameter name="bonusData"><![CDATA[bonusData 
 {
+   element Avalon_Master_0
+   {
+      datum _sortIndex
+      {
+         value = "11";
+         type = "int";
+      }
+   }
    element apu_buf
    {
       datum _sortIndex
@@ -92,6 +100,14 @@
       datum baseAddress
       {
          value = "48";
+         type = "String";
+      }
+   }
+   element fpgame_soc
+   {
+      datum _originalDeviceFamily
+      {
+         value = "Cyclone V";
          type = "String";
       }
    }
@@ -303,6 +319,11 @@
    internal="apu_control.conduit_end"
    type="conduit"
    dir="end" />
+ <interface
+   name="avalon_master_0_conduit_end"
+   internal="Avalon_Master_0.conduit_end"
+   type="conduit"
+   dir="end" />
  <interface name="clk" internal="clk_0.clk_in" type="clock" dir="end" />
  <interface
    name="cpu_wr_busy"
@@ -323,11 +344,6 @@
    name="h2f_vram_interface_cpu_vram_wr"
    internal="h2f_vram_interface_0.ppu_transfer_irq"
    type="interrupt"
-   dir="end" />
- <interface
-   name="hps_0_f2h_sdram0_data"
-   internal="hps_0.f2h_sdram0_data"
-   type="avalon"
    dir="end" />
  <interface name="hps_0_h2f_gp" internal="hps_0.h2f_gp" />
  <interface name="hps_0_h2f_mpu_events" internal="hps_0.h2f_mpu_events" />
@@ -358,6 +374,7 @@
    internal="ppu_fgscroll_pio.external_connection"
    type="conduit"
    dir="end" />
+ <module name="Avalon_Master_0" kind="Avalon_Master" version="1.0" enabled="1" />
  <module name="apu_buf" kind="PIO_with_async_write" version="4.20" enabled="1" />
  <module
    name="apu_control"
@@ -1012,6 +1029,15 @@
  <connection
    kind="avalon"
    version="20.1"
+   start="Avalon_Master_0.avm_m0"
+   end="hps_0.f2h_sdram0_data">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0000" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="20.1"
    start="hps_0.h2f_axi_master"
    end="h2f_vram_interface_0.avs_s0">
   <parameter name="arbitrationPriority" value="1" />
@@ -1127,6 +1153,11 @@
    kind="clock"
    version="20.1"
    start="clk_0.clk"
+   end="Avalon_Master_0.clock" />
+ <connection
+   kind="clock"
+   version="20.1"
+   start="clk_0.clk"
    end="hps_0.f2h_sdram0_clock" />
  <connection
    kind="clock"
@@ -1183,6 +1214,11 @@
    version="20.1"
    start="clk_0.clk_reset"
    end="apu_buf.reset" />
+ <connection
+   kind="reset"
+   version="20.1"
+   start="clk_0.clk_reset"
+   end="Avalon_Master_0.reset" />
  <connection
    kind="reset"
    version="20.1"

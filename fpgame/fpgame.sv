@@ -177,12 +177,11 @@ fpgame_soc u0 (
     .apu_buf_export_data		(apu_buf),
     .apu_buf_export_valid		(apu_buf_valid),
     .f2h_irq0_irq			({ 31'd0, apu_buf_irq }),
-    .hps_0_f2h_sdram0_data_burstcount    ('d1),
-    .hps_0_f2h_sdram0_data_waitrequest   (apu_mem_wait),
-    .hps_0_f2h_sdram0_data_address       (apu_mem_addr),
-    .hps_0_f2h_sdram0_data_readdata      (apu_mem_data),
-    .hps_0_f2h_sdram0_data_readdatavalid (apu_mem_ack),
-    .hps_0_f2h_sdram0_data_read          (apu_mem_read_en)
+    .avalon_master_0_conduit_end_avm_waitrequest   (apu_mem_wait),
+    .avalon_master_0_conduit_end_avm_addr       ({apu_mem_addr, 3'd0}),
+    .avalon_master_0_conduit_end_avm_readdata      (apu_mem_data),
+    .avalon_master_0_conduit_end_avm_readdatavalid (apu_mem_ack),
+    .avalon_master_0_conduit_end_avm_read          (apu_mem_read_en)
 );
 
 i2s_pll ipll (
@@ -234,6 +233,7 @@ apu u_apu (
 	.mem_addr(apu_mem_addr),
 	.mem_read_en(apu_mem_read_en),
 	.mem_wait(apu_mem_wait),
+	.chunk_addr(LED[5:0]),
 	.i2s_clk(HDMI_SCLK),
 	.i2s_ws(HDMI_LRCLK),
 	.i2s_out(HDMI_I2S)
@@ -263,7 +263,7 @@ ioss u_ioss (
     .clk(FPGA_CLK1_50),
     .rst_n(sys_rst_n),
     .GPIO,
-    .LED(LED[7:6]),
+    .LED(),
     .con_state(),
     .scroll(ppu_bgscroll) // TODO: Remove after demo
 );

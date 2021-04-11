@@ -19,6 +19,7 @@ module sample_fetcher
 
 	output logic [63:0] chunk,
 	output logic        chunk_valid,
+	output logic [5:0]  chunk_addr,
 	input  logic        chunk_ack,
 
 	input  logic [28:0] base,
@@ -33,7 +34,7 @@ logic [28:0] addr, next_addr;
 logic addr_valid, next_addr_valid;
 
 /* The address of the next chunk to fetch. */
-logic [5:0] chunk_addr, next_chunk_addr;
+logic [5:0] next_chunk_addr;
 logic chunk_reset;
 
 /* Samples which have been read from RAM and are pending being sent to I2S */

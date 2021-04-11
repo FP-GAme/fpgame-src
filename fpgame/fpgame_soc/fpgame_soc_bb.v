@@ -1,20 +1,17 @@
 
 module fpgame_soc (
+	apu_buf_export_valid,
+	apu_buf_export_data,
 	apu_control_export_valid,
 	apu_control_export_data,
 	clk_clk,
 	cpu_wr_busy_export,
+	f2h_irq0_irq,
 	h2f_vram_interface_export_wraddr,
 	h2f_vram_interface_export_wren,
 	h2f_vram_interface_export_wrdata,
 	h2f_vram_interface_export_byteena,
 	h2f_vram_interface_cpu_vram_wr_irq,
-	hps_0_f2h_sdram0_data_address,
-	hps_0_f2h_sdram0_data_burstcount,
-	hps_0_f2h_sdram0_data_waitrequest,
-	hps_0_f2h_sdram0_data_readdata,
-	hps_0_f2h_sdram0_data_readdatavalid,
-	hps_0_f2h_sdram0_data_read,
 	hps_io_hps_io_sdio_inst_CMD,
 	hps_io_hps_io_sdio_inst_D0,
 	hps_io_hps_io_sdio_inst_D1,
@@ -56,25 +53,24 @@ module fpgame_soc (
 	ppu_bgscroll_export,
 	ppu_enable_export,
 	ppu_fgscroll_export,
-	apu_buf_export_valid,
-	apu_buf_export_data,
-	f2h_irq0_irq);	
+	avalon_master_0_conduit_end_avm_addr,
+	avalon_master_0_conduit_end_avm_read,
+	avalon_master_0_conduit_end_avm_readdata,
+	avalon_master_0_conduit_end_avm_readdatavalid,
+	avalon_master_0_conduit_end_avm_waitrequest);	
 
+	output		apu_buf_export_valid;
+	output	[31:0]	apu_buf_export_data;
 	output		apu_control_export_valid;
 	output	[31:0]	apu_control_export_data;
 	input		clk_clk;
 	output		cpu_wr_busy_export;
+	input	[31:0]	f2h_irq0_irq;
 	output	[12:0]	h2f_vram_interface_export_wraddr;
 	output		h2f_vram_interface_export_wren;
 	output	[63:0]	h2f_vram_interface_export_wrdata;
 	output	[7:0]	h2f_vram_interface_export_byteena;
 	output		h2f_vram_interface_cpu_vram_wr_irq;
-	input	[28:0]	hps_0_f2h_sdram0_data_address;
-	input	[7:0]	hps_0_f2h_sdram0_data_burstcount;
-	output		hps_0_f2h_sdram0_data_waitrequest;
-	output	[63:0]	hps_0_f2h_sdram0_data_readdata;
-	output		hps_0_f2h_sdram0_data_readdatavalid;
-	input		hps_0_f2h_sdram0_data_read;
 	inout		hps_io_hps_io_sdio_inst_CMD;
 	inout		hps_io_hps_io_sdio_inst_D0;
 	inout		hps_io_hps_io_sdio_inst_D1;
@@ -116,7 +112,9 @@ module fpgame_soc (
 	output	[31:0]	ppu_bgscroll_export;
 	output	[2:0]	ppu_enable_export;
 	output	[31:0]	ppu_fgscroll_export;
-	output		apu_buf_export_valid;
-	output	[31:0]	apu_buf_export_data;
-	input	[31:0]	f2h_irq0_irq;
+	input	[28:0]	avalon_master_0_conduit_end_avm_addr;
+	input		avalon_master_0_conduit_end_avm_read;
+	output	[63:0]	avalon_master_0_conduit_end_avm_readdata;
+	output		avalon_master_0_conduit_end_avm_readdatavalid;
+	output		avalon_master_0_conduit_end_avm_waitrequest;
 endmodule
