@@ -155,8 +155,8 @@ static int apu_probe(struct platform_device *pdev)
 
 	/* Allocate sample buffers */
 	apu_dev = &(pdev->dev);
-	sample_buf[0] = dma_alloc_attrs(apu_dev, APU_BUF_SIZE << 1, &apu_dma,
-	                                GFP_KERNEL, DMA_ATTR_NON_CONSISTENT);
+	sample_buf[0] = dma_alloc_coherent(apu_dev, APU_BUF_SIZE << 1, &apu_dma,
+	                                GFP_KERNEL);
 	sample_buf[1] = &(sample_buf[0][APU_BUF_SIZE]);
 	if (sample_buf[0] == NULL) {
 		printk(KERN_ALERT "FP-GAme apu failed to alloc sample buffers");
@@ -257,8 +257,6 @@ static ssize_t apu_write(struct file *file, const char __user *buf,
                          size_t len, loff_t *offset)
 {
 	static atomic_t write_lock;
-	size_t cache_size;
-	size_t flush_size;
 	(void)offset;
 
 	/* Verify length arguments */
@@ -285,16 +283,14 @@ static ssize_t apu_write(struct file *file, const char __user *buf,
 			APU_BUF_SIZE - len);
 	}
 
-	/* Flush the cache region holding our samples */
-	cache_size = dma_get_cache_alignment();
-	flush_size = ((APU_BUF_SIZE / cache_size) + 1) * cache_size;
-	dma_cache_sync(apu_dev, sample_buf[0], flush_size, DMA_TO_DEVICE);
+	/* Ensure our changes are seen */
+	wmb();
 
 	/* Disallow new samples until the next irq. */
 	//sample_req = 0;
 
 	/* Send the new buffer. */
-	mmio_write(APU_BUF_OFFSET, virt_to_phys(sample_buf[!active_buf]));
+	mmio_write(APU_BUF_OFFSET, apu_dma + ((!active_buf) ? APU_BUF_SIZE : 0));
 	active_buf = !active_buf;
 
 	atomic_set(&write_lock, 0);
@@ -332,8 +328,7 @@ static int apu_remove(struct platform_device *pdev)
 {
 	unregister_chrdev(APU_MAJOR_NUM, APU_DEV_NAME);
 	io_mapping_free(apu_io);
-	dma_free_attrs(apu_dev, APU_BUF_SIZE << 1, sample_buf[0],
-	               apu_dma, DMA_ATTR_NON_CONSISTENT);
+	dma_free_coherent(apu_dev, APU_BUF_SIZE << 1, sample_buf[0], apu_dma);
 
 	mmio_write(APU_CONFIG_OFFSET, 0);
 	free_irq(platform_get_irq(pdev, 0), NULL);
