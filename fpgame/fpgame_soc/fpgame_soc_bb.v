@@ -10,13 +10,13 @@ module fpgame_soc (
 	avalon_master_0_conduit_end_avm_readdatavalid,
 	avalon_master_0_conduit_end_avm_waitrequest,
 	clk_clk,
-	cpu_wr_busy_export,
+	dma_engine_src_addr,
+	dma_engine_start,
+	dma_engine_finish,
 	f2h_irq0_irq,
-	h2f_vram_interface_export_wraddr,
-	h2f_vram_interface_export_wren,
-	h2f_vram_interface_export_wrdata,
-	h2f_vram_interface_export_byteena,
-	h2f_vram_interface_cpu_vram_wr_irq,
+	h2f_vram_wraddr,
+	h2f_vram_wren,
+	h2f_vram_wrdata,
 	hps_io_hps_io_sdio_inst_CMD,
 	hps_io_hps_io_sdio_inst_D0,
 	hps_io_hps_io_sdio_inst_D1,
@@ -57,7 +57,10 @@ module fpgame_soc (
 	ppu_bgcolor_export,
 	ppu_bgscroll_export,
 	ppu_enable_export,
-	ppu_fgscroll_export);	
+	ppu_fgscroll_export,
+	vramsrcaddrpio_rddata,
+	vramsrcaddrpio_update_avail,
+	vramsrcaddrpio_read_rst);	
 
 	output		apu_buf_export_valid;
 	output	[31:0]	apu_buf_export_data;
@@ -69,13 +72,13 @@ module fpgame_soc (
 	output		avalon_master_0_conduit_end_avm_readdatavalid;
 	output		avalon_master_0_conduit_end_avm_waitrequest;
 	input		clk_clk;
-	output		cpu_wr_busy_export;
+	input	[31:0]	dma_engine_src_addr;
+	input		dma_engine_start;
+	output		dma_engine_finish;
 	input	[31:0]	f2h_irq0_irq;
-	output	[12:0]	h2f_vram_interface_export_wraddr;
-	output		h2f_vram_interface_export_wren;
-	output	[63:0]	h2f_vram_interface_export_wrdata;
-	output	[7:0]	h2f_vram_interface_export_byteena;
-	output		h2f_vram_interface_cpu_vram_wr_irq;
+	output	[11:0]	h2f_vram_wraddr;
+	output		h2f_vram_wren;
+	output	[127:0]	h2f_vram_wrdata;
 	inout		hps_io_hps_io_sdio_inst_CMD;
 	inout		hps_io_hps_io_sdio_inst_D0;
 	inout		hps_io_hps_io_sdio_inst_D1;
@@ -117,4 +120,7 @@ module fpgame_soc (
 	output	[31:0]	ppu_bgscroll_export;
 	output	[2:0]	ppu_enable_export;
 	output	[31:0]	ppu_fgscroll_export;
+	output	[31:0]	vramsrcaddrpio_rddata;
+	output		vramsrcaddrpio_update_avail;
+	input		vramsrcaddrpio_read_rst;
 endmodule

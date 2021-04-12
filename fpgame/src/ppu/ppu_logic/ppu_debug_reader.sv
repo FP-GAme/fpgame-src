@@ -16,7 +16,7 @@ module ppu_debug_reader (
     output logic [5:0] LED,
     output logic [63:0] palram_rddata,
     input  logic [8:0]  palram_rdaddr,
-    vram_if.usr vram_ppu_ifP_usr
+    vram_if_ppu_facing.usr vram_ppu_ifP_usr
 );
     // TODO: Remove these. These don't belong here, but in PPU-Logic
     assign palram_rddata = vram_ppu_ifP_usr.palram_rddata_a;

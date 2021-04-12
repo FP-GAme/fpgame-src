@@ -16,9 +16,9 @@ module ppu_logic_tb;
     assign hdmi_rowram_rdaddr = 9'b0;
     assign hdmi_palram_rdaddr = 9'b0;
 
-    vram_if vram_ppu_ifP(); // VRAM interface used by ppu_logic
+    vram_if_ppu_facing vram_ppu_ifP(); // VRAM interface used by ppu_logic
 
-    vram_sub vr (
+    vram_ppu_facing vr (
         .clk,
         .i_src(vram_ppu_ifP.src) // PPU-Logic-Facing VRAM
     );

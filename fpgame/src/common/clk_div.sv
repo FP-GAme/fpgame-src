@@ -16,7 +16,7 @@ module clock_div
 
 logic next_level, tick, level;
 
-timer #(LEVEL_WIDTH) (.clock, .reset, .tick);
+timer #(LEVEL_WIDTH) t0 (.clock, .reset, .tick);
 
 assign next_level = (tick) ? ~level : level;
 assign neg_change = tick & level;

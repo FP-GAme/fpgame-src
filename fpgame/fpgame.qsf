@@ -149,96 +149,6 @@ set_global_assignment -name EDA_TEST_BENCH_MODULE_NAME tile_engine_tb -section_i
 set_global_assignment -name EDA_TEST_BENCH_NAME ppu_logic_tb -section_id eda_simulation
 set_global_assignment -name EDA_DESIGN_INSTANCE_NAME NA -section_id ppu_logic_tb
 set_global_assignment -name EDA_TEST_BENCH_MODULE_NAME ppu_logic_tb -section_id ppu_logic_tb
-set_global_assignment -name EDA_TEST_BENCH_NAME fetcher_tester -section_id eda_simulation
-set_global_assignment -name EDA_DESIGN_INSTANCE_NAME NA -section_id fetcher_tester
-set_global_assignment -name EDA_TEST_BENCH_MODULE_NAME fetcher_tester -section_id fetcher_tester
-set_global_assignment -name SYSTEMVERILOG_FILE src/apu/fetcher_tester.sv
-set_global_assignment -name SYSTEMVERILOG_FILE src/ioss/scrolling_demo.sv
-set_global_assignment -name SYSTEMVERILOG_FILE src/common/debounce.sv
-set_global_assignment -name SYSTEMVERILOG_FILE src/common/posedge_detect.sv
-set_global_assignment -name SYSTEMVERILOG_FILE src/apu/sin_table.sv
-set_global_assignment -name SYSTEMVERILOG_FILE src/apu/sample_fetcher.sv
-set_global_assignment -name SYSTEMVERILOG_FILE src/apu/i2s_comm.sv
-set_global_assignment -name SYSTEMVERILOG_FILE src/apu/chunk_player.sv
-set_global_assignment -name SYSTEMVERILOG_FILE src/apu/apu.sv
-set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/ppu_logic/ppu_logic_tb.sv
-set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/ppu_logic/pixel_mixer/pixel_mixer.sv
-set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/ppu_logic/tile_engine/tile_engine_tb.sv
-set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/ppu_logic/tile_engine/tile_engine.sv
-set_global_assignment -name SYSTEMVERILOG_FILE src/common/up_counter.sv
-set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/ppu_logic/indirect_sync_writer/indirect_sync_writer.sv
-set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/ppu_logic/indirect_sync_writer/indirect_sync_writer_tb.sv
-set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/row_ram/row_ram_swap.sv
-set_global_assignment -name SYSTEMVERILOG_FILE src/common/clk_div.sv
-set_global_assignment -name SYSTEMVERILOG_FILE src/common/shift_reg.sv
-set_global_assignment -name SYSTEMVERILOG_FILE src/common/timer.sv
-set_global_assignment -name SYSTEMVERILOG_FILE src/ioss/controller.sv
-set_global_assignment -name SYSTEMVERILOG_FILE src/ioss/ioss.sv
-set_global_assignment -name SYSTEMVERILOG_FILE fpgame.sv
-set_global_assignment -name SYSTEMVERILOG_FILE src/fpgame_video_tb.sv
-set_global_assignment -name QIP_FILE fpgame_soc/synthesis/fpgame_soc.qip
-set_global_assignment -name HEX_FILE palram_test.hex
-set_global_assignment -name HEX_FILE patram_test.hex
-set_global_assignment -name HEX_FILE rowram_test.hex
-set_global_assignment -name HEX_FILE single_palette_test.hex
-set_global_assignment -name HEX_FILE sprram_test.hex
-set_global_assignment -name HEX_FILE tilram_test.hex
-set_global_assignment -name QIP_FILE src/ppu/vram/palette_ram/palette_ram.qip
-set_global_assignment -name QIP_FILE src/ppu/vram/palette_ram/palette_ram_tester.qip
-set_global_assignment -name QIP_FILE src/ppu/vram/pattern_ram/pattern_ram_tester.qip
-set_global_assignment -name QIP_FILE src/ppu/vram/pattern_ram/pattern_ram.qip
-set_global_assignment -name QIP_FILE src/ppu/vram/sprite_ram/sprite_ram_tester.qip
-set_global_assignment -name QIP_FILE src/ppu/vram/sprite_ram/sprite_ram.qip
-set_global_assignment -name QIP_FILE src/ppu/vram/tile_ram/tile_ram.qip
-set_global_assignment -name QIP_FILE src/ppu/vram/tile_ram/tile_ram_tester.qip
-set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/vram/vram_sub/vram_sub.sv
-set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/vram/vram_sub/vram_sub_test.sv
-set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/vram/vram_sync_writer/sync_writer.sv
-set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/vram/vram_sync_writer/sync_writer_tb.sv
-set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/vram/vram_sync_writer/vram_sync_writer.sv
-set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/vram/vram_sync_writer/vram_sync_writer_tb.sv
-set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/vram/vram.sv
-set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/vram/vram_if.sv
-set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/vram/vram_test.sv
-set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/h2f_vram_interface.sv
-set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/ppu.sv
-set_global_assignment -name SYSTEMVERILOG_FILE src/hdmi_generator/hdmi_video_output/hdmi_video_output_tb.sv
-set_global_assignment -name SYSTEMVERILOG_FILE src/hdmi_generator/hdmi_video_output/hdmi_video_output.sv
-set_global_assignment -name SYSTEMVERILOG_FILE src/hdmi_generator/hdmi_generator.sv
-set_global_assignment -name VERILOG_FILE src/hdmi_generator/hdmi_audio_output/AUDIO_IF.v
-set_global_assignment -name VERILOG_FILE src/hdmi_generator/hdmi_config/i2c/I2C_WRITE_WDATA.v
-set_global_assignment -name VERILOG_FILE src/hdmi_generator/hdmi_config/i2c/I2C_Controller.v
-set_global_assignment -name VERILOG_FILE src/hdmi_generator/hdmi_config/I2C_HDMI_Config.v
-set_global_assignment -name QSYS_FILE fpgame_soc.qsys
-set_global_assignment -name SDC_FILE fpgame.sdc
-set_global_assignment -name QIP_FILE src/ppu/row_ram/row_ram.qip
-set_global_assignment -name QIP_FILE src/hdmi_generator/hdmi_audio_output/i2s_pll.qip
-set_global_assignment -name SIP_FILE src/hdmi_generator/hdmi_audio_output/i2s_pll.sip
-set_global_assignment -name QIP_FILE src/hdmi_generator/hdmi_video_output/vga_pll.qip
-set_global_assignment -name SIP_FILE src/hdmi_generator/hdmi_video_output/vga_pll.sip
-set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/vram_interconnect.sv
-set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/ppu_logic/ppu_logic.sv
-set_global_assignment -name QIP_FILE src/ppu/ppu_logic/tile_engine/tileng_rowdata_tilram/tileng_rowdata_tilram.qip
-set_global_assignment -name QIP_FILE src/ppu/ppu_logic/tile_engine/tileng_rowdata_patram/tileng_rowdata_patram.qip
-set_global_assignment -name HEX_FILE isw_tb_tileng_rowdata_tilram.hex
-set_global_assignment -name QIP_FILE src/ppu/ppu_logic/indirect_sync_writer/indirect_sync_writer_tb_ram/isw_tb_tileng_rowdata_tilram.qip
-set_global_assignment -name HEX_FILE isw_tb_pattern_ram.hex
-set_global_assignment -name QIP_FILE src/ppu/ppu_logic/indirect_sync_writer/indirect_sync_writer_tb_ram/isw_tb_pattern_ram.qip
-set_global_assignment -name HEX_FILE patram_campus_demo.hex
-set_global_assignment -name HEX_FILE palram_campus_demo.hex
-set_global_assignment -name HEX_FILE tilram_campus_demo.hex
-set_global_assignment -name SOURCE_FILE db/fpgame.cmp.rdb
-set_global_assignment -name EDA_TEST_BENCH_FILE src/hdmi_generator/hdmi_video_output/hdmi_video_output_tb.sv -section_id hdmi_video_output_tb
-set_global_assignment -name EDA_TEST_BENCH_FILE src/ppu/vram/vram_sync_writer/vram_sync_writer_tb.sv -section_id vram_sync_writer_tb
-set_global_assignment -name EDA_TEST_BENCH_FILE src/ppu/vram/vram_sync_writer/sync_writer_tb.sv -section_id sync_writer_tb
-set_global_assignment -name EDA_TEST_BENCH_FILE src/fpgame_video_tb.sv -section_id fpgame_video_tb
-set_global_assignment -name EDA_TEST_BENCH_FILE src/ppu/ppu_logic/indirect_sync_writer/indirect_sync_writer_tb.sv -section_id indirect_sync_writer_tb
-set_global_assignment -name EDA_TEST_BENCH_FILE src/ppu/ppu_logic/tile_engine/tile_engine_tb.sv -section_id tile_engine_tb
-set_global_assignment -name EDA_TEST_BENCH_FILE src/ppu/ppu_logic/ppu_logic_tb.sv -section_id ppu_logic_tb
-set_global_assignment -name EDA_TEST_BENCH_FILE src/apu/fetcher_tester.sv -section_id fetcher_tester
-set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
-set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
-set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to FPGA_CLK1_50
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to FPGA_CLK2_50
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to FPGA_CLK3_50
@@ -641,4 +551,84 @@ set_instance_assignment -name GLOBAL_SIGNAL OFF -to u0|hps_0|hps_io|border|hps_s
 set_instance_assignment -name GLOBAL_SIGNAL OFF -to u0|hps_0|hps_io|border|hps_sdram_inst|p0|umemphy|uread_datapath|reset_n_fifo_wraddress[3] -tag __hps_sdram_p0
 set_instance_assignment -name ENABLE_BENEFICIAL_SKEW_OPTIMIZATION_FOR_NON_GLOBAL_CLOCKS ON -to u0|hps_0|hps_io|border|hps_sdram_inst -tag __hps_sdram_p0
 set_instance_assignment -name PLL_COMPENSATION_MODE DIRECT -to u0|hps_0|hps_io|border|hps_sdram_inst|pll0|fbout -tag __hps_sdram_p0
+set_global_assignment -name EDA_TEST_BENCH_FILE src/hdmi_generator/hdmi_video_output/hdmi_video_output_tb.sv -section_id hdmi_video_output_tb
+set_global_assignment -name EDA_TEST_BENCH_FILE src/ppu/vram/vram_sync_writer/vram_sync_writer_tb.sv -section_id vram_sync_writer_tb
+set_global_assignment -name EDA_TEST_BENCH_FILE src/ppu/vram/vram_sync_writer/sync_writer_tb.sv -section_id sync_writer_tb
+set_global_assignment -name EDA_TEST_BENCH_FILE src/fpgame_video_tb.sv -section_id fpgame_video_tb
+set_global_assignment -name EDA_TEST_BENCH_FILE src/ppu/ppu_logic/indirect_sync_writer/indirect_sync_writer_tb.sv -section_id indirect_sync_writer_tb
+set_global_assignment -name EDA_TEST_BENCH_FILE src/ppu/ppu_logic/tile_engine/tile_engine_tb.sv -section_id tile_engine_tb
+set_global_assignment -name EDA_TEST_BENCH_FILE src/ppu/ppu_logic/ppu_logic_tb.sv -section_id ppu_logic_tb
+set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
+set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/vram/vram_sub/vram_ppu_facing.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/vram/vram_sub/vram_cpu_facing.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/vram/vram_if_ppu_facing.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/vram/vram_if_cpu_facing.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/ioss/scrolling_demo.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/common/debounce.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/common/posedge_detect.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/apu/sin_table.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/apu/sample_fetcher.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/apu/i2s_comm.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/apu/chunk_player.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/apu/apu.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/ppu_logic/ppu_logic_tb.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/ppu_logic/pixel_mixer/pixel_mixer.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/ppu_logic/tile_engine/tile_engine_tb.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/ppu_logic/tile_engine/tile_engine.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/common/up_counter.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/ppu_logic/indirect_sync_writer/indirect_sync_writer.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/ppu_logic/indirect_sync_writer/indirect_sync_writer_tb.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/row_ram/row_ram_swap.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/common/clk_div.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/common/shift_reg.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/common/timer.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/ioss/controller.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/ioss/ioss.sv
+set_global_assignment -name SYSTEMVERILOG_FILE fpgame.sv
+set_global_assignment -name HEX_FILE palram_test.hex
+set_global_assignment -name HEX_FILE patram_test.hex
+set_global_assignment -name HEX_FILE rowram_test.hex
+set_global_assignment -name HEX_FILE single_palette_test.hex
+set_global_assignment -name HEX_FILE sprram_test.hex
+set_global_assignment -name HEX_FILE tilram_test.hex
+set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/vram/vram_sync_writer/sync_writer.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/vram/vram_sync_writer/sync_writer_tb.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/vram/vram_sync_writer/vram_sync_writer.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/vram/vram.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/h2f_vram_interface.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/ppu.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/hdmi_generator/hdmi_video_output/hdmi_video_output_tb.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/hdmi_generator/hdmi_video_output/hdmi_video_output.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/hdmi_generator/hdmi_generator.sv
+set_global_assignment -name VERILOG_FILE src/hdmi_generator/hdmi_config/i2c/I2C_WRITE_WDATA.v
+set_global_assignment -name VERILOG_FILE src/hdmi_generator/hdmi_config/i2c/I2C_Controller.v
+set_global_assignment -name VERILOG_FILE src/hdmi_generator/hdmi_config/I2C_HDMI_Config.v
+set_global_assignment -name QSYS_FILE fpgame_soc.qsys
+set_global_assignment -name SDC_FILE fpgame.sdc
+set_global_assignment -name QIP_FILE src/ppu/row_ram/row_ram.qip
+set_global_assignment -name QIP_FILE src/hdmi_generator/hdmi_audio_output/i2s_pll.qip
+set_global_assignment -name SIP_FILE src/hdmi_generator/hdmi_audio_output/i2s_pll.sip
+set_global_assignment -name QIP_FILE src/hdmi_generator/hdmi_video_output/vga_pll.qip
+set_global_assignment -name SIP_FILE src/hdmi_generator/hdmi_video_output/vga_pll.sip
+set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/vram_interconnect.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/ppu_logic/ppu_logic.sv
+set_global_assignment -name QIP_FILE src/ppu/ppu_logic/tile_engine/tileng_rowdata_tilram/tileng_rowdata_tilram.qip
+set_global_assignment -name QIP_FILE src/ppu/ppu_logic/tile_engine/tileng_rowdata_patram/tileng_rowdata_patram.qip
+set_global_assignment -name HEX_FILE isw_tb_tileng_rowdata_tilram.hex
+set_global_assignment -name QIP_FILE src/ppu/ppu_logic/indirect_sync_writer/indirect_sync_writer_tb_ram/isw_tb_tileng_rowdata_tilram.qip
+set_global_assignment -name HEX_FILE isw_tb_pattern_ram.hex
+set_global_assignment -name QIP_FILE src/ppu/ppu_logic/indirect_sync_writer/indirect_sync_writer_tb_ram/isw_tb_pattern_ram.qip
+set_global_assignment -name HEX_FILE patram_campus_demo.hex
+set_global_assignment -name HEX_FILE palram_campus_demo.hex
+set_global_assignment -name HEX_FILE tilram_campus_demo.hex
+set_global_assignment -name QIP_FILE src/ppu/vram/palette_ram/palette_ram_ppu_facing.qip
+set_global_assignment -name QIP_FILE src/ppu/vram/palette_ram/palette_ram_cpu_facing.qip
+set_global_assignment -name QIP_FILE src/ppu/vram/pattern_ram/pattern_ram_ppu_facing.qip
+set_global_assignment -name QIP_FILE src/ppu/vram/pattern_ram/pattern_ram_cpu_facing.qip
+set_global_assignment -name QIP_FILE src/ppu/vram/sprite_ram/sprite_ram_ppu_facing.qip
+set_global_assignment -name QIP_FILE src/ppu/vram/sprite_ram/sprite_ram_cpu_facing.qip
+set_global_assignment -name QIP_FILE src/ppu/vram/tile_ram/tile_ram_ppu_facing.qip
+set_global_assignment -name QIP_FILE src/ppu/vram/tile_ram/tile_ram_cpu_facing.qip
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

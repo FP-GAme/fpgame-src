@@ -14,7 +14,7 @@ module ppu_logic (
     input  logic        rowram_swap,
     input  logic [7:0]  next_row,
 
-    vram_if.usr vram_ppu_ifP_usr,
+    vram_if_ppu_facing.usr vram_ppu_ifP_usr,
 
     input  logic [31:0] bgscroll
 );
@@ -117,6 +117,5 @@ module ppu_logic (
     assign vram_ppu_ifP_usr.palram_wren_b    = 1'b0;
     assign vram_ppu_ifP_usr.palram_wrdata_a  = 'X;
     assign vram_ppu_ifP_usr.palram_wrdata_b  = 'X;
-    assign vram_ppu_ifP_usr.palram_byteena_b = 'X;
 
 endmodule : ppu_logic

@@ -4,7 +4,7 @@
 // MODULE: altsyncram 
 
 // ============================================================
-// File Name: sprite_ram_tester.v
+// File Name: sprite_ram_ppu_facing.v
 // Megafunction Name(s):
 // 			altsyncram
 //
@@ -32,10 +32,9 @@
 //refer to the applicable agreement for further details, at
 //https://fpgasoftware.intel.com/eula.
 
-module sprite_ram_tester (
+module sprite_ram_ppu_facing (
 	address_a,
 	address_b,
-	byteena_b,
 	clock,
 	data_a,
 	data_b,
@@ -46,7 +45,6 @@ module sprite_ram_tester (
 
 	input	[5:0]  address_a;
 	input	[5:0]  address_b;
-	input	[7:0]  byteena_b;
 	input	  clock;
 	input	[63:0]  data_a;
 	input	[63:0]  data_b;
@@ -57,7 +55,6 @@ module sprite_ram_tester (
 `ifndef ALTERA_RESERVED_QIS
 // synopsys translate_off
 `endif
-	tri1	[7:0]  byteena_b;
 	tri1	  clock;
 	tri0	  wren_a;
 	tri0	  wren_b;
@@ -75,9 +72,9 @@ endmodule
 // Retrieval info: PRIVATE: BYTEENA_ACLR_A NUMERIC "0"
 // Retrieval info: PRIVATE: BYTEENA_ACLR_B NUMERIC "0"
 // Retrieval info: PRIVATE: BYTE_ENABLE_A NUMERIC "0"
-// Retrieval info: PRIVATE: BYTE_ENABLE_B NUMERIC "1"
+// Retrieval info: PRIVATE: BYTE_ENABLE_B NUMERIC "0"
 // Retrieval info: PRIVATE: BYTE_SIZE NUMERIC "8"
-// Retrieval info: PRIVATE: BlankMemory NUMERIC "0"
+// Retrieval info: PRIVATE: BlankMemory NUMERIC "1"
 // Retrieval info: PRIVATE: CLOCK_ENABLE_INPUT_A NUMERIC "0"
 // Retrieval info: PRIVATE: CLOCK_ENABLE_INPUT_B NUMERIC "0"
 // Retrieval info: PRIVATE: CLOCK_ENABLE_OUTPUT_A NUMERIC "0"
@@ -102,7 +99,7 @@ endmodule
 // Retrieval info: PRIVATE: MAXIMUM_DEPTH NUMERIC "0"
 // Retrieval info: PRIVATE: MEMSIZE NUMERIC "2560"
 // Retrieval info: PRIVATE: MEM_IN_BITS NUMERIC "0"
-// Retrieval info: PRIVATE: MIFfilename STRING "sprram_test.hex"
+// Retrieval info: PRIVATE: MIFfilename STRING ""
 // Retrieval info: PRIVATE: OPERATION_MODE NUMERIC "3"
 // Retrieval info: PRIVATE: OUTDATA_ACLR_B NUMERIC "0"
 // Retrieval info: PRIVATE: OUTDATA_REG_B NUMERIC "1"
@@ -131,14 +128,11 @@ endmodule
 // Retrieval info: PRIVATE: rden NUMERIC "0"
 // Retrieval info: LIBRARY: altera_mf altera_mf.altera_mf_components.all
 // Retrieval info: CONSTANT: ADDRESS_REG_B STRING "CLOCK0"
-// Retrieval info: CONSTANT: BYTEENA_REG_B STRING "CLOCK0"
-// Retrieval info: CONSTANT: BYTE_SIZE NUMERIC "8"
 // Retrieval info: CONSTANT: CLOCK_ENABLE_INPUT_A STRING "BYPASS"
 // Retrieval info: CONSTANT: CLOCK_ENABLE_INPUT_B STRING "BYPASS"
 // Retrieval info: CONSTANT: CLOCK_ENABLE_OUTPUT_A STRING "BYPASS"
 // Retrieval info: CONSTANT: CLOCK_ENABLE_OUTPUT_B STRING "BYPASS"
 // Retrieval info: CONSTANT: INDATA_REG_B STRING "CLOCK0"
-// Retrieval info: CONSTANT: INIT_FILE STRING "sprram_test.hex"
 // Retrieval info: CONSTANT: INTENDED_DEVICE_FAMILY STRING "Cyclone V"
 // Retrieval info: CONSTANT: LPM_TYPE STRING "altsyncram"
 // Retrieval info: CONSTANT: NUMWORDS_A NUMERIC "40"
@@ -158,11 +152,10 @@ endmodule
 // Retrieval info: CONSTANT: WIDTH_A NUMERIC "64"
 // Retrieval info: CONSTANT: WIDTH_B NUMERIC "64"
 // Retrieval info: CONSTANT: WIDTH_BYTEENA_A NUMERIC "1"
-// Retrieval info: CONSTANT: WIDTH_BYTEENA_B NUMERIC "8"
+// Retrieval info: CONSTANT: WIDTH_BYTEENA_B NUMERIC "1"
 // Retrieval info: CONSTANT: WRCONTROL_WRADDRESS_REG_B STRING "CLOCK0"
 // Retrieval info: USED_PORT: address_a 0 0 6 0 INPUT NODEFVAL "address_a[5..0]"
 // Retrieval info: USED_PORT: address_b 0 0 6 0 INPUT NODEFVAL "address_b[5..0]"
-// Retrieval info: USED_PORT: byteena_b 0 0 8 0 INPUT VCC "byteena_b[7..0]"
 // Retrieval info: USED_PORT: clock 0 0 0 0 INPUT VCC "clock"
 // Retrieval info: USED_PORT: data_a 0 0 64 0 INPUT NODEFVAL "data_a[63..0]"
 // Retrieval info: USED_PORT: data_b 0 0 64 0 INPUT NODEFVAL "data_b[63..0]"
@@ -172,7 +165,6 @@ endmodule
 // Retrieval info: USED_PORT: wren_b 0 0 0 0 INPUT GND "wren_b"
 // Retrieval info: CONNECT: @address_a 0 0 6 0 address_a 0 0 6 0
 // Retrieval info: CONNECT: @address_b 0 0 6 0 address_b 0 0 6 0
-// Retrieval info: CONNECT: @byteena_b 0 0 8 0 byteena_b 0 0 8 0
 // Retrieval info: CONNECT: @clock0 0 0 0 0 clock 0 0 0 0
 // Retrieval info: CONNECT: @data_a 0 0 64 0 data_a 0 0 64 0
 // Retrieval info: CONNECT: @data_b 0 0 64 0 data_b 0 0 64 0
@@ -180,10 +172,10 @@ endmodule
 // Retrieval info: CONNECT: @wren_b 0 0 0 0 wren_b 0 0 0 0
 // Retrieval info: CONNECT: q_a 0 0 64 0 @q_a 0 0 64 0
 // Retrieval info: CONNECT: q_b 0 0 64 0 @q_b 0 0 64 0
-// Retrieval info: GEN_FILE: TYPE_NORMAL sprite_ram_tester.v TRUE
-// Retrieval info: GEN_FILE: TYPE_NORMAL sprite_ram_tester.inc FALSE
-// Retrieval info: GEN_FILE: TYPE_NORMAL sprite_ram_tester.cmp FALSE
-// Retrieval info: GEN_FILE: TYPE_NORMAL sprite_ram_tester.bsf FALSE
-// Retrieval info: GEN_FILE: TYPE_NORMAL sprite_ram_tester_inst.v FALSE
-// Retrieval info: GEN_FILE: TYPE_NORMAL sprite_ram_tester_bb.v TRUE
+// Retrieval info: GEN_FILE: TYPE_NORMAL sprite_ram_ppu_facing.v TRUE
+// Retrieval info: GEN_FILE: TYPE_NORMAL sprite_ram_ppu_facing.inc FALSE
+// Retrieval info: GEN_FILE: TYPE_NORMAL sprite_ram_ppu_facing.cmp FALSE
+// Retrieval info: GEN_FILE: TYPE_NORMAL sprite_ram_ppu_facing.bsf FALSE
+// Retrieval info: GEN_FILE: TYPE_NORMAL sprite_ram_ppu_facing_inst.v FALSE
+// Retrieval info: GEN_FILE: TYPE_NORMAL sprite_ram_ppu_facing_bb.v TRUE
 // Retrieval info: LIB_FILE: altera_mf

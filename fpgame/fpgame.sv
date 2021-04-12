@@ -36,15 +36,15 @@ module fpgame (
     output        HPS_DDR3_RESET_N,
     input         HPS_DDR3_RZQ,
     output        HPS_DDR3_WE_N,
-    output        HPS_ENET_GTX_CLK,
+    //output        HPS_ENET_GTX_CLK,
     inout         HPS_ENET_INT_N,
-    output        HPS_ENET_MDC,
+    //output        HPS_ENET_MDC,
     inout         HPS_ENET_MDIO,
     input         HPS_ENET_RX_CLK,
     input  [3:0]  HPS_ENET_RX_DATA,
     input         HPS_ENET_RX_DV,
-    output [3:0]  HPS_ENET_TX_DATA,
-    output        HPS_ENET_TX_EN,
+    //output [3:0]  HPS_ENET_TX_DATA,
+    //output        HPS_ENET_TX_EN,
     inout         HPS_GSENSOR_INT,
     inout         HPS_I2C0_SCLK,
     inout         HPS_I2C0_SDAT,
@@ -56,9 +56,9 @@ module fpgame (
     output        HPS_SD_CLK,
     inout         HPS_SD_CMD,
     inout  [3:0]  HPS_SD_DATA,
-    output        HPS_SPIM_CLK,
-    input         HPS_SPIM_MISO,
-    output        HPS_SPIM_MOSI,
+    //output        HPS_SPIM_CLK,
+    //input         HPS_SPIM_MISO,
+    //output        HPS_SPIM_MOSI,
     inout         HPS_SPIM_SS,
     input         HPS_UART_RX,
     output        HPS_UART_TX,
@@ -69,8 +69,7 @@ module fpgame (
     output        HPS_USB_STP,
 
     //////////// GPIO_1, GPIO connect to GPIO Default //////////
-    inout  [35:0] GPIO,
-    output [7:0]  LED
+    inout  [35:0] GPIO
 );
 
 
@@ -95,12 +94,17 @@ logic        vblank_end_soon;
 logic [7:0]  next_row;
 
 // ppu to cpu interconnect
-logic [12:0] h2f_vram_wraddr;
-logic        h2f_vram_wren;
-logic [63:0] h2f_vram_wrdata;
-logic [7:0]  h2f_vram_byteena;
-logic        cpu_vram_wr_irq;
-logic        cpu_wr_busy;
+logic [11:0]  h2f_vram_wraddr;
+logic         h2f_vram_wren;
+logic [127:0] h2f_vram_wrdata;
+logic [31:0]  vramsrcaddrpio_rddata;
+logic         vramsrcaddrpio_update_avail;
+logic         vramsrcaddrpio_read_rst;
+logic [31:0]  dma_engine_src_addr; // TODO: The first 4 bits are not actually used since we operate at 16B boundaries (and this address is a byte-address).
+logic         dma_engine_start;
+logic         dma_engine_finish;
+logic         ppu_dma_rdy_irq;
+
 // TODO: These ppu signals need to be double-buffered like VRAM (when cpu_wr_busy is not high).
 // TODO: Do it in the ppu module.
 logic [31:0] ppu_bgscroll;
@@ -115,20 +119,13 @@ logic [15:0] con_state;
 logic [63:0] apu_mem_data;
 logic [31:0] apu_control, apu_buf;
 logic [28:0] apu_mem_addr;
-logic apu_control_valid, apu_buf_valid, apu_mem_read_en, apu_mem_ack,
-	apu_buf_irq, apu_mem_wait;
-
-assign GPIO[10] = cpu_wr_busy; // TODO: Remove after debug
+logic apu_control_valid, apu_buf_valid, apu_mem_read_en, apu_mem_ack, apu_buf_irq, apu_mem_wait;
 
 // ==================
 // === Submodules ===
 // ==================
 fpgame_soc u0 (
     .clk_clk                            (FPGA_CLK1_50),
-    .h2f_vram_interface_export_wraddr   (h2f_vram_wraddr),
-    .h2f_vram_interface_export_wren     (h2f_vram_wren),
-    .h2f_vram_interface_export_wrdata   (h2f_vram_wrdata),
-    .h2f_vram_interface_export_byteena  (h2f_vram_byteena),
     .hps_io_hps_io_sdio_inst_CMD        (HPS_SD_CMD),
     .hps_io_hps_io_sdio_inst_D0         (HPS_SD_DATA[0]),
     .hps_io_hps_io_sdio_inst_D1         (HPS_SD_DATA[1]),
@@ -149,7 +146,6 @@ fpgame_soc u0 (
     .hps_io_hps_io_usb1_inst_NXT        (HPS_USB_NXT),
     .hps_io_hps_io_uart0_inst_RX        (HPS_UART_RX),
     .hps_io_hps_io_uart0_inst_TX        (HPS_UART_TX),
-    .input_pio_export                   (con_state),
     .memory_mem_a                       (HPS_DDR3_ADDR),
     .memory_mem_ba                      (HPS_DDR3_BA),
     .memory_mem_ck                      (HPS_DDR3_CK_P),
@@ -166,9 +162,27 @@ fpgame_soc u0 (
     .memory_mem_odt                     (HPS_DDR3_ODT),
     .memory_mem_dm                      (HPS_DDR3_DM),
     .memory_oct_rzqin                   (HPS_DDR3_RZQ),
-    .h2f_vram_interface_cpu_vram_wr_irq (cpu_vram_wr_irq),
-    .cpu_wr_busy_export                 (cpu_wr_busy),
+    // === CPU IRQ ===
+    .f2h_irq0_irq                       ({ 30'd1, ppu_dma_rdy_irq, apu_buf_irq }),
+    // === IOSS/CPU Communication ===
+    .input_pio_export                   (con_state),
+    // === APU/CPU Communication ===
+    .apu_control_export_data		    (apu_control),
+    .apu_control_export_valid           (apu_control_valid),
+    .apu_buf_export_data                (apu_buf),
+    .apu_buf_export_valid               (apu_buf_valid),
+    .hps_0_f2h_sdram0_data_burstcount   ('d1),
+    .hps_0_f2h_sdram0_data_waitrequest  (apu_mem_wait),
+    .hps_0_f2h_sdram0_data_address      (apu_mem_addr),
+    .hps_0_f2h_sdram0_data_readdata     (apu_mem_data),
+    .hps_0_f2h_sdram0_data_readdatavalid(apu_mem_ack),
+    .hps_0_f2h_sdram0_data_read         (apu_mem_read_en),
+    // === PPU/CPU Communication ===
+    .h2f_vram_wraddr                    (h2f_vram_wraddr),
+    .h2f_vram_wren                      (h2f_vram_wren),
+    .h2f_vram_wrdata                    (h2f_vram_wrdata),
     .ppu_bgscroll_export                (), // TODO, set to ppu_bgscroll after demo
+    .ppu_fgscroll_export                (ppu_fgscroll),
     .ppu_enable_export                  (ppu_enable),
     .ppu_bgcolor_export                 (ppu_bgcolor),
     .ppu_fgscroll_export                (ppu_fgscroll),
@@ -182,6 +196,12 @@ fpgame_soc u0 (
     .avalon_master_0_conduit_end_avm_readdata      (apu_mem_data),
     .avalon_master_0_conduit_end_avm_readdatavalid (apu_mem_ack),
     .avalon_master_0_conduit_end_avm_read          (apu_mem_read_en)
+    .dma_engine_src_addr                (dma_engine_src_addr),
+    .dma_engine_start                   (dma_engine_start),
+    .dma_engine_finish                  (dma_engine_finish),
+    .vramsrcaddrpio_rddata              (vramsrcaddrpio_rddata),
+    .vramsrcaddrpio_update_avail        (vramsrcaddrpio_update_avail),
+    .vramsrcaddrpio_read_rst            (vramsrcaddrpio_update_avail)
 );
 
 i2s_pll ipll (
@@ -253,18 +273,21 @@ ppu u_ppu (
     .h2f_vram_wraddr,
     .h2f_vram_wren,
     .h2f_vram_wrdata,
-    .h2f_vram_byteena,
-    .cpu_vram_wr_irq,
     .bgscroll(ppu_bgscroll),
-    .cpu_wr_busy
+    .vramsrcaddrpio_rddata,
+    .vramsrcaddrpio_update_avail,
+    .vramsrcaddrpio_read_rst,
+    .dma_engine_src_addr,
+    .dma_engine_start,
+    .dma_engine_finish,
+    .ppu_dma_rdy_irq
 );
 
 ioss u_ioss (
     .clk(FPGA_CLK1_50),
     .rst_n(sys_rst_n),
     .GPIO,
-    .LED(),
-    .con_state(),
+    .con_state,
     .scroll(ppu_bgscroll) // TODO: Remove after demo
 );
 

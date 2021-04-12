@@ -28,3 +28,6 @@ ctests/apu_mod_polled/apu_poll
 
 # Ignore Generated Files from .mif Generators
 mif_gen/output/
+
+# Ignore Editor Settings
+.vscode/

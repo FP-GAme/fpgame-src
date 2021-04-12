@@ -54,18 +54,18 @@ module vram (
     input logic rst_n,
 
     // these following interfaces are inputs (see src modport in vram_if)
-    vram_if.src vram_ifP_src, // PPU uses vram_P
-    vram_if.src vram_ifC_src  // CPU uses vram_C
+    vram_if_ppu_facing.src vram_ifP_src, // PPU uses vram_P
+    vram_if_cpu_facing.src vram_ifC_src  // CPU uses vram_C
 );
 
     // PPU-Facing VRAM
-    vram_sub vram_P (
+    vram_ppu_facing vram_P (
         .clk,
         .i_src(vram_ifP_src)
     );
 
     // CPU-Facing VRAM
-    vram_sub vram_C (
+    vram_cpu_facing vram_C (
         .clk,
         .i_src(vram_ifC_src)
     );

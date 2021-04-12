@@ -1,5 +1,7 @@
 `timescale 1ns/1ns
 
+/* TODO: This testbench is obsolete now that the CPU-PPU Communication is changed */
+
 module vram_sync_writer_tb;
     logic clk;
     logic rst_n;

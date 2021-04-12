@@ -26,7 +26,7 @@
    {
       datum _sortIndex
       {
-         value = "10";
+         value = "4";
          type = "int";
       }
       datum sopceditor_expanded
@@ -52,7 +52,7 @@
    {
       datum _sortIndex
       {
-         value = "9";
+         value = "3";
          type = "int";
       }
       datum sopceditor_expanded
@@ -82,32 +82,6 @@
          type = "int";
       }
    }
-   element cpu_wr_busy_pio
-   {
-      datum _sortIndex
-      {
-         value = "4";
-         type = "int";
-      }
-      datum sopceditor_expanded
-      {
-         value = "0";
-         type = "boolean";
-      }
-   }
-   element cpu_wr_busy_pio.s1
-   {
-      datum _lockedAddress
-      {
-         value = "1";
-         type = "boolean";
-      }
-      datum baseAddress
-      {
-         value = "48";
-         type = "String";
-      }
-   }
    element fpgame_soc
    {
       datum _originalDeviceFamily
@@ -116,20 +90,20 @@
          type = "String";
       }
    }
-   element h2f_vram_interface_0
+   element h2f_vram_interface
    {
       datum _sortIndex
       {
-         value = "3";
+         value = "12";
          type = "int";
       }
       datum sopceditor_expanded
       {
-         value = "0";
+         value = "1";
          type = "boolean";
       }
    }
-   element h2f_vram_interface_0.avs_s0
+   element h2f_vram_interface.avs_s0
    {
       datum _lockedAddress
       {
@@ -193,7 +167,7 @@
    {
       datum _sortIndex
       {
-         value = "7";
+         value = "6";
          type = "int";
       }
       datum sopceditor_expanded
@@ -219,7 +193,7 @@
    {
       datum _sortIndex
       {
-         value = "5";
+         value = "8";
          type = "int";
       }
       datum sopceditor_expanded
@@ -245,7 +219,7 @@
    {
       datum _sortIndex
       {
-         value = "6";
+         value = "7";
          type = "int";
       }
       datum sopceditor_expanded
@@ -271,7 +245,7 @@
    {
       datum _sortIndex
       {
-         value = "8";
+         value = "5";
          type = "int";
       }
       datum sopceditor_expanded
@@ -290,6 +264,45 @@
       datum baseAddress
       {
          value = "64";
+         type = "String";
+      }
+   }
+   element vram_dma_engine
+   {
+      datum _sortIndex
+      {
+         value = "10";
+         type = "int";
+      }
+      datum sopceditor_expanded
+      {
+         value = "1";
+         type = "boolean";
+      }
+   }
+   element vram_dma_src_addr_pio
+   {
+      datum _sortIndex
+      {
+         value = "9";
+         type = "int";
+      }
+      datum sopceditor_expanded
+      {
+         value = "0";
+         type = "boolean";
+      }
+   }
+   element vram_dma_src_addr_pio.avalon_writeable_slave
+   {
+      datum _lockedAddress
+      {
+         value = "1";
+         type = "boolean";
+      }
+      datum baseAddress
+      {
+         value = "48";
          type = "String";
       }
    }
@@ -331,8 +344,8 @@
    dir="end" />
  <interface name="clk" internal="clk_0.clk_in" type="clock" dir="end" />
  <interface
-   name="cpu_wr_busy"
-   internal="cpu_wr_busy_pio.external_connection"
+   name="dma_engine"
+   internal="vram_dma_engine.conduit_end"
    type="conduit"
    dir="end" />
  <interface
@@ -341,14 +354,9 @@
    type="interrupt"
    dir="start" />
  <interface
-   name="h2f_vram_interface"
-   internal="h2f_vram_interface_0.external"
+   name="h2f_vram"
+   internal="h2f_vram_interface.external"
    type="conduit"
-   dir="end" />
- <interface
-   name="h2f_vram_interface_cpu_vram_wr"
-   internal="h2f_vram_interface_0.ppu_transfer_irq"
-   type="interrupt"
    dir="end" />
  <interface name="hps_0_h2f_gp" internal="hps_0.h2f_gp" />
  <interface name="hps_0_h2f_mpu_events" internal="hps_0.h2f_mpu_events" />
@@ -379,6 +387,11 @@
    internal="ppu_fgscroll_pio.external_connection"
    type="conduit"
    dir="end" />
+ <interface
+   name="vramsrcaddrpio"
+   internal="vram_dma_src_addr_pio.conduit"
+   type="conduit"
+   dir="end" />
  <module name="Avalon_Master_0" kind="Avalon_Master" version="1.0" enabled="1" />
  <module name="apu_buf" kind="PIO_with_async_write" version="4.20" enabled="1" />
  <module
@@ -393,25 +406,7 @@
   <parameter name="resetSynchronousEdges" value="NONE" />
  </module>
  <module
-   name="cpu_wr_busy_pio"
-   kind="altera_avalon_pio"
-   version="20.1"
-   enabled="1">
-  <parameter name="bitClearingEdgeCapReg" value="false" />
-  <parameter name="bitModifyingOutReg" value="false" />
-  <parameter name="captureEdge" value="false" />
-  <parameter name="clockRate" value="50000000" />
-  <parameter name="direction" value="Output" />
-  <parameter name="edgeType" value="RISING" />
-  <parameter name="generateIRQ" value="false" />
-  <parameter name="irqType" value="LEVEL" />
-  <parameter name="resetValue" value="0" />
-  <parameter name="simDoTestBenchWiring" value="false" />
-  <parameter name="simDrivenValue" value="0" />
-  <parameter name="width" value="1" />
- </module>
- <module
-   name="h2f_vram_interface_0"
+   name="h2f_vram_interface"
    kind="h2f_vram_interface"
    version="1.0"
    enabled="1" />
@@ -526,7 +521,7 @@
   <parameter name="F2SCLK_SDRAMCLK_FREQ" value="0" />
   <parameter name="F2SCLK_WARMRST_Enable" value="false" />
   <parameter name="F2SDRAM_Type" value="Avalon-MM Read-Only" />
-  <parameter name="F2SDRAM_Width" value="64" />
+  <parameter name="F2SDRAM_Width" value="128" />
   <parameter name="F2SINTERRUPT_Enable" value="true" />
   <parameter name="F2S_Width" value="2" />
   <parameter name="FIX_READ_LATENCY" value="8" />
@@ -566,7 +561,7 @@
   <parameter name="FPGA_PERIPHERAL_OUTPUT_CLOCK_FREQ_SPIM1_SCLK_OUT" value="100" />
   <parameter name="GPIO_Enable">No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No</parameter>
   <parameter name="GP_Enable" value="false" />
-  <parameter name="H2F_AXI_CLOCK_FREQ" value="50000000" />
+  <parameter name="H2F_AXI_CLOCK_FREQ" value="100" />
   <parameter name="H2F_CTI_CLOCK_FREQ" value="100" />
   <parameter name="H2F_DEBUG_APB_CLOCK_FREQ" value="100" />
   <parameter name="H2F_LW_AXI_CLOCK_FREQ" value="50000000" />
@@ -787,7 +782,7 @@
   <parameter name="S2FINTERRUPT_UART_Enable" value="false" />
   <parameter name="S2FINTERRUPT_USB_Enable" value="false" />
   <parameter name="S2FINTERRUPT_WATCHDOG_Enable" value="false" />
-  <parameter name="S2F_Width" value="2" />
+  <parameter name="S2F_Width" value="0" />
   <parameter name="SDIO_Mode" value="4-bit Data" />
   <parameter name="SDIO_PinMuxing" value="HPS I/O Set 0" />
   <parameter name="SEQUENCER_TYPE" value="NIOS" />
@@ -1031,6 +1026,14 @@
   <parameter name="simDrivenValue" value="0" />
   <parameter name="width" value="32" />
  </module>
+ <module name="vram_dma_engine" kind="dma_engine" version="1.0" enabled="1" />
+ <module
+   name="vram_dma_src_addr_pio"
+   kind="pio_write_w_avail"
+   version="1.0"
+   enabled="1">
+  <parameter name="DATA_WIDTH" value="32" />
+ </module>
  <connection
    kind="avalon"
    version="20.1"
@@ -1043,10 +1046,10 @@
  <connection
    kind="avalon"
    version="20.1"
-   start="hps_0.h2f_axi_master"
-   end="h2f_vram_interface_0.avs_s0">
+   start="hps_0.h2f_lw_axi_master"
+   end="vram_dma_src_addr_pio.avalon_writeable_slave">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0000" />
+  <parameter name="baseAddress" value="0x0030" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1074,15 +1077,6 @@
    end="input_pio.s1">
   <parameter name="arbitrationPriority" value="1" />
   <parameter name="baseAddress" value="0x0000" />
-  <parameter name="defaultConnection" value="false" />
- </connection>
- <connection
-   kind="avalon"
-   version="20.1"
-   start="hps_0.h2f_lw_axi_master"
-   end="cpu_wr_busy_pio.s1">
-  <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0030" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1121,12 +1115,25 @@
   <parameter name="baseAddress" value="0x0040" />
   <parameter name="defaultConnection" value="false" />
  </connection>
- <connection kind="clock" version="20.1" start="clk_0.clk" end="input_pio.clk" />
  <connection
-   kind="clock"
+   kind="avalon"
    version="20.1"
-   start="clk_0.clk"
-   end="cpu_wr_busy_pio.clk" />
+   start="vram_dma_engine.read_master"
+   end="hps_0.f2h_sdram0_data">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0000" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="20.1"
+   start="vram_dma_engine.write_master"
+   end="h2f_vram_interface.avs_s0">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0000" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection kind="clock" version="20.1" start="clk_0.clk" end="input_pio.clk" />
  <connection
    kind="clock"
    version="20.1"
@@ -1151,7 +1158,7 @@
    kind="clock"
    version="20.1"
    start="clk_0.clk"
-   end="h2f_vram_interface_0.clock" />
+   end="vram_dma_engine.clk" />
  <connection kind="clock" version="20.1" start="clk_0.clk" end="apu_control.clock" />
  <connection kind="clock" version="20.1" start="clk_0.clk" end="apu_buf.clock" />
  <connection
@@ -1159,6 +1166,16 @@
    version="20.1"
    start="clk_0.clk"
    end="Avalon_Master_0.clock" />
+ <connection
+   kind="clock"
+   version="20.1"
+   start="clk_0.clk"
+   end="h2f_vram_interface.clock" />
+ <connection
+   kind="clock"
+   version="20.1"
+   start="clk_0.clk"
+   end="vram_dma_src_addr_pio.clock" />
  <connection
    kind="clock"
    version="20.1"
@@ -1173,27 +1190,12 @@
    kind="clock"
    version="20.1"
    start="clk_0.clk"
-   end="hps_0.h2f_axi_clock" />
- <connection
-   kind="clock"
-   version="20.1"
-   start="clk_0.clk"
    end="hps_0.h2f_lw_axi_clock" />
  <connection
    kind="reset"
    version="20.1"
    start="clk_0.clk_reset"
    end="input_pio.reset" />
- <connection
-   kind="reset"
-   version="20.1"
-   start="clk_0.clk_reset"
-   end="h2f_vram_interface_0.reset" />
- <connection
-   kind="reset"
-   version="20.1"
-   start="clk_0.clk_reset"
-   end="cpu_wr_busy_pio.reset" />
  <connection
    kind="reset"
    version="20.1"
@@ -1224,6 +1226,21 @@
    version="20.1"
    start="clk_0.clk_reset"
    end="apu_buf.reset" />
+ <connection
+   kind="reset"
+   version="20.1"
+   start="clk_0.clk_reset"
+   end="h2f_vram_interface.reset" />
+ <connection
+   kind="reset"
+   version="20.1"
+   start="clk_0.clk_reset"
+   end="vram_dma_engine.reset" />
+ <connection
+   kind="reset"
+   version="20.1"
+   start="clk_0.clk_reset"
+   end="vram_dma_src_addr_pio.reset" />
  <connection
    kind="reset"
    version="20.1"
