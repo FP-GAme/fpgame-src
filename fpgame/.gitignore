@@ -6,6 +6,7 @@ hps_isw_handoff/
 greybox_tmp/
 *_sim
 synthesis/
+fpgame_soc/testbench/
 
 # --- Important Quartus-Related File Types ---
 # These files must be kept as per:
@@ -52,3 +53,4 @@ synthesis/
 *_generation_script*
 *_inst.vhd
 *.sld
+*.spd

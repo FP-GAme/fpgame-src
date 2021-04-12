@@ -97,16 +97,13 @@ logic [7:0]  next_row;
 logic [11:0]  h2f_vram_wraddr;
 logic         h2f_vram_wren;
 logic [127:0] h2f_vram_wrdata;
-logic [2:0]   ppu_dma_wraddr;
-assign ppu_dma_wraddr = 3'b0; // TODO: Implement in vram_dma_controller.sv
-logic         ppu_dma_wren;
-assign ppu_dma_wren = 1'b0;   // TODO: Implement in vram_dma_controller.sv
-logic [31:0]  ppu_dma_wrdata;
-assign ppu_dma_wrdata = 32'b0;// TODO: Implement in vram_dma_controller.sv
-logic         ppu_dma_finish_irq;
-logic         ppu_dma_waitrequest;
+logic [31:0]  vramsrcaddrpio_rddata;
+logic         vramsrcaddrpio_update_avail;
+logic         vramsrcaddrpio_read_rst;
+logic [31:0]  dma_engine_src_addr; // TODO: The first 4 bits are not actually used since we operate at 16B boundaries (and this address is a byte-address).
+logic         dma_engine_start;
+logic         dma_engine_finish;
 logic         ppu_dma_rdy_irq;
-assign ppu_dma_rdy_irq = 1'b0; // TODO: Implement in PPU
 
 // TODO: These ppu signals need to be double-buffered like VRAM (when cpu_wr_busy is not high).
 // TODO: Do it in the ppu module.
@@ -166,7 +163,7 @@ fpgame_soc u0 (
     .memory_mem_dm                      (HPS_DDR3_DM),
     .memory_oct_rzqin                   (HPS_DDR3_RZQ),
     // === CPU IRQ ===
-    .f2h_irq0_irq                       ({ 30'd1, apu_buf_irq }),
+    .f2h_irq0_irq                       ({ 30'd1, ppu_dma_rdy_irq, apu_buf_irq }),
     // === IOSS/CPU Communication ===
     .input_pio_export                   (con_state),
     // === APU/CPU Communication ===
@@ -188,11 +185,12 @@ fpgame_soc u0 (
     .ppu_fgscroll_export                (ppu_fgscroll),
     .ppu_enable_export                  (ppu_enable),
     .ppu_bgcolor_export                 (ppu_bgcolor),
-    .ppu_dma_wraddr                     (ppu_dma_wraddr),
-    .ppu_dma_wren                       (ppu_dma_wren),
-    .ppu_dma_wrdata                     (ppu_dma_wrdata),
-    .ppu_dma_finish_irq                 (ppu_dma_finish_irq),
-    .ppu_dma_waitrequest                (ppu_dma_waitrequest)
+    .dma_engine_src_addr                (dma_engine_src_addr),
+    .dma_engine_start                   (dma_engine_start),
+    .dma_engine_finish                  (dma_engine_finish),
+    .vramsrcaddrpio_rddata              (vramsrcaddrpio_rddata),
+    .vramsrcaddrpio_update_avail        (vramsrcaddrpio_update_avail),
+    .vramsrcaddrpio_read_rst            (vramsrcaddrpio_update_avail)
 );
 
 i2s_pll ipll (
@@ -263,7 +261,14 @@ ppu u_ppu (
     .h2f_vram_wraddr,
     .h2f_vram_wren,
     .h2f_vram_wrdata,
-    .bgscroll(ppu_bgscroll)
+    .bgscroll(ppu_bgscroll),
+    .vramsrcaddrpio_rddata,
+    .vramsrcaddrpio_update_avail,
+    .vramsrcaddrpio_read_rst,
+    .dma_engine_src_addr,
+    .dma_engine_start,
+    .dma_engine_finish,
+    .ppu_dma_rdy_irq
 );
 
 ioss u_ioss (

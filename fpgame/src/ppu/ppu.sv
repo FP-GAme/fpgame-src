@@ -18,36 +18,66 @@ module ppu (
     input  logic        vblank_end_soon,
 
     // h2f_vram_avalon_interface (essentially the CPU->VRAM write interface)
-    input  logic [11:0] h2f_vram_wraddr,
-    input  logic        h2f_vram_wren,
+    input  logic [11:0]  h2f_vram_wraddr,
+    input  logic         h2f_vram_wren,
     input  logic [127:0] h2f_vram_wrdata,
-    input  logic [31:0] bgscroll
+
+    // TODO: Double-buffer these pio inputs. Change when we do SYNC
+    input  logic [31:0]  bgscroll,
+    
+    // DMA Source Address PIO
+    input  logic [31:0]  vramsrcaddrpio_rddata,
+    input  logic         vramsrcaddrpio_update_avail,
+    output logic         vramsrcaddrpio_read_rst,
+
+    // DMA-Engine connections
+    output logic [31:0]  dma_engine_src_addr,
+    output logic         dma_engine_start,
+    input  logic         dma_engine_finish,
+
+    output logic         ppu_dma_rdy_irq
 );
 
-    logic dma_busy;
-    // TODO: Remove this after demo. It simply prevents the VRAM synchronization, which overwrites the PPU-Facing Tile/Palette/Pattern Data used for the demo
-    assign dma_busy = 1'b1; // TODO 
-
-    vram_if_ppu_facing vram_ifP(); // Actual PPU-Facing VRAM interface
-    vram_if_cpu_facing vram_ifC(); // Actual CPU-Facing VRAM interface
     // Routing for the following interfaces is handled by vram_interconnect.
-    vram_if_ppu_facing vram_vsw_ifP(); // VRAM interface used by vram_sync_writer. Routed to vram_ifP in sync
-    vram_if_cpu_facing vram_vsw_ifC(); // VRAM interface used by vram_sync_writer. Routed to vram_ifC in sync
-    vram_if_ppu_facing vram_ppu_ifP(); // VRAM interface used by ppu_logic. Routed to vram_ifP during !sync.
     // These interfaces will connect to vram_ifP and vram_ifC depending on the PPU state.
 
-    logic vram_sync, n_vram_sync, vram_sync_sent, n_vram_sync_sent;
-    //logic n_cpu_vram_wr_irq;
+    // Actual PPU-Facing VRAM interface. Both ports are either exposed to the vram_sync_writer or
+    //   the ppu_logic, depending on PPU state.
+    vram_if_ppu_facing vram_ifP();
+
+    // Actual CPU-Facing VRAM interface. Half is connected to the vram_sync_writer, half is exposed
+    //   to the dma_engine.
+    vram_if_cpu_facing vram_ifC();
+
+    // VRAM interface used by vram_sync_writer. Routed to vram_ifP in sync_active
+    vram_if_ppu_facing vram_vsw_ifP();
+
+    // VRAM interface used by ppu_logic. Routed to vram_ifP in !sync_active.
+    vram_if_ppu_facing vram_ppu_ifP();
+
+    // VRAM interface used by vram_sync_writer. Connected only to a single port of vram_ifC.
+    vram_if_cpu_facing vram_vsw_ifC();
+
+    logic vram_sync, n_vram_sync;
+    //logic vram_sync_sent, n_vram_sync_sent;
+    logic vram_sync_done;
     logic sync_active;
     logic rowram_swap_disp;
-    
+    logic dma_rdy_for_sync, n_dma_rdy_for_sync;
+    logic [31:0] n_dma_engine_src_addr;
+    logic n_dma_engine_start;
+    logic n_ppu_dma_rdy_irq;
+
     enum { 
-        PPU_SYNC, // Either syncing VRAMs or initial state (waiting for first PPU_DISP)
-        PPU_DISP, // ppu_logic reads the PPU-Facing VRAM and cpu_logic writes the CPU-Facing VRAM
-        PPU_LATE  // CPU failed to complete its writes in time. No syncing or CPU IRQ occurs
+        PPU_IDLE, // DMA either took too long, no DMA transfer even started, or we are just starting
+        PPU_DISP, // ppu_logic reads the PPU-Facing VRAM, DMA is likely in progress or complete
+        PPU_SYNC  // Syncing changes made by a complete DMA transfer to the PPU-Facing VRAM
     } state, n_state;
 
-    // === Module Instantiation ===
+
+    // ===============================
+    // === Submodule Instantiation ===
+    // ===============================
     vram vr (
         .clk,
         .rst_n,
@@ -59,7 +89,7 @@ module ppu (
         .clk,
         .rst_n,
         .sync(vram_sync),
-        .done(),
+        .done(vram_sync_done),
         .vram_ifP_usr(vram_vsw_ifP.usr),
         .vram_ifC_usr(vram_vsw_ifC.usr)
     );
@@ -90,65 +120,120 @@ module ppu (
         .vram_ppu_ifP_src(vram_ppu_ifP.src)
     );
 
+
+    // ===============
     // === PPU FSM ===
-    // next-state logic
+    // ===============
+    // row-ram swap signal is ignored at all non-display times
+    assign rowram_swap_disp = (state == PPU_DISP && rowram_swap);
+    // During sync, vram_interconnect automatically assigns VRAM's signals to the vram_sync_writer.
+    assign sync_active = (state == PPU_SYNC);
+
+    // === next-state logic ===
     always_comb begin
         // default next-signal states
-        //TODO: REMOVEn_cpu_vram_wr_irq = 1'b0;
         n_vram_sync = 1'b0;
-        n_vram_sync_sent = vram_sync_sent;
-        sync_active = 1'b0;
-        rowram_swap_disp = 1'b0;
+        //n_vram_sync_sent = vram_sync_sent;
+        n_dma_rdy_for_sync = dma_rdy_for_sync;
+        n_dma_engine_src_addr = dma_engine_src_addr;
+        n_dma_engine_start = 1'b0;
+        vramsrcaddrpio_read_rst = 1'b0;
+        n_ppu_dma_rdy_irq = 1'b0;
 
         unique case (state)
-            PPU_SYNC: begin
-                // During sync, the vram_interconnect automatically assigns the vram's signals to
-                //   the vram_sync_writer.
-                sync_active = 1'b1;
+            PPU_IDLE: begin
+                // If we do not yet have a DMA transfer completed (ready to be synced), or we are
+                //   just starting), then we simply wait for the PPU_DISP period to begin.
+                // This will repeat the last buffered frame in PPU-Facing VRAM, without syncing.
 
-                n_vram_sync = !vram_sync_sent; // Only send the sync signal once per SYNC state
-                n_vram_sync_sent = 1'b1;
-                // There is a short delay to ease timing requirements on sync_active switching the
-                //   interconnect. TODO: Maybe this extra cycle of timing slack isn't needed
+                if (vblank_end_soon) n_state = PPU_DISP;
+                else n_state = PPU_IDLE;
+            end
+            PPU_DISP: begin
+                // If we have a DMA finished (ready to be synced), then go to sync, else, go to IDLE
+                //   and do nothing.
+                //if (vblank_start) n_state = (dma_rdy_for_sync) ? PPU_SYNC : PPU_IDLE;
+                if (vblank_start) begin
+                    n_state = (dma_rdy_for_sync) ? PPU_SYNC : PPU_IDLE;
+                    n_vram_sync = 1'b1; // TODO, remove if this fails.
+                end
+                else n_state = PPU_DISP;
+            end
+            PPU_SYNC: begin
+                // TODO: Give the VRAM Interconnect one extra clock cycle to react to state change?
+                // TODO: We can get rid of the VRAM sync sent signal if we just assert n_vram_sync = 1 in the transition to PPU_SYNC from PPU_DISP.
+                // Send the sync signal at the start of this state. Ensure it is sent only once.
+                //n_vram_sync = !vram_sync_sent;
+                //n_vram_sync_sent = 1'b1;
+
+                // Once we are done syncing the last DMA, we can tell the CPU to DMA the next VRAM
+                //   data whenever it is ready to do so.
+                if (vram_sync_done) begin
+                    n_dma_rdy_for_sync = 1'b0;
+                    n_ppu_dma_rdy_irq = 1'b1;
+
+                    // Note, THIS IS GUARANTEED TO OCCUR IN PPU_SYNC. However, logic synthesis should be
+                    //   simpler if "could" occur at any time.
+                end
 
                 if (vblank_end_soon) begin
                     n_state = PPU_DISP;
-                    
-                    n_vram_sync_sent = 1'b0; // reset the sync-sent flag for later reuse
-                    //TODO: REMOVE n_cpu_vram_wr_irq = 1'b1; // tell the CPU it is okay to write
+                    // TODO: Again, we can probably remove this!
+                    //n_vram_sync_sent = 1'b0; // reset the sync-sent flag for later reuse
                 end
                 else n_state = PPU_SYNC;
             end
-            PPU_DISP: begin
-                // row-ram swap signal is ignored at all non-display times
-                rowram_swap_disp = rowram_swap; // only accept the signal in display
-
-                if (vblank_start) n_state = (dma_busy) ? PPU_LATE : PPU_SYNC;
-                else n_state = PPU_DISP;
-            end
-            PPU_LATE: begin
-                // If PPU is late, do no syncing. Let the CPU finish its writes.
-                // We can only escape the LATE state if the CPU has finished its writes
-                if (vblank_end_soon) n_state = PPU_DISP;
-                else n_state = PPU_LATE;
-            end
         endcase
+
+        // === Conditions that can occur in any of the three states ===
+        // technically, the dma_engine_finish can only occur after a dma_engine_start, which can
+        //   occur only outside of the actual syncwriter sync period.
+        if (dma_engine_finish) begin
+            n_dma_rdy_for_sync = 1'b1;
+        end
+
+        if (vramsrcaddrpio_update_avail && !dma_rdy_for_sync) begin
+            // read in the new DMA source address and start the DMA on the next clock edge
+            n_dma_engine_src_addr = vramsrcaddrpio_rddata;
+            n_dma_engine_start = 1'b1;
+
+            // We are reading on the next clock edge, so tell pio to clear the "update available"
+            //   signal.
+            vramsrcaddrpio_read_rst = 1'b1;
+
+            // Also note that this IF will be true only once per interrupt, since there should be no
+            //   CPU writes (and thus no update_avail) until the DMA has finished, the changes have
+            //   been synced, and ppu_dma_rdy_irq has been sent out.
+        end
     end
 
-    // transition logic
+    // === Transition Logic ===
     always_ff @(posedge clk, negedge rst_n) begin
         if (!rst_n) begin
-            // Start FSM in LATE. We will always lose the first frame, but we will be able to
+            // Start FSM in IDLE. We will always lose the first frame, but we will be able to
             //   account for the case where 
-            state <= PPU_LATE;
-            //TODO: REMOVE cpu_vram_wr_irq <= 1'b0;
-            vram_sync_sent <= 1'b0;
+            state <= PPU_IDLE;
+
+            vram_sync      <= 1'b0;
+            //vram_sync_sent <= 1'b0;
+
+            dma_rdy_for_sync    <= 1'b0;
+            dma_engine_src_addr <= 32'd0;
+            dma_engine_start    <= 1'b0;
+
+            ppu_dma_rdy_irq <= 1'b0;
         end
         else begin
             state <= n_state;
-            // TODO: REMOVE cpu_vram_wr_irq <= n_cpu_vram_wr_irq;
-            vram_sync <= n_vram_sync;
-            vram_sync_sent <= n_vram_sync_sent;
+
+            vram_sync      <= n_vram_sync;
+            //vram_sync_sent <= n_vram_sync_sent;
+
+            dma_rdy_for_sync    <= n_dma_rdy_for_sync;
+            dma_engine_src_addr <= n_dma_engine_src_addr;
+            dma_engine_start    <= n_dma_engine_start;
+
+            ppu_dma_rdy_irq <= n_ppu_dma_rdy_irq;
         end
     end
 

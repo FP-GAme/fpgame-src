@@ -5,16 +5,13 @@ module fpgame_soc (
 	apu_control_export_valid,
 	apu_control_export_data,
 	clk_clk,
+	dma_engine_src_addr,
+	dma_engine_start,
+	dma_engine_finish,
 	f2h_irq0_irq,
 	h2f_vram_wraddr,
 	h2f_vram_wren,
 	h2f_vram_wrdata,
-	hps_0_f2h_sdram0_data_address,
-	hps_0_f2h_sdram0_data_burstcount,
-	hps_0_f2h_sdram0_data_waitrequest,
-	hps_0_f2h_sdram0_data_readdata,
-	hps_0_f2h_sdram0_data_readdatavalid,
-	hps_0_f2h_sdram0_data_read,
 	hps_io_hps_io_sdio_inst_CMD,
 	hps_io_hps_io_sdio_inst_D0,
 	hps_io_hps_io_sdio_inst_D1,
@@ -54,29 +51,24 @@ module fpgame_soc (
 	memory_oct_rzqin,
 	ppu_bgcolor_export,
 	ppu_bgscroll_export,
-	ppu_dma_waitrequest,
-	ppu_dma_wraddr,
-	ppu_dma_wren,
-	ppu_dma_wrdata,
-	ppu_dma_finish_irq,
 	ppu_enable_export,
-	ppu_fgscroll_export);	
+	ppu_fgscroll_export,
+	vramsrcaddrpio_rddata,
+	vramsrcaddrpio_update_avail,
+	vramsrcaddrpio_read_rst);	
 
 	output		apu_buf_export_valid;
 	output	[31:0]	apu_buf_export_data;
 	output		apu_control_export_valid;
 	output	[31:0]	apu_control_export_data;
 	input		clk_clk;
+	input	[31:0]	dma_engine_src_addr;
+	input		dma_engine_start;
+	output		dma_engine_finish;
 	input	[31:0]	f2h_irq0_irq;
 	output	[11:0]	h2f_vram_wraddr;
 	output		h2f_vram_wren;
 	output	[127:0]	h2f_vram_wrdata;
-	input	[28:0]	hps_0_f2h_sdram0_data_address;
-	input	[7:0]	hps_0_f2h_sdram0_data_burstcount;
-	output		hps_0_f2h_sdram0_data_waitrequest;
-	output	[63:0]	hps_0_f2h_sdram0_data_readdata;
-	output		hps_0_f2h_sdram0_data_readdatavalid;
-	input		hps_0_f2h_sdram0_data_read;
 	inout		hps_io_hps_io_sdio_inst_CMD;
 	inout		hps_io_hps_io_sdio_inst_D0;
 	inout		hps_io_hps_io_sdio_inst_D1;
@@ -116,11 +108,9 @@ module fpgame_soc (
 	input		memory_oct_rzqin;
 	output	[23:0]	ppu_bgcolor_export;
 	output	[31:0]	ppu_bgscroll_export;
-	output		ppu_dma_waitrequest;
-	input	[2:0]	ppu_dma_wraddr;
-	input		ppu_dma_wren;
-	input	[31:0]	ppu_dma_wrdata;
-	output		ppu_dma_finish_irq;
 	output	[2:0]	ppu_enable_export;
 	output	[31:0]	ppu_fgscroll_export;
+	output	[31:0]	vramsrcaddrpio_rddata;
+	output		vramsrcaddrpio_update_avail;
+	input		vramsrcaddrpio_read_rst;
 endmodule
