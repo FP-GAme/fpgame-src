@@ -4,6 +4,11 @@ module fpgame_soc (
 	apu_buf_export_data,
 	apu_control_export_valid,
 	apu_control_export_data,
+	avalon_master_0_conduit_end_avm_addr,
+	avalon_master_0_conduit_end_avm_read,
+	avalon_master_0_conduit_end_avm_readdata,
+	avalon_master_0_conduit_end_avm_readdatavalid,
+	avalon_master_0_conduit_end_avm_waitrequest,
 	clk_clk,
 	cpu_wr_busy_export,
 	f2h_irq0_irq,
@@ -52,17 +57,17 @@ module fpgame_soc (
 	ppu_bgcolor_export,
 	ppu_bgscroll_export,
 	ppu_enable_export,
-	ppu_fgscroll_export,
-	avalon_master_0_conduit_end_avm_addr,
-	avalon_master_0_conduit_end_avm_read,
-	avalon_master_0_conduit_end_avm_readdata,
-	avalon_master_0_conduit_end_avm_readdatavalid,
-	avalon_master_0_conduit_end_avm_waitrequest);	
+	ppu_fgscroll_export);	
 
 	output		apu_buf_export_valid;
 	output	[31:0]	apu_buf_export_data;
 	output		apu_control_export_valid;
 	output	[31:0]	apu_control_export_data;
+	input	[31:0]	avalon_master_0_conduit_end_avm_addr;
+	input		avalon_master_0_conduit_end_avm_read;
+	output	[63:0]	avalon_master_0_conduit_end_avm_readdata;
+	output		avalon_master_0_conduit_end_avm_readdatavalid;
+	output		avalon_master_0_conduit_end_avm_waitrequest;
 	input		clk_clk;
 	output		cpu_wr_busy_export;
 	input	[31:0]	f2h_irq0_irq;
@@ -112,9 +117,4 @@ module fpgame_soc (
 	output	[31:0]	ppu_bgscroll_export;
 	output	[2:0]	ppu_enable_export;
 	output	[31:0]	ppu_fgscroll_export;
-	input	[28:0]	avalon_master_0_conduit_end_avm_addr;
-	input		avalon_master_0_conduit_end_avm_read;
-	output	[63:0]	avalon_master_0_conduit_end_avm_readdata;
-	output		avalon_master_0_conduit_end_avm_readdatavalid;
-	output		avalon_master_0_conduit_end_avm_waitrequest;
 endmodule

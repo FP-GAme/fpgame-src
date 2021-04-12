@@ -16,6 +16,11 @@
          value = "11";
          type = "int";
       }
+      datum sopceditor_expanded
+      {
+         value = "1";
+         type = "boolean";
+      }
    }
    element apu_buf
    {
@@ -506,7 +511,7 @@
   <parameter name="ENABLE_USER_ECC" value="false" />
   <parameter name="EXPORT_AFI_HALF_CLK" value="false" />
   <parameter name="EXTRA_SETTINGS" value="" />
-  <parameter name="F2H_AXI_CLOCK_FREQ" value="100" />
+  <parameter name="F2H_AXI_CLOCK_FREQ" value="50000000" />
   <parameter name="F2H_SDRAM0_CLOCK_FREQ" value="50000000" />
   <parameter name="F2H_SDRAM1_CLOCK_FREQ" value="100" />
   <parameter name="F2H_SDRAM2_CLOCK_FREQ" value="100" />
@@ -523,7 +528,7 @@
   <parameter name="F2SDRAM_Type" value="Avalon-MM Read-Only" />
   <parameter name="F2SDRAM_Width" value="64" />
   <parameter name="F2SINTERRUPT_Enable" value="true" />
-  <parameter name="F2S_Width" value="0" />
+  <parameter name="F2S_Width" value="2" />
   <parameter name="FIX_READ_LATENCY" value="8" />
   <parameter name="FORCED_NON_LDC_ADDR_CMD_MEM_CK_INVERT" value="false" />
   <parameter name="FORCED_NUM_WRITE_FR_CYCLE_SHIFTS" value="0" />
@@ -1030,7 +1035,7 @@
    kind="avalon"
    version="20.1"
    start="Avalon_Master_0.avm_m0"
-   end="hps_0.f2h_sdram0_data">
+   end="hps_0.f2h_axi_slave">
   <parameter name="arbitrationPriority" value="1" />
   <parameter name="baseAddress" value="0x0000" />
   <parameter name="defaultConnection" value="false" />
@@ -1154,6 +1159,11 @@
    version="20.1"
    start="clk_0.clk"
    end="Avalon_Master_0.clock" />
+ <connection
+   kind="clock"
+   version="20.1"
+   start="clk_0.clk"
+   end="hps_0.f2h_axi_clock" />
  <connection
    kind="clock"
    version="20.1"

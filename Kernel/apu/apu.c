@@ -148,7 +148,7 @@ static int apu_probe(struct platform_device *pdev)
 
 	/* Allocate sample buffers */
 	sample_buf[0] = kzalloc(APU_BUF_SIZE << 1, GFP_KERNEL);
-	sample_buf[1] = &sample_buf[0][APU_BUF_SIZE];
+	sample_buf[1] = &(sample_buf[0][APU_BUF_SIZE]);
 	if (sample_buf[0] == NULL) {
 		printk(KERN_ALERT "FP-GAme apu failed to alloc sample buffers");
 		return -1;
@@ -182,8 +182,8 @@ static irqreturn_t apu_irq(int irq, void *dev_id)
 	(void)dev_id;
 
 	/* Switch the active buffer */
-	active_buf = !active_buf;
-	sample_req = 1;
+	//active_buf = !active_buf;
+	//sample_req = 1;
 
 	/* Acknowledge the interrupt, dropping the IRQ line. */
 	mmio_write(APU_CONFIG_OFFSET, APU_IRQ_ACK | APU_ENABLE);
@@ -259,10 +259,10 @@ static ssize_t apu_write(struct file *file, const char __user *buf,
 	if (atomic_xchg(&write_lock, 1) == 1) { return -EBUSY; }
 
 	/* Ensure that the buffer is only written to once per sample request. */
-	if (!sample_req) {
-		atomic_set(&write_lock, 0);
-		return -EBUSY;
-	}
+	//if (!sample_req) {
+	//	atomic_set(&write_lock, 0);
+	//	return -EBUSY;
+	//}
 
 	// Copy from user memory. Clear unspecified samples.
 	if (copy_from_user(sample_buf[!active_buf], buf, len) != 0) {
@@ -275,10 +275,11 @@ static ssize_t apu_write(struct file *file, const char __user *buf,
 	}
 
 	/* Disallow new samples until the next irq. */
-	sample_req = 0;
+	//sample_req = 0;
 
 	/* Send the new buffer. */
 	mmio_write(APU_BUF_OFFSET, virt_to_phys(sample_buf[!active_buf]));
+	active_buf = !active_buf;
 
 	atomic_set(&write_lock, 0);
 

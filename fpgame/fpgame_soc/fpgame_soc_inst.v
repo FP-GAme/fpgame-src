@@ -3,6 +3,11 @@
 		.apu_buf_export_data                           (<connected-to-apu_buf_export_data>),                           //                               .export_data
 		.apu_control_export_valid                      (<connected-to-apu_control_export_valid>),                      //                    apu_control.export_valid
 		.apu_control_export_data                       (<connected-to-apu_control_export_data>),                       //                               .export_data
+		.avalon_master_0_conduit_end_avm_addr          (<connected-to-avalon_master_0_conduit_end_avm_addr>),          //    avalon_master_0_conduit_end.avm_addr
+		.avalon_master_0_conduit_end_avm_read          (<connected-to-avalon_master_0_conduit_end_avm_read>),          //                               .avm_read
+		.avalon_master_0_conduit_end_avm_readdata      (<connected-to-avalon_master_0_conduit_end_avm_readdata>),      //                               .avm_readdata
+		.avalon_master_0_conduit_end_avm_readdatavalid (<connected-to-avalon_master_0_conduit_end_avm_readdatavalid>), //                               .avm_readdatavalid
+		.avalon_master_0_conduit_end_avm_waitrequest   (<connected-to-avalon_master_0_conduit_end_avm_waitrequest>),   //                               .avm_waitrequest
 		.clk_clk                                       (<connected-to-clk_clk>),                                       //                            clk.clk
 		.cpu_wr_busy_export                            (<connected-to-cpu_wr_busy_export>),                            //                    cpu_wr_busy.export
 		.f2h_irq0_irq                                  (<connected-to-f2h_irq0_irq>),                                  //                       f2h_irq0.irq
@@ -51,11 +56,6 @@
 		.ppu_bgcolor_export                            (<connected-to-ppu_bgcolor_export>),                            //                    ppu_bgcolor.export
 		.ppu_bgscroll_export                           (<connected-to-ppu_bgscroll_export>),                           //                   ppu_bgscroll.export
 		.ppu_enable_export                             (<connected-to-ppu_enable_export>),                             //                     ppu_enable.export
-		.ppu_fgscroll_export                           (<connected-to-ppu_fgscroll_export>),                           //                   ppu_fgscroll.export
-		.avalon_master_0_conduit_end_avm_addr          (<connected-to-avalon_master_0_conduit_end_avm_addr>),          //    avalon_master_0_conduit_end.avm_addr
-		.avalon_master_0_conduit_end_avm_read          (<connected-to-avalon_master_0_conduit_end_avm_read>),          //                               .avm_read
-		.avalon_master_0_conduit_end_avm_readdata      (<connected-to-avalon_master_0_conduit_end_avm_readdata>),      //                               .avm_readdata
-		.avalon_master_0_conduit_end_avm_readdatavalid (<connected-to-avalon_master_0_conduit_end_avm_readdatavalid>), //                               .avm_readdatavalid
-		.avalon_master_0_conduit_end_avm_waitrequest   (<connected-to-avalon_master_0_conduit_end_avm_waitrequest>)    //                               .avm_waitrequest
+		.ppu_fgscroll_export                           (<connected-to-ppu_fgscroll_export>)                            //                   ppu_fgscroll.export
 	);
 
