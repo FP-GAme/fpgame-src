@@ -154,8 +154,11 @@ module ppu (
                 //   and do nothing.
                 //if (vblank_start) n_state = (dma_rdy_for_sync) ? PPU_SYNC : PPU_IDLE;
                 if (vblank_start) begin
-                    n_state = (dma_rdy_for_sync) ? PPU_SYNC : PPU_IDLE;
-                    n_vram_sync = 1'b1; // TODO, remove if this fails.
+                    if (dma_rdy_for_sync) begin
+                        n_state = PPU_SYNC;
+                        n_vram_sync = 1'b1; // TODO, remove if this fails.
+                    end
+                    else n_state = PPU_IDLE;
                 end
                 else n_state = PPU_DISP;
             end

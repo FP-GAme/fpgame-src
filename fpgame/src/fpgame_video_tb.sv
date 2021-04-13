@@ -34,100 +34,33 @@ module fpgame_video_tb;
     logic [23:0]  ppu_bgcolor;
     logic [31:0]  ppu_fgscroll;
 
-    // cpu to ioss interconnect
-    logic [15:0] con_state;
-    assign con_state = 16'd0;
-
-    /* APU to CPU interconnect */
-    logic [63:0] apu_mem_data;
-    logic [31:0] apu_control, apu_buf;
-    logic [28:0] apu_mem_addr;
-    logic apu_control_valid, apu_buf_valid, apu_buf_irq;
-    assign apu_buf_irq = 1'b0;
-
+    // "Don't-care" assignments for this testbench
+    assign h2f_vram_wraddr = '0;
+    assign h2f_vram_wren = 1'b0;
+    assign h2f_vram_wrdata = '0;
+    assign vramsrcaddrpio_rddata = '0;
+    assign vramsrcaddrpio_update_avail = 1'b0;
+    assign ppu_bgscroll = '0;
+    assign ppu_enable = '0;
+    assign ppu_bgcolor = '0;
+    assign ppu_fgscroll = '0;
+    assign hdmi_tx_int = 1'b0;
 
     // ==================
     // === Submodules ===
     // ==================
-    fpgame_soc u0 (
-        .clk_clk                            (clk),
-        .hps_io_hps_io_sdio_inst_CMD        (),
-        .hps_io_hps_io_sdio_inst_D0         (),
-        .hps_io_hps_io_sdio_inst_D1         (),
-        .hps_io_hps_io_sdio_inst_CLK        (),
-        .hps_io_hps_io_sdio_inst_D2         (),
-        .hps_io_hps_io_sdio_inst_D3         (),
-        .hps_io_hps_io_usb1_inst_D0         (),
-        .hps_io_hps_io_usb1_inst_D1         (),
-        .hps_io_hps_io_usb1_inst_D2         (),
-        .hps_io_hps_io_usb1_inst_D3         (),
-        .hps_io_hps_io_usb1_inst_D4         (),
-        .hps_io_hps_io_usb1_inst_D5         (),
-        .hps_io_hps_io_usb1_inst_D6         (),
-        .hps_io_hps_io_usb1_inst_D7         (),
-        .hps_io_hps_io_usb1_inst_CLK        (),
-        .hps_io_hps_io_usb1_inst_STP        (),
-        .hps_io_hps_io_usb1_inst_DIR        (),
-        .hps_io_hps_io_usb1_inst_NXT        (),
-        .hps_io_hps_io_uart0_inst_RX        (),
-        .hps_io_hps_io_uart0_inst_TX        (),
-        .memory_mem_a                       (),
-        .memory_mem_ba                      (),
-        .memory_mem_ck                      (),
-        .memory_mem_ck_n                    (),
-        .memory_mem_cke                     (),
-        .memory_mem_cs_n                    (),
-        .memory_mem_ras_n                   (),
-        .memory_mem_cas_n                   (),
-        .memory_mem_we_n                    (),
-        .memory_mem_reset_n                 (),
-        .memory_mem_dq                      (),
-        .memory_mem_dqs                     (),
-        .memory_mem_dqs_n                   (),
-        .memory_mem_odt                     (),
-        .memory_mem_dm                      (),
-        .memory_oct_rzqin                   (),
-        // === CPU IRQ ===
-        .f2h_irq0_irq                       ({ 30'd1, ppu_dma_rdy_irq, apu_buf_irq }),
-        // === IOSS/CPU Communication ===
-        .input_pio_export                   (con_state),
-        // === APU/CPU Communication ===
-        .apu_control_export_data		    (apu_control),
-        .apu_control_export_valid           (apu_control_valid),
-        .apu_buf_export_data                (apu_buf),
-        .apu_buf_export_valid               (apu_buf_valid),
-        // === PPU/CPU Communication ===
-        .h2f_vram_wraddr                    (h2f_vram_wraddr),
-        .h2f_vram_wren                      (h2f_vram_wren),
-        .h2f_vram_wrdata                    (h2f_vram_wrdata),
-        .ppu_bgscroll_export                (ppu_bgscroll),
-        .ppu_fgscroll_export                (ppu_fgscroll),
-        .ppu_enable_export                  (ppu_enable),
-        .ppu_bgcolor_export                 (ppu_bgcolor),
-        .dma_engine_src_addr                (dma_engine_src_addr),
-        .dma_engine_start                   (dma_engine_start),
-        .dma_engine_finish                  (dma_engine_finish),
-        .vramsrcaddrpio_rddata              (vramsrcaddrpio_rddata),
-        .vramsrcaddrpio_update_avail        (vramsrcaddrpio_update_avail),
-        .vramsrcaddrpio_read_rst            (vramsrcaddrpio_update_avail)
-    );
-
-    hdmi_generator hgen (
-        .video_clk,
-        .clk(clk),
+    hdmi_video_output hvo (
+        .video_clk(video_clk),
         .rst_n(sys_rst_n),
-        .vga_pclk(HDMI_TX_CLK),
-        .vga_de(HDMI_TX_DE),
-        .vga_hs(HDMI_TX_HS),
-        .vga_vs(HDMI_TX_VS),
-        .vga_rgb(HDMI_TX_D),
-        .i2c_sclk(HDMI_I2C_SCL),
-        .i2c_sda(HDMI_I2C_SDA),
-        .hdmi_tx_int(HDMI_TX_INT),
-        .hdmi_rowram_rddata,
-        .hdmi_rowram_rdaddr,
-        .hdmi_palram_rddata,
-        .hdmi_palram_rdaddr,
+        .vga_pclk(),
+        .vga_de(),
+        .vga_hs(),
+        .vga_vs(),
+        .vga_rgb(),
+        .rowram_rddata(hdmi_rowram_rddata),
+        .rowram_rdaddr(hdmi_rowram_rdaddr),
+        .palram_rddata(hdmi_palram_rddata),
+        .palram_rdaddr(hdmi_palram_rdaddr),
         .rowram_swap,
         .vblank_start,
         .vblank_end_soon,
@@ -179,12 +112,21 @@ module fpgame_video_tb;
     end
 
     initial begin
+        dma_engine_finish = 1'b0;
+
         sys_rst_n = 0;
         #1;
         sys_rst_n = 1;
-        #1;
+        @(posedge clk);
 
-        #(16800000 * 2); // Simulate for 2 frames
+        // === Simulation Start ===
+        repeat (10) @(posedge clk);
+        dma_engine_finish = 1'b1;
+        @(posedge clk);
+        dma_engine_finish = 1'b0;
+
+        repeat (840000) @(posedge clk); // Simulate for a 1 frame
+
         $stop;
     end
 
