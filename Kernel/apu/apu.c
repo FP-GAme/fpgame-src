@@ -52,30 +52,6 @@
 /** @brief The size of each apu sample buffer. */
 #define APU_BUF_SIZE (sizeof(unsigned char) * 512)
 
-/** @brief The I/O mapping region for the apu driver. */
-static struct io_mapping *apu_io;
-
-/** @brief The lock used to protect the APU from multiple processes. */
-static atomic_t apu_lock;
-
-/** @brief The pid which should be sent the SIGINT for callback. */
-static pid_t callback_pid;
-
-/** @brief The buffers which will hold the active and pending samples. */
-static unsigned char *sample_buf[2];
-
-/** @brief The dma handle for the apu. */
-static dma_addr_t apu_dma;
-
-/** @brief The device structure for the apu. */
-static struct device *apu_dev;
-
-/** @brief Indicates which buffer the user should write to. */
-static unsigned active_buf;
-
-/** @brief Indicates that the device currently wants more samples. */
-static unsigned sample_req;
-
 /* Module Functions */
 static int apu_probe(struct platform_device *pdev);
 static irqreturn_t apu_irq(int irq, void *dev_id);
@@ -90,6 +66,45 @@ static int apu_remove(struct platform_device *pdev);
 /* Helper Functions */
 static void mmio_write(unsigned addr, unsigned val);
 static void send_user_interrupt(pid_t pid, int code);
+
+/** @brief The I/O mapping region for the apu driver. */
+static struct io_mapping *apu_io;
+
+/** @brief The device structure for the apu. */
+static struct device *apu_dev;
+
+/** @brief The lock used to protect the APU from multiple processes. */
+static atomic_t apu_lock;
+
+/**
+ * @brief The structure type used to manage apu sample sending/receiving.
+ *
+ * On initialization, the driver requests twice the apu buffer size
+ * of dma-able memory. This memory is assigned to our double buffered
+ * sample buffer, buf. dma_addr is also given the base physical address
+ * that the apu should use to access samples by that request.
+ *
+ * active_buf denotes the buffer currently being used by the apu to play
+ * samples (which should not be written to).
+ *
+ * sample_req and pid are used to coordinate communication with the user
+ * mode part of the driver. The user mode portion must register its pid
+ * with the driver after making a successful call to open on our device file.
+ * Once that is done, interrupts will be enabled. The interrupt handler
+ * will set sample_req to 1, which is exchanged to 0 during the write call
+ * the user mode driver makes to send us new samples. This prevents us from
+ * receiving multiple new sample buffers per sample frame.
+ */
+struct apu_sample {
+	// Driver instance specific info.
+	unsigned char *buf[2];
+	unsigned active_buf;
+	dma_addr_t dma_addr;
+
+	// User instance specific info.
+	atomic_t req;
+	pid_t pid;
+} sample;
 
 /**
  * @brief Interrupt table structure thing.
@@ -155,10 +170,10 @@ static int apu_probe(struct platform_device *pdev)
 
 	/* Allocate sample buffers */
 	apu_dev = &(pdev->dev);
-	sample_buf[0] = dma_alloc_coherent(apu_dev, APU_BUF_SIZE << 1, &apu_dma,
-	                                GFP_KERNEL);
-	sample_buf[1] = &(sample_buf[0][APU_BUF_SIZE]);
-	if (sample_buf[0] == NULL) {
+	sample.buf[0] = dma_alloc_coherent(apu_dev, APU_BUF_SIZE << 1,
+	                                   &sample.dma_addr, GFP_KERNEL);
+	sample.buf[1] = &(sample.buf[0][APU_BUF_SIZE]);
+	if (sample.buf[0] == NULL) {
 		printk(KERN_ALERT "FP-GAme apu failed to alloc sample buffers");
 		return -1;
 	}
@@ -187,18 +202,12 @@ static int apu_probe(struct platform_device *pdev)
  */
 static irqreturn_t apu_irq(int irq, void *dev_id)
 {
-	(void)irq;
-	(void)dev_id;
-
-	/* Switch the active buffer */
-	//active_buf = !active_buf;
-	//sample_req = 1;
-
 	/* Acknowledge the interrupt, dropping the IRQ line. */
 	mmio_write(APU_CONFIG_OFFSET, APU_IRQ_ACK | APU_ENABLE);
 
 	/* Signal the user process that we need more samples. */
-	if (callback_pid) { send_user_interrupt(callback_pid, APU_MAJOR_NUM); }
+	atomic_set(&sample.req, 1);
+	if (sample.pid) { send_user_interrupt(sample.pid, APU_MAJOR_NUM); }
 
 	return IRQ_HANDLED;
 }
@@ -208,6 +217,8 @@ static irqreturn_t apu_irq(int irq, void *dev_id)
  *
  * If the APU has already been opened by another process, fails.
  *
+ * @param inode Ignored.
+ * @param file Ignored.
  * @return 0 on success, -1 on error.
  */
 static int apu_open(struct inode *inode, struct file *file)
@@ -218,22 +229,20 @@ static int apu_open(struct inode *inode, struct file *file)
 
 /**
  * @brief Handles an IOCTL call to the apu module.
- * @param file Ignored.
- * @param ioctl_num The ioctl command number.
- * @param ioctl_param The PID to send the callback signal to.
  *
  * Fails if the command is not the set callback pid command.
  *
+ * @param file Ignored.
+ * @param ioctl_num The ioctl command number.
+ * @param ioctl_param The PID to send the callback signal to.
  * @return 0 on success, or -1 on failure.
  */
 static long apu_ioctl(struct file *file, unsigned ioctl_num,
                       unsigned long ioctl_param)
 {
-	(void)file;
-
 	if (ioctl_num != IOCTL_APU_SET_CALLBACK_PID) { return -EINVAL; }
 
-	callback_pid = ioctl_param;
+	sample.pid = ioctl_param;
 	mmio_write(APU_CONFIG_OFFSET, APU_ENABLE | APU_IRQ_REQ);
 	return 0;
 }
@@ -257,7 +266,6 @@ static ssize_t apu_write(struct file *file, const char __user *buf,
                          size_t len, loff_t *offset)
 {
 	static atomic_t write_lock;
-	(void)offset;
 
 	/* Verify length arguments */
 	if (len > APU_BUF_SIZE) {
@@ -268,30 +276,28 @@ static ssize_t apu_write(struct file *file, const char __user *buf,
 	if (atomic_xchg(&write_lock, 1) == 1) { return -EBUSY; }
 
 	/* Ensure that the buffer is only written to once per sample request. */
-	//if (!sample_req) {
-	//	atomic_set(&write_lock, 0);
-	//	return -EBUSY;
-	//}
+	if (atomic_xchg(&sample.req, 0) != 1) {
+		atomic_set(&write_lock, 0);
+		return -EBUSY;
+	}
 
 	/* Copy from user memory. Clear unspecified samples. */
-	if (copy_from_user(sample_buf[!active_buf], buf, len) != 0) {
-		memset(sample_buf[!active_buf], 0, APU_BUF_SIZE);
+	if (copy_from_user(sample.buf[!sample.active_buf], buf, len) != 0) {
+		memset(sample.buf[!sample.active_buf], 0, APU_BUF_SIZE);
 		atomic_set(&write_lock, 0);
 		return -EFAULT;
 	} else {
-		memset(&sample_buf[!active_buf][len], 0,
-			APU_BUF_SIZE - len);
+		memset(&sample.buf[!sample.active_buf][len],
+		       0, APU_BUF_SIZE - len);
 	}
 
 	/* Ensure our changes are seen */
 	wmb();
 
-	/* Disallow new samples until the next irq. */
-	//sample_req = 0;
-
 	/* Send the new buffer. */
-	mmio_write(APU_BUF_OFFSET, apu_dma + ((!active_buf) ? APU_BUF_SIZE : 0));
-	active_buf = !active_buf;
+	mmio_write(APU_BUF_OFFSET, sample.dma_addr
+	           + ((!sample.active_buf) ? APU_BUF_SIZE : 0));
+	sample.active_buf = !sample.active_buf;
 
 	atomic_set(&write_lock, 0);
 
@@ -310,11 +316,17 @@ static ssize_t apu_write(struct file *file, const char __user *buf,
  */
 static int apu_release(struct inode *inode, struct file *file)
 {
-	/* Release the apu. */
-	if (atomic_xchg(&apu_lock, 0) == 0) { return -EIO; }
+	/* Reset user specific info. */
+	sample.pid = 0;
+	atomic_set(&sample.req, 0);
 
 	/* Mute output and disable apu IRQs. */
 	mmio_write(APU_CONFIG_OFFSET, 0);
+
+	/* Release the apu. */
+	if (atomic_xchg(&apu_lock, 0) == 0) {
+		printk(KERN_ALERT "Close called on apu when it wasn't open!");
+	}
 
 	return 0;
 }
@@ -328,7 +340,8 @@ static int apu_remove(struct platform_device *pdev)
 {
 	unregister_chrdev(APU_MAJOR_NUM, APU_DEV_NAME);
 	io_mapping_free(apu_io);
-	dma_free_coherent(apu_dev, APU_BUF_SIZE << 1, sample_buf[0], apu_dma);
+	dma_free_coherent(apu_dev, APU_BUF_SIZE << 1,
+	                  sample.buf[0], sample.dma_addr);
 
 	mmio_write(APU_CONFIG_OFFSET, 0);
 	free_irq(platform_get_irq(pdev, 0), NULL);
