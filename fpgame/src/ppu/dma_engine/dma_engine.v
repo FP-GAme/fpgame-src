@@ -500,9 +500,7 @@ module dma_engine (
 ) /* synthesis ALTERA_ATTRIBUTE = "SUPPRESS_DA_RULE_INTERNAL=\"R101\"" */ ;
 
     wire             clk_en;
-    reg              d1_done_transaction;
     reg              done;
-    wire             done_transaction;
     reg              done_write;
     wire             fifo_datavalid;
     wire             fifo_empty;
@@ -581,11 +579,12 @@ module dma_engine (
     always @(posedge clk or negedge reset_n) begin
         if (reset_n == 0)
             writeaddress <= 16'h0;
-        else if (clk_en)
-            writeaddress <= p1_writeaddress;
+        else if (clk_en) begin
+            // is p1_writelength == 0, we are about to end, so do not increment address.
+            writeaddress <= (p1_writelength == 0) ? 16'h0 : p1_writeaddress;
+        end
     end
 
-    // TODO: May need to reset module after every run. Otherwise, writeaddress won't return to starting value
     assign p1_writeaddress = (dma_engine_start && !started) ? START_WRADDRESS :
                              (inc_write) ? (writeaddress + writeaddress_inc) : writeaddress;
 
@@ -735,12 +734,14 @@ module dma_engine (
     assign p1_done_read = (leen && (p1_length_eq_0 || (length_eq_0))) | p1_done_write;
     assign p1_done_write = (leen && (p1_writelength_eq_0 || writelength_eq_0));
 
-    // Write has completed when the length goes to 0, or
+    // Write has completed when the length goes to 0
     always @(posedge clk or negedge reset_n) begin
-        if (reset_n == 0)
-            done_write <= 0;
-        else if (clk_en)
-            done_write <= p1_done_write;
+        if (!reset_n) begin
+            done_write <= 1'b1;
+        end
+        else begin
+            done_write <= (!started && dma_engine_start) ? 1'b0 : p1_done_write;
+        end
     end
 
     assign read_address = readaddress;
