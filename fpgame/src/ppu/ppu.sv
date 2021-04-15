@@ -8,14 +8,14 @@ module ppu (
     input logic rst_n,
 
     // from/to HDMI video output
-    output logic [9:0]  hdmi_rowram_rddata,
-    input  logic [8:0]  hdmi_rowram_rdaddr,
-    output logic [63:0] hdmi_palram_rddata,
-    input  logic [8:0]  hdmi_palram_rdaddr,
-    input  logic        rowram_swap,
-    input  logic [7:0]  next_row,
-    input  logic        vblank_start,
-    input  logic        vblank_end_soon,
+    output logic [9:0]   hdmi_rowram_rddata,
+    input  logic [8:0]   hdmi_rowram_rdaddr,
+    output logic [23:0]  hdmi_color_rddata,
+    input  logic [9:0]   hdmi_color_rdaddr,
+    input  logic         rowram_swap,
+    input  logic [7:0]   next_row,
+    input  logic         vblank_start,
+    input  logic         vblank_end_soon,
 
     // h2f_vram_avalon_interface (essentially the CPU->VRAM write interface)
     input  logic [11:0]  h2f_vram_wraddr,
@@ -23,7 +23,10 @@ module ppu (
     input  logic [127:0] h2f_vram_wrdata,
 
     // TODO: Double-buffer these pio inputs. Change when we do SYNC
-    input  logic [31:0]  bgscroll,
+    input  logic [31:0]  ppu_bgscroll,
+    input  logic [31:0]  ppu_fgscroll,
+    input  logic [2:0]   ppu_enable,
+    input  logic [23:0]  ppu_bgcolor,
     
     // DMA Source Address PIO
     input  logic [31:0]  vramsrcaddrpio_rddata,
@@ -68,6 +71,11 @@ module ppu (
     logic n_dma_engine_start;
     logic n_ppu_dma_rdy_irq;
 
+    logic [31:0] bgscroll;
+    logic [31:0] fgscroll;
+    logic [2:0]  enable;
+    logic [23:0] bgcolor;
+
     enum { 
         PPU_IDLE, // DMA either took too long, no DMA transfer even started, or we are just starting
         PPU_DISP, // ppu_logic reads the PPU-Facing VRAM, DMA is likely in progress or complete
@@ -99,12 +107,15 @@ module ppu (
         .rst_n,
         .hdmi_rowram_rddata,
         .hdmi_rowram_rdaddr,
-        .hdmi_palram_rddata,
-        .hdmi_palram_rdaddr,
+        .hdmi_color_rddata,
+        .hdmi_color_rdaddr,
         .rowram_swap(rowram_swap_disp),
         .next_row,
         .vram_ppu_ifP_usr(vram_ppu_ifP.usr),
-        .bgscroll
+        .bgscroll,
+        .fgscroll,
+        .enable,
+        .bgcolor
     );
 
     // Decides who gets the access to the PPU-Facing and CPU-Facing VRAMs
@@ -120,6 +131,20 @@ module ppu (
         .vram_ppu_ifP_src(vram_ppu_ifP.src)
     );
 
+    // dbuf_ppu_ctrl_regs
+    dbuf_ppu_ctrl_regs dpcr (
+        .clk,
+        .rst_n,
+        .sync(vram_sync), // Control regs sync along with the VRAMs
+        .ppu_bgscroll,
+        .ppu_fgscroll,
+        .ppu_enable,
+        .ppu_bgcolor,
+        .dbuf_bgscroll(bgscroll),
+        .dbuf_fgscroll(fgscroll),
+        .dbuf_enable(enable),
+        .dbuf_bgcolor(bgcolor)
+    );
 
     // ===============
     // === PPU FSM ===
@@ -218,7 +243,6 @@ module ppu (
             state <= PPU_IDLE;
 
             vram_sync      <= 1'b0;
-            //vram_sync_sent <= 1'b0;
 
             dma_rdy_for_sync    <= 1'b0;
             dma_engine_src_addr <= 32'd0;
@@ -230,7 +254,6 @@ module ppu (
             state <= n_state;
 
             vram_sync      <= n_vram_sync;
-            //vram_sync_sent <= n_vram_sync_sent;
 
             dma_rdy_for_sync    <= n_dma_rdy_for_sync;
             dma_engine_src_addr <= n_dma_engine_src_addr;

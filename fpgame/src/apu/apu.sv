@@ -59,16 +59,16 @@ logic debounce_i2s_ws, sample_req;
 
 /*** Modules ***/
 
-sample_fetcher(.clock, .reset_l, .mem_data, .mem_ack, .mem_addr, .mem_read_en,
-               .mem_wait, .chunk, .chunk_valid, .chunk_ack, .chunk_addr, .base(queued_base),
-               .base_valid(queued_base_valid), .base_ack(queued_base_ack));
+sample_fetcher s1 (.clock, .reset_l, .mem_data, .mem_ack, .mem_addr, .mem_read_en,
+                   .mem_wait, .chunk, .chunk_valid, .chunk_ack, .chunk_addr, .base(queued_base),
+                   .base_valid(queued_base_valid), .base_ack(queued_base_ack));
 
-chunk_player(.clock, .reset_l, .chunk, .chunk_valid, .chunk_ack, .sample,
-             .sample_req);
+chunk_player c1 (.clock, .reset_l, .chunk, .chunk_valid, .chunk_ack, .sample,
+                 .sample_req);
 
-posedge_detect(.clock, .reset_l, .in(debounce_i2s_ws), .out(sample_req));
+posedge_detect p1 (.clock, .reset_l, .in(debounce_i2s_ws), .out(sample_req));
 
-debounce(.clock, .reset_l, .in(i2s_ws), .out(debounce_i2s_ws));
+debounce d1 (.clock, .reset_l, .in(i2s_ws), .out(debounce_i2s_ws));
 
 /*
  * Important: It isn't, strictly speaking, safe to connect an output from one
@@ -82,8 +82,8 @@ debounce(.clock, .reset_l, .in(i2s_ws), .out(debounce_i2s_ws));
  * The same cannot be said for the edge detection on i2s_ws itself, which is
  * why it is debounced.
  */
-i2s_comm(.clock(i2s_clk), .reset_l, .i2s_out, .i2s_ws,
-         .sample(i2s_sample));
+i2s_comm i1 (.clock(i2s_clk), .reset_l, .i2s_out, .i2s_ws,
+             .sample(i2s_sample));
 
 /*** Combonational Logic ***/
 

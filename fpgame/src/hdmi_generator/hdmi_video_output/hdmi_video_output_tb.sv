@@ -18,8 +18,8 @@ module hdmi_video_output_tb;
     // interconnect
     logic [9:0] rowram_rddata;
     logic [8:0] rowram_rdaddr;
-    logic [63:0] palram_rddata;
-    logic [8:0] palram_rdaddr;
+    logic [23:0] color_rddata;
+    logic [9:0] color_rdaddr;
 
 
     hdmi_video_output hvo (
@@ -32,8 +32,8 @@ module hdmi_video_output_tb;
         .vga_rgb(vga_rgb),
         .rowram_rddata,
         .rowram_rdaddr,
-        .palram_rddata,
-        .palram_rdaddr,
+        .color_rddata,
+        .color_rdaddr,
         .rowram_swap
     );
 

@@ -11,8 +11,8 @@ module fpgame_video_tb;
     // hdmi_generator to ppu interconnect
     logic [9:0]  hdmi_rowram_rddata;
     logic [8:0]  hdmi_rowram_rdaddr;
-    logic [63:0] hdmi_palram_rddata;
-    logic [8:0]  hdmi_palram_rdaddr;
+    logic [23:0] hdmi_color_rddata;
+    logic [9:0]  hdmi_color_rdaddr;
     logic        rowram_swap;
     logic        vblank_start;
     logic        vblank_end_soon;
@@ -59,8 +59,8 @@ module fpgame_video_tb;
         .vga_rgb(),
         .rowram_rddata(hdmi_rowram_rddata),
         .rowram_rdaddr(hdmi_rowram_rdaddr),
-        .palram_rddata(hdmi_palram_rddata),
-        .palram_rdaddr(hdmi_palram_rdaddr),
+        .color_rddata(hdmi_color_rddata),
+        .color_rdaddr(hdmi_color_rdaddr),
         .rowram_swap,
         .vblank_start,
         .vblank_end_soon,
@@ -72,8 +72,8 @@ module fpgame_video_tb;
         .rst_n(sys_rst_n),
         .hdmi_rowram_rddata,
         .hdmi_rowram_rdaddr,
-        .hdmi_palram_rddata,
-        .hdmi_palram_rdaddr,
+        .hdmi_color_rddata,
+        .hdmi_color_rdaddr,
         .rowram_swap,
         .next_row,
         .vblank_start,
@@ -81,7 +81,10 @@ module fpgame_video_tb;
         .h2f_vram_wraddr,
         .h2f_vram_wren,
         .h2f_vram_wrdata,
-        .bgscroll(ppu_bgscroll),
+        .ppu_bgscroll,
+        .ppu_fgscroll,
+        .ppu_enable,
+        .ppu_bgcolor,
         .vramsrcaddrpio_rddata,
         .vramsrcaddrpio_update_avail,
         .vramsrcaddrpio_read_rst,
@@ -121,11 +124,11 @@ module fpgame_video_tb;
 
         // === Simulation Start ===
         repeat (10) @(posedge clk);
-        dma_engine_finish = 1'b1;
+        //dma_engine_finish = 1'b1;
         @(posedge clk);
-        dma_engine_finish = 1'b0;
-
-        repeat (840000) @(posedge clk); // Simulate for a 1 frame
+        //dma_engine_finish = 1'b0;
+        repeat (420000) @(posedge clk);
+        //repeat (840000) @(posedge clk); // Simulate for a 1 frame
 
         $stop;
     end

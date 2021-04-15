@@ -7,14 +7,14 @@ module ppu_logic_tb;
 
     // Controls for this testbench (from/to HDMI video output)
     logic [8:0] hdmi_rowram_rdaddr; // tied to 0. We don't use.
-    logic [8:0] hdmi_palram_rdaddr; // also tied to 0. We don't use
+    logic [9:0] hdmi_color_rdaddr;  // also tied to 0. We don't use
     logic       rowram_swap;        // Essentially the "start" signal
     logic [7:0] next_row;           // Which row to prepare?
 
     logic [31:0] bgscroll;
 
     assign hdmi_rowram_rdaddr = 9'b0;
-    assign hdmi_palram_rdaddr = 9'b0;
+    assign hdmi_color_rdaddr = 10'b0;
 
     vram_if_ppu_facing vram_ppu_ifP(); // VRAM interface used by ppu_logic
 
@@ -28,8 +28,8 @@ module ppu_logic_tb;
         .rst_n,
         .hdmi_rowram_rddata(), // leave disconnected, since hdmi_video_output isn't part of the sim
         .hdmi_rowram_rdaddr,
-        .hdmi_palram_rddata(), // also leave disconnected
-        .hdmi_palram_rdaddr,
+        .hdmi_color_rddata(), // also leave disconnected
+        .hdmi_color_rdaddr,
         .rowram_swap,
         .next_row,
         .vram_ppu_ifP_usr(vram_ppu_ifP.usr),

@@ -12,8 +12,8 @@ module hdmi_video_output (
     // to PPU
     input  logic [9:0]  rowram_rddata,
     output logic [8:0]  rowram_rdaddr,
-    input  logic [63:0] palram_rddata,
-    output logic [8:0]  palram_rdaddr,
+    input  logic [23:0] color_rddata,
+    output logic [9:0]  color_rdaddr,
     output logic        rowram_swap,
     output logic        vblank_start,
     output logic        vblank_end_soon, // Signal that PPU that vblank period is about to end
@@ -57,8 +57,6 @@ module hdmi_video_output (
     logic [8:0] n_rowram_rdaddr; // next row-ram read address
     logic n_addr_toggle;
     logic [23:0] n_vga_rgb;
-    logic palram_datasel; // store LSB of rowram_rddata to translate from 32-bit to 64-bit rd addr
-    logic palram_datasel_prev;
 
     enum { IDLE, SWAP, DISPLAY } c_state, n_state;
      
@@ -109,7 +107,7 @@ module hdmi_video_output (
                     n_rowram_rdaddr = rowram_rdaddr + 9'b1; // Increment pixel address every 2 px
 
                 n_addr_toggle = ~addr_toggle;
-                n_vga_rgb = (palram_datasel_prev) ? palram_rddata[55:32] : palram_rddata[23:0];
+                n_vga_rgb = color_rddata;
 
                 // As soon as we are about to enter the horizontal front porch, transition to IDLE
                 n_state = (h_count == h_sync + h_backporch + h_visible - 1) ? IDLE : DISPLAY;
@@ -125,18 +123,14 @@ module hdmi_video_output (
     always_ff @(posedge video_clk or negedge rst_n) begin
         if (!rst_n) begin
             rowram_rdaddr <= 9'b0;
-            palram_rdaddr <= 9'b0;
-            palram_datasel <= 0;
-            palram_datasel_prev <= 0;
+            color_rdaddr <= 9'b0;
             addr_toggle <= 1'b0;
             c_state <= IDLE;
             vga_rgb <= 24'b0;
         end
         else begin
             rowram_rdaddr <= n_rowram_rdaddr;
-            palram_rdaddr <= rowram_rddata[9:1];
-            palram_datasel <= rowram_rddata[0];
-            palram_datasel_prev <= palram_datasel;
+            color_rdaddr <= rowram_rddata;
             addr_toggle <= n_addr_toggle;
             vga_rgb <= n_vga_rgb;
 

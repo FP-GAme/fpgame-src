@@ -86,8 +86,8 @@ logic video_clk;
 // hdmi_generator to ppu interconnect
 logic [9:0]  hdmi_rowram_rddata;
 logic [8:0]  hdmi_rowram_rdaddr;
-logic [63:0] hdmi_palram_rddata;
-logic [8:0]  hdmi_palram_rdaddr;
+logic [23:0] hdmi_color_rddata;
+logic [9:0]  hdmi_color_rdaddr;
 logic        rowram_swap;
 logic        vblank_start;
 logic        vblank_end_soon;
@@ -108,9 +108,9 @@ logic         ppu_dma_rdy_irq;
 // TODO: These ppu signals need to be double-buffered like VRAM (when cpu_wr_busy is not high).
 // TODO: Do it in the ppu module.
 logic [31:0] ppu_bgscroll;
+logic [31:0] ppu_fgscroll;
 logic [2:0]  ppu_enable;
 logic [23:0] ppu_bgcolor;
-logic [31:0] ppu_fgscroll;
 
 // cpu to ioss interconnect
 logic [15:0] con_state;
@@ -180,7 +180,7 @@ fpgame_soc u0 (
     .h2f_vram_wraddr                    (h2f_vram_wraddr),
     .h2f_vram_wren                      (h2f_vram_wren),
     .h2f_vram_wrdata                    (h2f_vram_wrdata),
-    .ppu_bgscroll_export                (), // TODO, set to ppu_bgscroll after demo
+    .ppu_bgscroll_export                (ppu_bgscroll),
     .ppu_fgscroll_export                (ppu_fgscroll),
     .ppu_enable_export                  (ppu_enable),
     .ppu_bgcolor_export                 (ppu_bgcolor),
@@ -220,8 +220,8 @@ hdmi_generator hgen (
     .hdmi_tx_int(HDMI_TX_INT),
     .hdmi_rowram_rddata,
     .hdmi_rowram_rdaddr,
-    .hdmi_palram_rddata,
-    .hdmi_palram_rdaddr,
+    .hdmi_color_rddata,
+    .hdmi_color_rdaddr,
     .rowram_swap,
     .vblank_start,
     .vblank_end_soon,
@@ -251,8 +251,8 @@ ppu u_ppu (
     .rst_n(sys_rst_n),
     .hdmi_rowram_rddata,
     .hdmi_rowram_rdaddr,
-    .hdmi_palram_rddata,
-    .hdmi_palram_rdaddr,
+    .hdmi_color_rddata,
+    .hdmi_color_rdaddr,
     .rowram_swap,
     .next_row,
     .vblank_start,
@@ -260,7 +260,10 @@ ppu u_ppu (
     .h2f_vram_wraddr,
     .h2f_vram_wren,
     .h2f_vram_wrdata,
-    .bgscroll(ppu_bgscroll),
+    .ppu_bgscroll,
+    .ppu_fgscroll,
+    .ppu_enable,
+    .ppu_bgcolor,
     .vramsrcaddrpio_rddata,
     .vramsrcaddrpio_update_avail,
     .vramsrcaddrpio_read_rst,
@@ -274,8 +277,7 @@ ioss u_ioss (
     .clk(FPGA_CLK1_50),
     .rst_n(sys_rst_n),
     .GPIO,
-    .con_state,
-    .scroll(ppu_bgscroll) // TODO: Remove after demo
+    .con_state
 );
 
 endmodule : fpgame

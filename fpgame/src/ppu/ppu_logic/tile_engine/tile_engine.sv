@@ -424,7 +424,8 @@ module tile_engine #(
 
     // This contains valid data with 1-cycle of read latency during the IDLE state
     // The MSBs form a color palette address, the LSBs form the pixel color
-    assign pmxr_pixel_data = {tilram_fetcher_pmxr_rddata[5:2], patram_rbuf_pmxr_rddata};
+    assign pmxr_pixel_data = (enable) ? {tilram_fetcher_pmxr_rddata[5:2], patram_rbuf_pmxr_rddata} :
+                                        8'b0;
 
 
     // ===========
