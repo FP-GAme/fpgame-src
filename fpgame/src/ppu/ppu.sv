@@ -1,6 +1,34 @@
 /* ppu.sv
  * Implements the Pixel Processing Unit.
- * TODO: Come on Joe, this needs more documentation.
+ */
+/* Overview
+ * This module is the top level module for the PPU. It has several jobs:
+ * 1. We instantiate and connect the various PPU Structures, such as:
+ *    * ppu_logic: HDMI video output reads this module, which returns video data based on vram and
+ *                 dbuf_ppu_ctrl_regs.
+ *
+ *    * vram:      Video RAM. Split into 2 VRAM copies - one PPU-Facing (accessible by the PPU) and
+ *                 one CPU-Facing (accessible by DMA from CPU). These sections are sychronized by
+ *                 vram_sync_writer after a successful DMA from CPU memory into the CPU-Facing VRAM.
+ *                 Each VRAM is split into 4 sections which tell ppu_logic what to display for
+ *                 different data types (tiles, sprites, patterns, and palettes).
+ *
+ *    * vram_sync_writer: Copies from CPU-Facing VRAM to PPU-Facing VRAM, synchronizing them.
+ *
+ *    * vram_interconnect: Both ppu_logic, the DMA-Engine, and vram_sync_writer use vram, so we need
+ *                         a more complex interconnect structure to manage these connections.
+ *
+ *    * dbuf_ppu_ctrl_regs: Ensures PPU-Facing Control registers are synced with the CPU-Facing
+ *                          Control registers whenever VRAM sync occurs.
+ *
+ * 2. We implement the PPU FSM, which determines the communication protocol with the CPU. This
+ *    involves:
+ *    * ppu_dma_rdy_irq: A CPU interrupt which is asserted by the PPU when the PPU is ready to
+ *                       receive another DMA transfer.
+ *
+ *    * vramsrcaddrpio:  A register that the CPU can write an address to in order to signal to the
+ *                       PPU that a DMA transfer should start. The register itself gives a "avail"
+ *                       signal whenever a new DMA address is available.
  */
 
 module ppu (
@@ -22,7 +50,7 @@ module ppu (
     input  logic         h2f_vram_wren,
     input  logic [127:0] h2f_vram_wrdata,
 
-    // TODO: Double-buffer these pio inputs. Change when we do SYNC
+    // Double-buffer these pio inputs. Change when we do SYNC
     input  logic [31:0]  ppu_bgscroll,
     input  logic [31:0]  ppu_fgscroll,
     input  logic [2:0]   ppu_enable,
@@ -131,7 +159,7 @@ module ppu (
         .vram_ppu_ifP_src(vram_ppu_ifP.src)
     );
 
-    // dbuf_ppu_ctrl_regs
+    // Buffered control registers synced along with the PPU-Facing VRAM.
     dbuf_ppu_ctrl_regs dpcr (
         .clk,
         .rst_n,
@@ -158,7 +186,6 @@ module ppu (
     always_comb begin
         // default next-signal states
         n_vram_sync = 1'b0;
-        //n_vram_sync_sent = vram_sync_sent;
         n_dma_rdy_for_sync = dma_rdy_for_sync;
         n_dma_engine_src_addr = dma_engine_src_addr;
         n_dma_engine_start = 1'b0;
@@ -177,23 +204,16 @@ module ppu (
             PPU_DISP: begin
                 // If we have a DMA finished (ready to be synced), then go to sync, else, go to IDLE
                 //   and do nothing.
-                //if (vblank_start) n_state = (dma_rdy_for_sync) ? PPU_SYNC : PPU_IDLE;
                 if (vblank_start) begin
                     if (dma_rdy_for_sync) begin
                         n_state = PPU_SYNC;
-                        n_vram_sync = 1'b1; // TODO, remove if this fails.
+                        n_vram_sync = 1'b1;
                     end
                     else n_state = PPU_IDLE;
                 end
                 else n_state = PPU_DISP;
             end
             PPU_SYNC: begin
-                // TODO: Give the VRAM Interconnect one extra clock cycle to react to state change?
-                // TODO: We can get rid of the VRAM sync sent signal if we just assert n_vram_sync = 1 in the transition to PPU_SYNC from PPU_DISP.
-                // Send the sync signal at the start of this state. Ensure it is sent only once.
-                //n_vram_sync = !vram_sync_sent;
-                //n_vram_sync_sent = 1'b1;
-
                 // Once we are done syncing the last DMA, we can tell the CPU to DMA the next VRAM
                 //   data whenever it is ready to do so.
                 if (vram_sync_done) begin
@@ -206,8 +226,6 @@ module ppu (
 
                 if (vblank_end_soon) begin
                     n_state = PPU_DISP;
-                    // TODO: Again, we can probably remove this!
-                    //n_vram_sync_sent = 1'b0; // reset the sync-sent flag for later reuse
                 end
                 else n_state = PPU_SYNC;
             end

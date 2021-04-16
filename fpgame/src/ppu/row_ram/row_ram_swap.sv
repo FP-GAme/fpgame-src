@@ -61,7 +61,6 @@ module row_ram_swap (
     // wrdata is safe to tie to both RAMs. It is essentially a "don't-care", so the wren must be 0
     //   on the RAM we don't intend on writing to. This RAM not being written to is, of course,
     //   being read by the hdmi_video_output, so this should be safe by default.
-    // TODO: Unlikely, but if necessary, use actual don't-cares. Increases complexity but may improve timing.
     assign rr1_wrdata = pmxr_rowram_wrdata;
 
     assign rr2_addr = (swapped) ? hdmi_rowram_rdaddr : pmxr_rowram_wraddr;

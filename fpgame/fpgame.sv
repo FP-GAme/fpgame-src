@@ -100,13 +100,11 @@ logic [127:0] h2f_vram_wrdata;
 logic [31:0]  vramsrcaddrpio_rddata;
 logic         vramsrcaddrpio_update_avail;
 logic         vramsrcaddrpio_read_rst;
-logic [31:0]  dma_engine_src_addr; // TODO: The first 4 bits are not actually used since we operate at 16B boundaries (and this address is a byte-address).
+logic [31:0]  dma_engine_src_addr;
 logic         dma_engine_start;
 logic         dma_engine_finish;
 logic         ppu_dma_rdy_irq;
 
-// TODO: These ppu signals need to be double-buffered like VRAM (when cpu_wr_busy is not high).
-// TODO: Do it in the ppu module.
 logic [31:0] ppu_bgscroll;
 logic [31:0] ppu_fgscroll;
 logic [2:0]  ppu_enable;

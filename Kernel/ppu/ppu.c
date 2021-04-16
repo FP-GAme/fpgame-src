@@ -22,7 +22,12 @@
  */
 
 #include <linux/module.h>
+#include <linux/kernel.h>
+#include <linux/init.h>
 #include <linux/platform_device.h>
+
+#include <linux/of.h>
+#include <linux/of_device.h>
 
 /** @brief Address of the Lightweight H2F Avalon/AXI Bus, where the PPU Control Registers live */
 #define LW_H2F_MMIO_BASE         (0xFF200000U)
@@ -32,32 +37,40 @@
 #define BGCOLOR_PIO_OFFSET       (0x00000060U)
 #define ENABLE_PIO_OFFSET        (0x00000070U)
 
+<0xFC000000, 0xD140>, // TODO. I want to allocate 0xD140 Bytes for vram...
+
+/** @brief The name of the ppu device. */
+#define PPU_DEV_NAME "fp_game_ppu"
+
 /* Module Functions */
 static int ppu_probe(struct platform_device *pdev);
 static int ppu_remove(struct platform_device *pdev);
 
-/**@brief Interrupt table
+/**@brief Device Tree Devices Support List
  *
  * Defines the device our kernel module is compatible with, which Linux checks against the Device
  *   Tree to find out which driver (us) to call probe on so we can register our interrupt handler.
  */
-static const struct of_device_id ppu_int_table[] = {
+static const struct of_device_id ppu_dt_ids[] = {
     {.compatible = "altr,socfpga-fpgameppu"},
     {},
 };
+
+// Inform Linux of the devices this driver supports.
+MODULE_DEVICE_TABLE(of, ppu_dt_ids); // of means "use Open Firmware matching mechanism"
 
 /**@brief Platform driver structure.
  *
  * Set up this kernel module as the platform driver for the PPU platform device.
  */
 static struct platform_driver ppu_platform = {
+    .probe = ppu_probe,
+    .remove = ppu_remove,
     .driver = {
         .name = PPU_DEV_NAME,
         .owner = THIS_MODULE,
-        .of_match_table = of_match_ptr(ppu_int_table),
+        .of_match_table = of_match_ptr(ppu_dt_ids),
     },
-    .probe = ppu_probe,
-    .remove = ppu_remove,
 };
 
 /**@brief Initialize the PPU kernel module.
@@ -66,7 +79,12 @@ static struct platform_driver ppu_platform = {
  */
 static int ppu_probe(struct platform_device *pdev)
 {
-    // TODO: Create a big-chungus virtual VRAM
+    // Extract resources from device tree
+    struct resource 
+
+    // Create a big-chungus virtual VRAM
+    // Ensure it is aligned to 16B. We do this by allocating an extra 8B and choosing where to start
+    //   our VRAM based on the start address XXXX returns us.
     return 0;
 }
 
@@ -74,16 +92,16 @@ static int ppu_probe(struct platform_device *pdev)
  * @param pdev The platform device of the PPU.
  * @return 0.
  */
-static int apu_remove(struct platform_device *pdev)
+static int ppu_remove(struct platform_device *pdev)
 {
     // TODO
 	return 0;
 }
 
-
-
+// Short-hand used to replace init and exit functions, since our module does nothing special there.
 module_platform_driver(ppu_platform);
 
 MODULE_AUTHOR("Joseph Yankel");
-MODULE_DESCRIPTION("FP-GAme PPU Driver");
+MODULE_AUTHOR("Andrew Spaulding"); // Plenty of code was copied from APU Kernel Module
+MODULE_DESCRIPTION("FP-GAme Device Driver used by FP-GAme Library to control PPU");
 MODULE_LICENSE("GPL");

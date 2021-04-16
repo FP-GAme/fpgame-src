@@ -10,7 +10,10 @@
 		};
 		fpgameppu {
 			compatible = "altr,socfpga-fpgameppu";
+			reg = <0xFF200030, 0x10>, <0xFF200040, 0x10>, <0xFF200050, 0x10>, <0xFF200060, 0x10>, <0xFF200070, 0x10>;
+			reg-names "dma_addr", "bgscroll", "fgscroll", "bgcolor", "enable";
 			interrupts = <GIC_SPI 41 IRQ_TYPE_EDGE_RISING>;
+			interrupt-names = "ppu_dma_rdy";
 		};
 	};
 };

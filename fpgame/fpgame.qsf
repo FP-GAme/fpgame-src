@@ -538,15 +538,14 @@ set_global_assignment -name VERILOG_CONSTANT_LOOP_LIMIT 1000000
 set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
 set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+set_global_assignment -name EDA_TEST_BENCH_FILE src/fpgame_video_tb.sv -section_id fpgame_video_tb
 set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/dbuf_ppu_ctrl_regs/dbuf_ppu_ctrl_regs.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/ppu_logic/sprite_engine/sprite_engine.sv
-set_global_assignment -name SYSTEMVERILOG_FILE src/fpgame_video_tb.sv
 set_global_assignment -name QIP_FILE fpgame_soc/synthesis/fpgame_soc.qip
 set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/vram/vram_sub/vram_ppu_facing.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/vram/vram_sub/vram_cpu_facing.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/vram/vram_if_ppu_facing.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/vram/vram_if_cpu_facing.sv
-set_global_assignment -name SYSTEMVERILOG_FILE src/ioss/scrolling_demo.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/common/debounce.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/common/posedge_detect.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/apu/sin_table.sv
@@ -565,12 +564,6 @@ set_global_assignment -name SYSTEMVERILOG_FILE src/common/timer.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/ioss/controller.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/ioss/ioss.sv
 set_global_assignment -name SYSTEMVERILOG_FILE fpgame.sv
-set_global_assignment -name HEX_FILE palram_test.hex
-set_global_assignment -name HEX_FILE patram_test.hex
-set_global_assignment -name HEX_FILE rowram_test.hex
-set_global_assignment -name HEX_FILE single_palette_test.hex
-set_global_assignment -name HEX_FILE sprram_test.hex
-set_global_assignment -name HEX_FILE tilram_test.hex
 set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/vram/vram_sync_writer/sync_writer.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/vram/vram_sync_writer/vram_sync_writer.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/vram/vram.sv
@@ -592,13 +585,6 @@ set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/vram_interconnect.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/ppu_logic/ppu_logic.sv
 set_global_assignment -name QIP_FILE src/ppu/ppu_logic/tile_engine/tileng_rowdata_tilram/tileng_rowdata_tilram.qip
 set_global_assignment -name QIP_FILE src/ppu/ppu_logic/tile_engine/tileng_rowdata_patram/tileng_rowdata_patram.qip
-set_global_assignment -name HEX_FILE isw_tb_tileng_rowdata_tilram.hex
-set_global_assignment -name QIP_FILE src/ppu/ppu_logic/indirect_sync_writer/indirect_sync_writer_tb_ram/isw_tb_tileng_rowdata_tilram.qip
-set_global_assignment -name HEX_FILE isw_tb_pattern_ram.hex
-set_global_assignment -name QIP_FILE src/ppu/ppu_logic/indirect_sync_writer/indirect_sync_writer_tb_ram/isw_tb_pattern_ram.qip
-set_global_assignment -name HEX_FILE patram_campus_demo.hex
-set_global_assignment -name HEX_FILE palram_campus_demo.hex
-set_global_assignment -name HEX_FILE tilram_campus_demo.hex
 set_global_assignment -name QIP_FILE src/ppu/vram/palette_ram/palette_ram_ppu_facing.qip
 set_global_assignment -name QIP_FILE src/ppu/vram/palette_ram/palette_ram_cpu_facing.qip
 set_global_assignment -name QIP_FILE src/ppu/vram/pattern_ram/pattern_ram_ppu_facing.qip
@@ -607,9 +593,4 @@ set_global_assignment -name QIP_FILE src/ppu/vram/sprite_ram/sprite_ram_ppu_faci
 set_global_assignment -name QIP_FILE src/ppu/vram/sprite_ram/sprite_ram_cpu_facing.qip
 set_global_assignment -name QIP_FILE src/ppu/vram/tile_ram/tile_ram_ppu_facing.qip
 set_global_assignment -name QIP_FILE src/ppu/vram/tile_ram/tile_ram_cpu_facing.qip
-set_global_assignment -name HEX_FILE tilram_cpu_test.hex
-set_global_assignment -name HEX_FILE patram_cpu_test.hex
-set_global_assignment -name HEX_FILE palram_cpu_test.hex
-set_global_assignment -name HEX_FILE sprram_cpu_test.hex
-set_global_assignment -name EDA_TEST_BENCH_FILE src/fpgame_video_tb.sv -section_id fpgame_video_tb
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

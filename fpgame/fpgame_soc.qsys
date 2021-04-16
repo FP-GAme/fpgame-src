@@ -18,7 +18,7 @@
       }
       datum sopceditor_expanded
       {
-         value = "1";
+         value = "0";
          type = "boolean";
       }
    }
@@ -99,7 +99,7 @@
       }
       datum sopceditor_expanded
       {
-         value = "1";
+         value = "0";
          type = "boolean";
       }
    }
@@ -124,6 +124,14 @@
          type = "int";
       }
       datum sopceditor_expanded
+      {
+         value = "1";
+         type = "boolean";
+      }
+   }
+   element hps_0.f2h_axi_slave
+   {
+      datum _lockedAddress
       {
          value = "1";
          type = "boolean";
@@ -167,7 +175,7 @@
    {
       datum _sortIndex
       {
-         value = "6";
+         value = "8";
          type = "int";
       }
       datum sopceditor_expanded
@@ -185,7 +193,7 @@
       }
       datum baseAddress
       {
-         value = "80";
+         value = "96";
          type = "String";
       }
    }
@@ -193,7 +201,7 @@
    {
       datum _sortIndex
       {
-         value = "8";
+         value = "6";
          type = "int";
       }
       datum sopceditor_expanded
@@ -211,7 +219,7 @@
       }
       datum baseAddress
       {
-         value = "112";
+         value = "64";
          type = "String";
       }
    }
@@ -219,7 +227,7 @@
    {
       datum _sortIndex
       {
-         value = "7";
+         value = "9";
          type = "int";
       }
       datum sopceditor_expanded
@@ -237,7 +245,7 @@
       }
       datum baseAddress
       {
-         value = "96";
+         value = "112";
          type = "String";
       }
    }
@@ -245,7 +253,7 @@
    {
       datum _sortIndex
       {
-         value = "5";
+         value = "7";
          type = "int";
       }
       datum sopceditor_expanded
@@ -263,7 +271,7 @@
       }
       datum baseAddress
       {
-         value = "64";
+         value = "80";
          type = "String";
       }
    }
@@ -276,7 +284,7 @@
       }
       datum sopceditor_expanded
       {
-         value = "1";
+         value = "0";
          type = "boolean";
       }
    }
@@ -284,7 +292,7 @@
    {
       datum _sortIndex
       {
-         value = "9";
+         value = "5";
          type = "int";
       }
       datum sopceditor_expanded
@@ -1085,7 +1093,7 @@
    start="hps_0.h2f_lw_axi_master"
    end="ppu_bgscroll_pio.s1">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0070" />
+  <parameter name="baseAddress" value="0x0040" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1094,7 +1102,7 @@
    start="hps_0.h2f_lw_axi_master"
    end="ppu_enable_pio.s1">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0060" />
+  <parameter name="baseAddress" value="0x0070" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1103,7 +1111,7 @@
    start="hps_0.h2f_lw_axi_master"
    end="ppu_bgcolor_pio.s1">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0050" />
+  <parameter name="baseAddress" value="0x0060" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1112,7 +1120,7 @@
    start="hps_0.h2f_lw_axi_master"
    end="ppu_fgscroll_pio.s1">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0040" />
+  <parameter name="baseAddress" value="0x0050" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection

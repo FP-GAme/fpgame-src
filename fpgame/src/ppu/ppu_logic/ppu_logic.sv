@@ -1,5 +1,7 @@
 /* ppu_logic.sv
- * TODO: Joseph... plz document.
+ *
+ * Returns color data to the HDMI Video Output based on the PPU-Facing VRAM and buffered PPU Control
+ *   registers
  */
 
 module ppu_logic (

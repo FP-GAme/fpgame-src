@@ -15,10 +15,10 @@ module dbuf_ppu_ctrl_regs (
     // Only update control registers on sync
     always_ff @(posedge clk, negedge rst_n) begin
         if (!rst_n) begin
-            dbuf_bgscroll <= 32'b1_0000000_000000000;
+            dbuf_bgscroll <= 32'b0;
             dbuf_fgscroll <= 32'b0;
-            dbuf_enable   <=  3'b001; // TODO: Revert to 3'b111 after testing
-            dbuf_bgcolor  <= 24'hFF0000; // TODO: Revert to 24'b0 after testing
+            dbuf_enable   <=  3'b0;
+            dbuf_bgcolor  <= 24'b0;
         end
         else begin
             dbuf_bgscroll <= (sync) ? ppu_bgscroll : dbuf_bgscroll;

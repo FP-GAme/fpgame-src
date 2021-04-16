@@ -24,7 +24,6 @@ module vram_interconnect (
 // Signals to demux from the full CPU write address (h2f_vram_wraddr):
 // One set of these should be tied to h2f_vram_wraddr[whatever width:0] (chosen by the demux logic)
 // The non-chosen buses can safely be left as Xs as long as wr_en is set to 0.
-// TODO: Check if leaving addr lines are Xs is bad idea... It might be...
 logic [9:0] cpu_tilram_wraddr;
 logic [10:0] cpu_patram_wraddr;
 logic [7:0]  cpu_palram_wraddr;
