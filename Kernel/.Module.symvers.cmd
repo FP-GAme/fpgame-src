@@ -1,1 +1,0 @@
-cmd_/home/andy/Documents/Projects/Capstone/Kernel/Module.symvers := sed 's/ko$$/o/' /home/andy/Documents/Projects/Capstone/Kernel/modules.order | scripts/mod/modpost     -o /home/andy/Documents/Projects/Capstone/Kernel/Module.symvers -e    -T -

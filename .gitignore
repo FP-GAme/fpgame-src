@@ -1,11 +1,7 @@
 *.wav
 *.mp3
 *.o
-*.ko
-*.mod
-*.cmd
 *.*.swp
-*.mod.c
 *.d
 *.a
 *.bin
@@ -25,6 +21,15 @@ spl_bsp/
 ctests/con_mod/con_test
 ctests/apu_mod/apu_test
 ctests/apu_mod_polled/apu_poll
+
+# Ignore Kernel Module Compilation Stuff
+*.ko
+**.o
+*.mod
+*.mod.c
+*.order
+**.cmd
+**.symvers
 
 # Ignore Generated Files from .mif Generators
 mif_gen/output/
