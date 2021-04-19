@@ -54,3 +54,4 @@ fpgame_soc/testbench/
 *_inst.vhd
 *.sld
 *.spd
+*.stp

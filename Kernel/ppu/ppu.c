@@ -38,7 +38,9 @@
 
 
 /* === Definitions === */
+/** @brief PPU MMIO Control Registers physical base address */
 #define PPU_MMIO_BASE 0xFF200030
+/** @brief Overall-size/span of the PPU MMIO Control Registers */
 #define PPU_MMIO_SIZE 0x50
 
 /** @brief Offsets from the PPU_MMIO_BASE for each PPU Control Register */
@@ -49,6 +51,13 @@
 #define PPU_BGCOLOR_OFFSET  0x30
 #define PPU_ENABLE_OFFSET   0x40
 //@}
+
+/** @brief SDRAM Register Map Base Address (Physical) */
+#define SDR_BASE 0xFFC20000
+/** @brief fpgaportrst register offset from @ref SDR_BASE */
+#define FPGAPORTRST_OFFSET 0x5080
+/** @brief Size (in Bytes) of fpgaportrst register */
+#define FPGAPORTRST_SIZE 0x4
 
 
 /* === Module Functions === */
@@ -111,13 +120,13 @@ static const struct of_device_id ppu_dt_ids[] = {
  * Set up this kernel module as the platform driver for the PPU platform device.
  */
 static struct platform_driver ppu_platform = {
-    .probe = ppu_probe,
-    .remove = ppu_remove,
     .driver = {
         .name = PPU_DEV_NAME,
         .owner = THIS_MODULE,
         .of_match_table = of_match_ptr(ppu_dt_ids),
     },
+    .probe = ppu_probe,
+    .remove = ppu_remove,
 };
 
 /** @brief PPU file operations structure
@@ -140,6 +149,9 @@ static struct file_operations fops = {
  */
 static int ppu_probe(struct platform_device *pdev)
 {
+    // Temporary mapping to the SDRAM Controller registers
+    void __iomem *fpgaportrst_io;
+
     // Register our driver with the kernel
     if (register_chrdev(PPU_MAJOR_NUM, PPU_DEV_NAME, &fops) < 0)
     {
@@ -182,8 +194,18 @@ static int ppu_probe(struct platform_device *pdev)
     if (request_irq(dma_rdy_irq, ppu_irq, 0, PPU_DEV_NAME, ppu_irq) < 0)
     {
         printk(KERN_ALERT "FP-GAme PPU Driver failed to register IRQ");
+        return -1;
     }
 
+    // Write 1s to specific bits in the fpgaportrst register to enable the ports used by our PPU's
+    //   DMA-Engine
+    if ( (fpgaportrst_io = ioremap(SDR_BASE + FPGAPORTRST_OFFSET, FPGAPORTRST_SIZE)) == NULL )
+    {
+        printk(KERN_ALERT "FP-GAme PPU Driver failed to map fpgaportrst physical address");
+        return -1;
+    }
+    writel(0x0103, fpgaportrst_io);
+    iounmap(fpgaportrst_io);
 
     return 0;
 }
@@ -252,12 +274,16 @@ static ssize_t ppu_write(struct file *file, const char __user *buf, size_t len, 
     }
 
     // Try to acquire the VRAM write lock. If we cannot, tell the user we are busy.
-    if (atomic_xchg(&vram_lock, 1) == 1) { return -EBUSY; }
+    if (atomic_xchg(&vram_lock, 1) == 1) {
+        printk(KERN_ALERT "FP-GAme PPU Driver write busy");
+        return -EBUSY;
+    }
 
     // Write user's data to the Kernel VRAM at the specified offset
     addr = (u8*)vram_addr_v + (unsigned)(*offset);
     if (copy_from_user(addr, buf, len) != 0)
     {
+        printk(KERN_ALERT "FP-GAme PPU Driver write failed!");
         atomic_xchg(&vram_lock, 0);
         return -EFAULT;
     }
@@ -269,6 +295,7 @@ static ssize_t ppu_write(struct file *file, const char __user *buf, size_t len, 
     *offset += len;
 
     atomic_xchg(&vram_lock, 0);
+
     return len; // We will have written exactly len bytes on success
 }
 

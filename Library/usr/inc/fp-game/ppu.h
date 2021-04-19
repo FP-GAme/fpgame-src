@@ -15,6 +15,7 @@
 #define _FP_GAME_PPU_H_
 
 #include <stdlib.h>
+#include <sys/types.h>
 
 /** @brief Enables the PPU
  *
@@ -57,9 +58,12 @@ int ppu_update(void);
  * functions such as ppu_write_tile or ppu_write_sprite. TODO: Come back to this later Joseph.
  *
  * @pre PPU is currently locked by this process. See @ref ppu_enable.
+ * @param buf Pointer to a buffer to write to the VRAM.
+ * @param len Size of buf in bytes.
+ * @param offset Byte offset into VRAM.
  * @return 0 on success; -1 if PPU busy
  */
-int ppu_write_vram(const void *buf, size_t len);
+int ppu_write_vram(const void *buf, size_t len, off_t offset);
 
 /** @brief Sets the universal background color of the PPU
  *

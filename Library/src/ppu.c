@@ -68,9 +68,9 @@ int ppu_update(void)
     return ret;
 }
 
-int ppu_write_vram(const void *buf, size_t len)
+int ppu_write_vram(const void *buf, size_t len, off_t offset)
 {
-    if (write(ppu_fd, buf, len)) {
+    if (pwrite(ppu_fd, buf, len, offset) != (ssize_t)len) {
         fprintf(stderr, "FP-GAme PPU: PPU VRAM write failed! Error: %s\n", strerror(errno));
         return -1;
     }

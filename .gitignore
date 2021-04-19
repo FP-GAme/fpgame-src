@@ -21,6 +21,7 @@ spl_bsp/
 ctests/con_mod/con_test
 ctests/apu_mod/apu_test
 ctests/apu_mod_polled/apu_poll
+ctests/ppu_mod/ppu_test
 
 # Ignore Kernel Module Compilation Stuff
 *.ko
