@@ -15,11 +15,16 @@
 #include <linux/fs.h>
 #include <linux/io-mapping.h>
 #include <asm-generic/io.h>
+#include <linux/device.h>
+#include <linux/kdev_t.h>
 
 #include <linux/fp-game/drv_con.h>
 
 /** @brief The address of the controllers memory mapped i/o */
 #define CON_MMIO_ADDR 0xFF200000
+
+/** @brief The name of the CON device. */
+#define CON_DEV_NAME "fp_game_con"
 
 /** @brief The I/O mapping region for the controller driver. */
 static struct io_mapping *con_io;
@@ -40,14 +45,19 @@ struct file_operations fops = {
 	.unlocked_ioctl = con_ioctl
 };
 
+/** @brief Device Class for this driver */
+struct class *cl;
+
 /**
  * @brief Initializes the controller kernel module.
  * @return 0 on success, and a negative integer on failure.
  */
 int con_init(void)
 {
+    dev_t dev;
+
 	/* Register our driver with the kernel. */
-	int ret = register_chrdev(CON_MAJOR_NUM, CON_DEV_FILE, &fops);
+	int ret = register_chrdev(CON_MAJOR_NUM, CON_DEV_NAME, &fops);
 
 	if (ret < 0) {
 		printk(KERN_ALERT "Initializing FP-GAme controller failed: %d",
@@ -57,6 +67,11 @@ int con_init(void)
 
 	/* Map the controller I/O. */
 	con_io = io_mapping_create_wc(CON_MMIO_ADDR, sizeof(int));
+
+    // Create the device in /dev
+    cl = class_create(THIS_MODULE, CON_DEV_NAME);
+    dev = MKDEV(CON_MAJOR_NUM, 0);
+    device_create(cl, NULL, dev, NULL, CON_DEV_NAME);
 
 	return 0;
 }
@@ -74,6 +89,8 @@ int con_init(void)
 long con_ioctl(struct file *file, unsigned ioctl_num,
                unsigned long ioctl_param)
 {
+	void *con_addr;
+	int state;
 	(void)file;
 	(void)ioctl_param;
 
@@ -83,8 +100,8 @@ long con_ioctl(struct file *file, unsigned ioctl_num,
 	 * Map our address. This holds a lock, so we must unmap it after
 	 * reading the controller state.
 	 */
-	void *con_addr = io_mapping_map_atomic_wc(con_io, 0);
-	int state = readl(con_addr);
+	con_addr = io_mapping_map_atomic_wc(con_io, 0);
+	state = readl(con_addr);
 	io_mapping_unmap_atomic(con_addr);
 
 	return state;
@@ -96,6 +113,11 @@ long con_ioctl(struct file *file, unsigned ioctl_num,
  */
 void con_clean(void)
 {
+    dev_t dev;
+    dev = MKDEV(CON_MAJOR_NUM, 0);
+    device_destroy(cl, dev);
+    class_destroy(cl);
+
 	unregister_chrdev(CON_MAJOR_NUM, CON_DEV_FILE);
 	io_mapping_free(con_io);
 }

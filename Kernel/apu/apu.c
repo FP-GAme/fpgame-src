@@ -28,6 +28,8 @@
 #include <asm-generic/io.h>
 #include <asm/io.h>
 #include <asm/uaccess.h>
+#include <linux/device.h>
+#include <linux/kdev_t.h>
 
 #include <linux/fp-game/drv_apu.h>
 
@@ -75,6 +77,9 @@ static struct device *apu_dev;
 
 /** @brief The lock used to protect the APU from multiple processes. */
 static atomic_t apu_lock;
+
+/** @brief Device Class for this driver */
+struct class *cl;
 
 /**
  * @brief The structure type used to manage apu sample sending/receiving.
@@ -155,6 +160,7 @@ static int apu_probe(struct platform_device *pdev)
 {
 	int ret;
 	int irq;
+    dev_t dev;
 
 	/* Register our driver with the kernel. */
 	ret = register_chrdev(APU_MAJOR_NUM, APU_DEV_NAME, &fops);
@@ -184,6 +190,11 @@ static int apu_probe(struct platform_device *pdev)
 	if (ret < 0) {
 		printk(KERN_ALERT "FP-GAme apu failed to register irq");
 	}
+
+    // Create the device in /dev
+    cl = class_create(THIS_MODULE, APU_DEV_NAME);
+    dev = MKDEV(APU_MAJOR_NUM, 0);
+    device_create(cl, NULL, dev, NULL, APU_DEV_NAME);
 
 	return ret;
 }
@@ -338,6 +349,11 @@ static int apu_release(struct inode *inode, struct file *file)
  */
 static int apu_remove(struct platform_device *pdev)
 {
+    dev_t dev;
+    dev = MKDEV(APU_MAJOR_NUM, 0);
+    device_destroy(cl, dev);
+    class_destroy(cl);
+
 	unregister_chrdev(APU_MAJOR_NUM, APU_DEV_NAME);
 	io_mapping_free(apu_io);
 	dma_free_coherent(apu_dev, APU_BUF_SIZE << 1,

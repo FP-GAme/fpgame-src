@@ -33,6 +33,8 @@
 #include <linux/io-mapping.h>
 #include <linux/dma-mapping.h>
 #include <linux/interrupt.h>
+#include <linux/device.h>
+#include <linux/kdev_t.h>
 
 #include <linux/fp-game/drv_ppu.h>
 
@@ -105,6 +107,9 @@ static atomic_t ppu_lock;
 /** @brief Lock for VRAM writes during DMA transfer */
 static atomic_t vram_lock;
 
+/** @brief Device Class for this driver */
+struct class *cl;
+
 /** @brief Device Tree Devices Support List
  *
  * Defines the device our kernel module is compatible with, which Linux checks against the Device
@@ -151,6 +156,8 @@ static int ppu_probe(struct platform_device *pdev)
 {
     // Temporary mapping to the SDRAM Controller registers
     void __iomem *fpgaportrst_io;
+
+    dev_t dev;
 
     // Register our driver with the kernel
     if (register_chrdev(PPU_MAJOR_NUM, PPU_DEV_NAME, &fops) < 0)
@@ -207,6 +214,11 @@ static int ppu_probe(struct platform_device *pdev)
     writel(0x0103, fpgaportrst_io);
     iounmap(fpgaportrst_io);
 
+    // Create the device in /dev
+    cl = class_create(THIS_MODULE, PPU_DEV_NAME);
+    dev = MKDEV(PPU_MAJOR_NUM, 0);
+    device_create(cl, NULL, dev, NULL, PPU_DEV_NAME);
+
     return 0;
 }
 
@@ -216,6 +228,11 @@ static int ppu_probe(struct platform_device *pdev)
  */
 static int ppu_remove(struct platform_device *pdev)
 {
+    dev_t dev;
+    dev = MKDEV(PPU_MAJOR_NUM, 0);
+    device_destroy(cl, dev);
+    class_destroy(cl);
+
     unregister_chrdev(PPU_MAJOR_NUM, PPU_DEV_NAME);
     io_mapping_free(ppu_io);
     dma_free_coherent(&pdev->dev, VRAM_SIZE+8, vram_base_v, vram_base_p);
