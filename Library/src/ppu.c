@@ -78,6 +78,11 @@ int ppu_write_vram(const void *buf, size_t len, off_t offset)
     return 0;
 }
 
+inline tile_t ppu_make_tile(pattern_addr_t pattern_addr, unsigned palette_id, mirror_e mirror)
+{
+    return (pattern_addr << 6) | (palette_id << 2) | mirror;
+}
+
 int ppu_set_bgcolor(unsigned color)
 {
     // if (ppu_fd == -1)
@@ -92,7 +97,7 @@ int ppu_set_bgcolor(unsigned color)
     return ret;
 }
 
-int ppu_set_layer_enable(unsigned char enable_mask)
+int ppu_set_layer_enable(unsigned enable_mask)
 {
     // if (ppu_fd == -1)
     // {

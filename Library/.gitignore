@@ -1,0 +1,9 @@
+# Git Ignore File for Library
+
+# Ignore compilation files
+*.d
+*.o
+*.a
+
+# Ignore doxygen output files
+docs/html/

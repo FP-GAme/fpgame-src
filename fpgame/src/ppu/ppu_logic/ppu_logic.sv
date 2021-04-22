@@ -80,8 +80,10 @@ module ppu_logic (
         .clk,
         .rst_n,
         .next_row,
-        .sprram_addr(vram_ppu_ifP_usr.sprram_addr_a),
-        .sprram_rddata(vram_ppu_ifP_usr.sprram_rddata_a),
+        .sprram_addr_a(vram_ppu_ifP_usr.sprram_addr_a),
+        .sprram_rddata_a(vram_ppu_ifP_usr.sprram_rddata_a),
+        .sprram_addr_b(vram_ppu_ifP_usr.sprram_addr_b),
+        .sprram_rddata_b(vram_ppu_ifP_usr.sprram_rddata_b),
         .patram_addr(spre_patram_addr), // Multiplexed in with bgte_patram_addr
         .patram_rddata(vram_ppu_ifP_usr.patram_rddata_a), // Shared with background tile-engine
         .prep(spre_start), // Start whenever tile-engines end
@@ -151,8 +153,7 @@ module ppu_logic (
     assign vram_ppu_ifP_usr.patram_wrdata_a =  'X;
     assign vram_ppu_ifP_usr.patram_wrdata_b =  'X;
 
-    // Only 1 port (port a) is used as Read-Only for sprite data (by Sprite Engine)
-    assign vram_ppu_ifP_usr.sprram_addr_b   =  'X;
+    // Port a and b are used as Read-Only for sprite data (by Sprite Engine)
     assign vram_ppu_ifP_usr.sprram_wren_a   = 1'b0;
     assign vram_ppu_ifP_usr.sprram_wren_b   = 1'b0;
     assign vram_ppu_ifP_usr.sprram_wrdata_a =  'X;

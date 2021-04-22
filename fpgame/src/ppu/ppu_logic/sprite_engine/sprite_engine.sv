@@ -7,16 +7,14 @@ module sprite_engine (
     input  logic rst_n,
 
     // From ppu_logic (and technically hdmi_video_output)
-    input  logic [7:0]  next_row,       // The row we should prepare to display
-    output logic [5:0]  sprram_addr,    // Address to Sprite-RAM
-    input  logic [63:0] sprram_rddata,  // Read-data from Sprite-RAM
-    // TODO: Technically you can have 2 Sprite-RAM read ports available to you. Let me know if you
-    //       want to use the extra one for speeding up reads. You likely won't need to, though.
-    output logic [11:0] patram_addr,    // Address to Pattern-RAM
-    input  logic [63:0] patram_rddata,  // Read-data from Pattern-RAM
-    // TODO: Technically you can have 2 Pattern-RAM read ports available to you. Let me know if you
-    //       want to use the extra one for speeding up reads. You likely won't need to, though
-    input  logic        prep,           // Start preparing a row corresponding to next_row
+    input  logic [7:0]  next_row,        // The row we should prepare to display
+    output logic [5:0]  sprram_addr_a,   // Address to Sprite-RAM port a
+    input  logic [63:0] sprram_rddata_a, // Read-data from Sprite-RAM port b
+    output logic [5:0]  sprram_addr_b,   // Address to Sprite-RAM port b
+    input  logic [63:0] sprram_rddata_b, // Read-data from Sprite-RAM port b
+    output logic [11:0] patram_addr,     // Address to Pattern-RAM
+    input  logic [63:0] patram_rddata,   // Read-data from Pattern-RAM
+    input  logic        prep,            // Start preparing a row corresponding to next_row
 
     // From Double-Buffered Control Registers
     input  logic        enable,
@@ -51,10 +49,12 @@ To visualize this timing:
 
 --- Sprite engine sees pmxr_pixel_addr 1 ---
 --- pmxr sets pmxr_pixel_addr 2 ---
---- spit out pmxr_data corresponding to pmxr_pixel_addr 0 ---
+--- Sprite Engine spits out pmxr_data corresponding to pmxr_pixel_addr 0 ---
 --- rising clk edge ---
 
 ... and so on ...
+
+If this is confusing. See the diagram I sent over Slack.
 
 TODO END: Good luck!
 */
@@ -64,6 +64,7 @@ assign done = 1'b1;
 assign pmxr_pixel_prio = 2'b10;
 assign pmxr_pixel_data = 9'd0;
 assign patram_addr = 12'd0;
-assign sprram_addr = 11'd0;
+assign sprram_addr_a = 6'd0;
+assign sprram_addr_b = 6'd0;
 
 endmodule : sprite_engine
