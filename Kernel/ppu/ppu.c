@@ -389,7 +389,6 @@ static void mmio_write(unsigned offset, unsigned val)
 
     /* WARNING: This function disables preemption! */
     addr = io_mapping_map_atomic_wc(ppu_io, offset);
-    printk(KERN_ALERT "Writing to addr: %p\n", addr);
     writel(val, addr);
     io_mapping_unmap_atomic(addr);
 }

@@ -527,8 +527,7 @@ int ppu_set_scroll(layer_e tile_layer, unsigned scroll_x, unsigned scroll_y)
     nowaymsg(tile_layer == LAYER_SPR, "FP-GAme PPU does not support Sprite Layer scrolling!");
 
     uint32_t scroll = (scroll_y << 16) | scroll_x;
-    printf("scroll: (%d, %d)\n", scroll);
-    unsigned long ioctl_num = (tile_layer == LAYER_FG) ? IOCTL_PPU_SET_FGSCROLL : IOCTL_PPU_SET_BGCOLOR;
+    unsigned long ioctl_num = (tile_layer == LAYER_FG) ? IOCTL_PPU_SET_FGSCROLL : IOCTL_PPU_SET_BGSCROLL;
 
     if (ioctl(ppu_fd, ioctl_num, scroll) < 0)
     {
