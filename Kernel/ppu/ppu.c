@@ -302,7 +302,7 @@ static ssize_t ppu_write(struct file *file, const char __user *buf, size_t len, 
     {
         printk(KERN_ALERT "FP-GAme PPU Driver write failed!");
         atomic_xchg(&vram_lock, 0);
-        return -EFAULT;
+        return -EFAULT; // THIS SHOULD NEVER HAPPEN, since we checked offset earlier.
     }
 
     // Ensure our changes are seen before any other write occurs (especially the DMA_ADDR MMIO!)
@@ -389,6 +389,7 @@ static void mmio_write(unsigned offset, unsigned val)
 
     /* WARNING: This function disables preemption! */
     addr = io_mapping_map_atomic_wc(ppu_io, offset);
+    printk(KERN_ALERT "Writing to addr: %p\n", addr);
     writel(val, addr);
     io_mapping_unmap_atomic(addr);
 }

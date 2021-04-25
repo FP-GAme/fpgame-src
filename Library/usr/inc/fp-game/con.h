@@ -18,8 +18,8 @@
 #ifndef _FP_GAME_CON_H_
 #define _FP_GAME_CON_H_
 
-//@{
 /** @brief These masks define the bit in which each button state is stored. */
+/**@{*/
 #define CON_BUT_B (1 << 15)
 #define CON_BUT_Y (1 << 14)
 #define CON_BUT_SELECT (1 << 13)
@@ -32,7 +32,7 @@
 #define CON_BUT_X (1 << 6)
 #define CON_BUT_L (1 << 5)
 #define CON_BUT_R (1 << 4)
-//@}
+/**@}*/
 
 /**
  * @brief Returns true if the given button is pressed in the given state.
