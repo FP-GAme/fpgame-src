@@ -46,6 +46,7 @@
 #define PALETTERAM_TILEMAX 16     ///< Maximum number of palettes for a tile layer to access
 #define SPRRAM_EXTRAOFFSET 0x100  ///< Byte offset of the extra data in Sprite RAM
 #define TILEPATTERN_BSIZE 32      ///< Size (in Bytes) of a single pattern_t (tile-pattern)
+#define TILERAM_FGOFFSET 0x2000   ///< Byte offset for foreground tile layer within Tile RAM
 #define TILECHUNK_WIDTH 4         ///< Width of a single tile-chunk (group of 4x4 tile-patterns)
 #define TILECHUNK_HEIGHT 4        ///< Height of a single tile-chunk (group of 4x4 tile-patterns)
 #define TILEDATA_BSIZE 2          ///< Size of tile data in bytes
@@ -250,19 +251,21 @@ void ppu_load_palette(palette_t *palette, char *file)
 /* =========================== */
 /* === PPU Write Functions === */
 /* =========================== */
-int ppu_write_tiles_horizontal(tile_t *tiles, unsigned len, unsigned x_i, unsigned y_i,
-                               unsigned count)
+int ppu_write_tiles_horizontal(tile_t *tiles, unsigned len, layer_e layer, unsigned x_i,
+                               unsigned y_i, unsigned count)
 {
     unsigned i;            // Generic reusable loop iterator
-    unsigned start_addr;   // Actual Byte-address in VRAM to write to.
+    unsigned start_addr;   // Actual Byte-address within the BG or FG section of RAM to write to.
     unsigned towrite;      // How many tiles to write for this writing iteration.
     unsigned written;      // Keep track of how many tiles we have written so far.
     tile_t *write_tiles;   // Buffer of tiles to write, taking into account tile repeat/loop.
+    unsigned tile_layer_offset;
 
     // Catch input errors and tell the user
     nowaymsg(ppu_fd == -1, "PPU not enabled or owned by this process!");
     nowaymsg(x_i >= TILELAYER_WIDTH, "Initial write position out of bounds!");
     nowaymsg(y_i >= TILELAYER_HEIGHT, "Initial write position out of bounds!");
+    nowaymsg(layer != LAYER_BG && layer != LAYER_FG, "Incorrect layer to write tiles to!");
     nowaymsg(tiles == NULL, "Tile array is NULL!");
 
     // Catch case where nothing should occur
@@ -290,8 +293,10 @@ int ppu_write_tiles_horizontal(tile_t *tiles, unsigned len, unsigned x_i, unsign
         written = (written == len - 1) ? 0 : written + 1;
     }
 
+    tile_layer_offset = (layer == LAYER_FG) ? TILERAM_FGOFFSET : 0;
+
     // (64 tiles/row * y_i rows + x_i tiles) * 2B per tile. Note: No offset from VRAM start
-    start_addr = ((y_i << 6) + x_i) * TILEDATA_BSIZE;
+    start_addr = tile_layer_offset + ((y_i << 6) + x_i) * TILEDATA_BSIZE;
 
     towrite = TILELAYER_WIDTH - x_i; // write up to the end of the current row initially
     written = 0;                     // Keep track of how many tiles we've written so far
@@ -306,7 +311,7 @@ int ppu_write_tiles_horizontal(tile_t *tiles, unsigned len, unsigned x_i, unsign
         written += towrite;
         towrite = count - written; // Prepare to write the leftover tiles next (if any)
         // Wrap around to the start of the current row
-        start_addr = (y_i * TILELAYER_HEIGHT) * TILEDATA_BSIZE;
+        start_addr = tile_layer_offset + (y_i * TILELAYER_HEIGHT) * TILEDATA_BSIZE;
     }
 
     free(write_tiles);
@@ -314,7 +319,7 @@ int ppu_write_tiles_horizontal(tile_t *tiles, unsigned len, unsigned x_i, unsign
     return 0;
 }
 
-int ppu_write_tiles_vertical(tile_t *tiles, unsigned len, unsigned x_i, unsigned y_i,
+int ppu_write_tiles_vertical(tile_t *tiles, unsigned len, layer_e layer, unsigned x_i, unsigned y_i,
                              unsigned count)
 {
     unsigned i;            // Generic reusable loop iterator
@@ -322,6 +327,7 @@ int ppu_write_tiles_vertical(tile_t *tiles, unsigned len, unsigned x_i, unsigned
     unsigned towrite;      // How many tiles to write for this writing iteration.
     unsigned written;      // Keep track of how many tiles we have written so far.
     tile_t *write_tiles;   // Buffer of tiles to write, taking into account tile repeat/loop.
+    unsigned tile_layer_offset;
 
     // Catch input errors and tell the user
     nowaymsg(ppu_fd == -1, "PPU not enabled or owned by this process!");
@@ -354,8 +360,10 @@ int ppu_write_tiles_vertical(tile_t *tiles, unsigned len, unsigned x_i, unsigned
         written = (written == len - 1) ? 0 : written + 1;
     }
 
-    // (64 tiles/row * y_i rows + x_i tiles) * 2B per tile. Note: No offset from VRAM start.
-    start_addr = ((y_i << 6) + x_i) * TILEDATA_BSIZE;
+    tile_layer_offset = (layer == LAYER_FG) ? TILERAM_FGOFFSET : 0;
+
+    // (64 tiles/row * y_i rows + x_i tiles) * 2B per tile.
+    start_addr = tile_layer_offset + ((y_i << 6) + x_i) * TILEDATA_BSIZE;
 
     towrite = TILELAYER_HEIGHT - y_i; // write up to the end of the current column initially
     written = 0;                      // Keep track of how many tiles we've written so far
@@ -376,8 +384,9 @@ int ppu_write_tiles_vertical(tile_t *tiles, unsigned len, unsigned x_i, unsigned
             // Increment start address by an entire row
             start_addr += TILELAYER_WIDTH * TILEDATA_BSIZE;
         }
-        towrite = count - written;         // Write the leftover tiles next (if any)
-        start_addr = x_i * TILEDATA_BSIZE; // Wrap around to 0th row, starting at the fixed column
+        towrite = count - written; // Write the leftover tiles next (if any)
+        // Wrap around to 0th row, starting at the fixed column
+        start_addr = tile_layer_offset + x_i * TILEDATA_BSIZE; 
     }
 
     free(write_tiles);

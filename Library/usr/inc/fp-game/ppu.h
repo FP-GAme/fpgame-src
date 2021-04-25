@@ -248,14 +248,15 @@ void ppu_load_palette(palette_t *palette, char *file);
  * @pre PPU is currently locked by this process. See @ref ppu_enable.
  * @param tiles Buffer of tile data to write to Tile RAM.
  * @param len Length of the tiles buffer. @p len will be clamped to 64 if len > 64.
+ * @param layer Must be either LAYER_FG or LAYER_BG, depending on which tile RAM section to write.
  * @param x_i Horizontal position of the first tile to write. Must be in the range [0, 63]
  * @param y_i Vertical position of the first tile to write. Must be in the range [0, 63]
  * @param count The number of tiles to overwrite (horizontally) in Tile RAM. @p count will be set to
  *              64 if count > 64.
  * @return 0 on success; -1 if PPU busy
  */
-int ppu_write_tiles_horizontal(tile_t *tiles, unsigned len, unsigned x_i, unsigned y_i,
-                               unsigned count);
+int ppu_write_tiles_horizontal(tile_t *tiles, unsigned len, layer_e layer, unsigned x_i,
+                               unsigned y_i, unsigned count);
 
 /** @brief Writes an array to a vertical segment of tiles
  *
@@ -269,13 +270,14 @@ int ppu_write_tiles_horizontal(tile_t *tiles, unsigned len, unsigned x_i, unsign
  * @pre PPU is currently locked by this process. See @ref ppu_enable.
  * @param tiles Buffer of tile data to write to Tile RAM.
  * @param len Length of the tiles buffer. @p len will be clamped to 64 if len > 64.
+ * @param layer Must be either LAYER_FG or LAYER_BG, depending on which tile RAM section to write.
  * @param x_i Horizontal position of the first tile to write. Must be in the range [0, 63].
  * @param y_i Vertical position of the first tile to write. Must be in the range [0, 63].
  * @param count The number of tiles to overwrite (vertically) in Tile RAM. @p count will be set to
  *              64 if count > 64.
  * @return 0 on success; -1 if PPU busy
  */
-int ppu_write_tiles_vertical(tile_t *tiles, unsigned len, unsigned x_i, unsigned y_i,
+int ppu_write_tiles_vertical(tile_t *tiles, unsigned len, layer_e layer, unsigned x_i, unsigned y_i,
                              unsigned count);
 
 /** @brief Writes pattern_t patterns (8x8-pixel tiles) to a specified location in Pattern RAM
