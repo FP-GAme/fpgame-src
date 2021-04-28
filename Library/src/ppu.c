@@ -55,6 +55,12 @@
 
 
 /* ========================= */
+/* === Helper Prototypes === */
+/* ========================= */
+unsigned unsigned_min(unsigned a, unsigned b);
+
+
+/* ========================= */
 /* === PPU Main Controls === */
 /* ========================= */
 /** @brief The file descriptor for the PPU device file. */
@@ -254,13 +260,6 @@ void ppu_load_palette(palette_t *palette, char *file)
 int ppu_write_tiles_horizontal(tile_t *tiles, unsigned len, layer_e layer, unsigned x_i,
                                unsigned y_i, unsigned count)
 {
-    unsigned i;            // Generic reusable loop iterator
-    unsigned start_addr;   // Actual Byte-address within the BG or FG section of RAM to write to.
-    unsigned towrite;      // How many tiles to write for this writing iteration.
-    unsigned written;      // Keep track of how many tiles we have written so far.
-    tile_t *write_tiles;   // Buffer of tiles to write, taking into account tile repeat/loop.
-    unsigned tile_layer_offset;
-
     // Catch input errors and tell the user
     nowaymsg(ppu_fd == -1, "PPU not enabled or owned by this process!");
     nowaymsg(x_i >= TILELAYER_WIDTH, "Initial write position out of bounds!");
@@ -276,43 +275,68 @@ int ppu_write_tiles_horizontal(tile_t *tiles, unsigned len, layer_e layer, unsig
     count = (count > TILELAYER_WIDTH) ? TILELAYER_WIDTH : count;
     len = (len > TILELAYER_WIDTH) ? TILELAYER_WIDTH : len;
 
+    // If len < count, we need to repeat the sequence of tiles given by "tiles".
+    // To do this, construct a write buffer of length (len) which takes into account these repeats.
+    unsigned tiles_written = 0; // Keep track of how many tiles we have written so far.
+    tile_t *write_tiles;       // Buffer of tiles to write, taking into account tile repeat/loop.
+
+    nowaymsg((write_tiles = malloc(sizeof(tile_t) * count)) == NULL, "Malloc failed!");
+    for (unsigned i = 0; i < count; i++)
+    {
+        write_tiles[i] = tiles[tiles_written];
+
+        // Repeat tile sequence if we have run through all tiles in "tiles".
+        tiles_written = (tiles_written == len - 1) ? 0 : tiles_written + 1;
+    }
+
     // We split the tile writing operation into two writes:
     //   1. Write from x_i until either the end of the row, or until we've written count tiles.
     //   2. If we have reached the end of the row, but haven't written count tiles in total, we must
     //      continue writing tiles by wrapping around to the start of the current row.
 
-    // Also importantly, if len < count, we need to repeat the sequence of tiles given by "tiles".
-    // To do this, construct a write buffer of length (len) which takes into account repeats.
-    nowaymsg((write_tiles = malloc(sizeof(tile_t) * count)) == NULL, "Malloc failed!");
-    written = 0; // Keep track of our place in tiles array.
-    for (i = 0; i < count; i++)
-    {
-        write_tiles[i] = tiles[written];
+    // Determine start byte address, offset from the start of Tile-RAM
+    unsigned tile_layer_offset = (layer == LAYER_FG) ? TILERAM_FGOFFSET : 0;
 
-        // Repeat tile sequence if we have run through all tiles in "tiles".
-        written = (written == len - 1) ? 0 : written + 1;
-    }
-
-    tile_layer_offset = (layer == LAYER_FG) ? TILERAM_FGOFFSET : 0;
-
+    // Byte-address within the BG or FG section of RAM to write to.
     // (64 tiles/row * y_i rows + x_i tiles) * 2B per tile. Note: No offset from VRAM start
-    start_addr = tile_layer_offset + ((y_i << 6) + x_i) * TILEDATA_BSIZE;
+    unsigned start_addr = tile_layer_offset + (y_i * TILELAYER_HEIGHT + x_i) * TILEDATA_BSIZE;
 
-    towrite = TILELAYER_WIDTH - x_i; // write up to the end of the current row initially
-    written = 0;                     // Keep track of how many tiles we've written so far
-    while (written < count)
+    // --- 1st iteration ---
+    // How many tiles to write for this writing iteration.
+    // Initially, only write up to the end of the current row.
+    unsigned tiles_towrite = unsigned_min(TILELAYER_WIDTH - x_i, count);
+
+    // How many bytes to write for this writing iteration.
+    unsigned bytes_towrite = tiles_towrite * TILEDATA_BSIZE;
+
+    if (pwrite(ppu_fd, write_tiles, bytes_towrite, start_addr) != (ssize_t)bytes_towrite)
     {
-        if (pwrite(ppu_fd, &write_tiles[written], towrite * TILEDATA_BSIZE, start_addr) != (ssize_t)towrite * TILEDATA_BSIZE)
-        {
-            assert(errno == EBUSY);
+        assert(errno == EBUSY);
 
-            return -1; // In this case, PPU is busy (errno == EBUSY)
-        }
-        written += towrite;
-        towrite = count - written; // Prepare to write the leftover tiles next (if any)
-        // Wrap around to the start of the current row
-        start_addr = tile_layer_offset + (y_i * TILELAYER_HEIGHT) * TILEDATA_BSIZE;
+        return -1; // In this case, PPU is busy (errno == EBUSY)
     }
+    tiles_written = tiles_towrite;
+
+    if ( (tiles_towrite = count - tiles_written) == 0)
+    {
+        free(write_tiles);
+
+        return 0;
+    }
+
+    // --- 2nd iteration ---
+    bytes_towrite = tiles_towrite * TILEDATA_BSIZE;
+
+    // Wrap around to the start of the current row
+    start_addr = tile_layer_offset + (y_i * TILELAYER_HEIGHT) * TILEDATA_BSIZE;
+
+    if (pwrite(ppu_fd, &write_tiles[tiles_written], bytes_towrite, start_addr) != (ssize_t)bytes_towrite)
+    {
+        assert(errno == EBUSY);
+
+        return -1; // In this case, PPU is busy (errno == EBUSY)
+    }
+    assert(count - (tiles_written + tiles_towrite) == 0); // No more tiles left to write
 
     free(write_tiles);
 
@@ -365,7 +389,8 @@ int ppu_write_tiles_vertical(tile_t *tiles, unsigned len, layer_e layer, unsigne
     // (64 tiles/row * y_i rows + x_i tiles) * 2B per tile.
     start_addr = tile_layer_offset + ((y_i << 6) + x_i) * TILEDATA_BSIZE;
 
-    towrite = TILELAYER_HEIGHT - y_i; // write up to the end of the current column initially
+    // write up to the end of the current column (at most) initially
+    towrite = unsigned_min(TILELAYER_HEIGHT - y_i, count);
     written = 0;                      // Keep track of how many tiles we've written so far
     while (written < count) // This loop should run twice at most
     {
@@ -559,4 +584,13 @@ int ppu_set_layer_enable(unsigned enable_mask)
     }
 
     return 0;
+}
+
+
+/* ======================== */
+/* === Helper Functions === */
+/* ======================== */
+unsigned unsigned_min(unsigned a, unsigned b)
+{
+    return (a < b) ? a : b;
 }
