@@ -1,0 +1,11 @@
+# Ignore Kernel Module Compilation Stuff
+*.ko
+*.o
+*.d
+*.a
+**.o
+*.mod
+*.mod.c
+*.order
+**.cmd
+**.symvers

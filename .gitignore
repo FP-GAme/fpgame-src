@@ -16,24 +16,17 @@ unsaved/
 synthesis/
 hps_isw_handoff/
 .qsys_edit/
-linux-socfpga/
 spl_bsp/
 ctests/con_mod/con_test
 ctests/apu_mod/apu_test
 ctests/apu_mod_polled/apu_poll
 ctests/ppu_mod/ppu_test
 
-# Ignore Kernel Module Compilation Stuff
-*.ko
-**.o
-*.mod
-*.mod.c
-*.order
-**.cmd
-**.symvers
-
-# Ignore Generated Files from .mif Generators
-mif_gen/output/
+# Ignore linux-socfpga folder
+linux-socfpga/
 
 # Ignore Editor Settings
 .vscode/
+
+# Ignore .img files from img_src
+img_src/*.img
