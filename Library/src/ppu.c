@@ -28,10 +28,7 @@
 #define TILELAYER_MAX_PALETTES 16 ///< Maximum palettes for tile layers (as opposed to sprite layer)
 #define PATTERN_MAXADDR 1023      ///< Maximum pattern_addr_t value
 #define MIRROR_MAXVAL 3           ///< Maximum allowable value for mirror_e
-#define SPRITE_MAXWIDTH 4         ///< Maximum allowable sprite width
-#define SPRITE_MAXHEIGHT 4        ///< Maximum allowable sprite height
 #define SPRITE_MAXCOUNT 64        ///< Maximum supported sprites
-#define PRIO_MAX_VALUE 2          ///< Maximum allowable value for render_prio_e
 #define COLOR_24MASK 0xFFFFFF     ///< 24-bit color mask
 #define LAYER_ENMASK 0x7          ///< Enable Mask for layer_e
 #define TILELAYER_WIDTH 64        ///< Width (in tiles) of the tile layer
@@ -46,13 +43,12 @@
 #define PALETTERAM_TILEMAX 16     ///< Maximum number of palettes for a tile layer to access
 #define SPRRAM_EXTRAOFFSET 0x100  ///< Byte offset of the extra data in Sprite RAM
 #define TILEPATTERN_BSIZE 32      ///< Size (in Bytes) of a single pattern_t (tile-pattern)
-#define TILERAM_FGOFFSET 0x2000   ///< Byte offset for foreground tile layer within Tile RAM
-#define TILECHUNK_WIDTH 4         ///< Width of a single tile-chunk (group of 4x4 tile-patterns)
-#define TILECHUNK_HEIGHT 4        ///< Height of a single tile-chunk (group of 4x4 tile-patterns)
-#define TILEDATA_BSIZE 2          ///< Size of tile data in bytes
-#define PALETTE_BSIZE 60          ///< Size of 15 colors (a single palette)
-#define SPRITE_BSIZE 4            ///< Size of sprite data in bytes
 #define TILEPATTERN_HEIGHT 8      ///< Height in pixel rows of a single tile pattern (8x8 tile)
+#define TILERAM_FGOFFSET 0x2000   ///< Byte offset for foreground tile layer within Tile RAM
+#define TILEDATA_BSIZE 2          ///< Size of tile data in bytes
+#define PALETTE15_BSIZE 60        ///< Size of 15 colors (not counting the transparent color)
+#define PALETTE16_BSIZE 64        ///< Size of 16 colors (technically a full palette)
+#define SPRITE_BSIZE 4            ///< Size of sprite data in bytes
 
 
 /* ========================= */
@@ -127,13 +123,12 @@ int ppu_write_vram(const void *buf, size_t len, off_t offset)
 /* =========================== */
 /* === PPU Data Generators === */
 /* =========================== */
-pattern_addr_t ppu_pattern_addr (unsigned pattern_id, unsigned x, unsigned y)
+pattern_addr_t ppu_pattern_addr (unsigned x, unsigned y)
 {
-    nowaymsg(pattern_id > 63, "Argument out of range!");
-    nowaymsg(x > 3, "Argument out of range!");
-    nowaymsg(y > 3, "Argument out of range!");
+    nowaymsg(x > 31, "Argument out of range!");
+    nowaymsg(y > 31, "Argument out of range!");
 
-    return (pattern_id << 4) | (y << 2) | x;
+    return (y << 5) | x;
 }
 
 tile_t ppu_make_tile(pattern_addr_t pattern_addr, unsigned palette_id, mirror_e mirror)
@@ -143,27 +138,6 @@ tile_t ppu_make_tile(pattern_addr_t pattern_addr, unsigned palette_id, mirror_e 
     nowaymsg(mirror > MIRROR_MAXVAL, "Mirror argument malformed!");
 
     return (pattern_addr << 6) | (palette_id << 2) | mirror;
-}
-
-void ppu_make_sprite(sprite_t *sprite, pattern_addr_t pattern_addr, unsigned width, unsigned height,
-                     unsigned palette_id, render_prio_e prio, mirror_e mirror)
-{
-    nowaymsg(sprite == NULL, "Sprite points to NULL!");
-    nowaymsg(pattern_addr > PATTERN_MAXADDR, "Pattern address malformed!");
-    nowaymsg(width > SPRITE_MAXWIDTH, "Sprites widths larger than 4 tiles are not supported!");
-    nowaymsg(height > SPRITE_MAXHEIGHT, "Sprite heights larger than 4 tiles are not supported!");
-    nowaymsg(palette_id > TILELAYER_MAX_PALETTES, "Palette ID out of range!");
-    nowaymsg(prio > PRIO_MAX_VALUE, "Priority argument malformed!");
-    nowaymsg(mirror > MIRROR_MAXVAL, "Mirror argument malformed!");
-
-    sprite->pattern_addr = pattern_addr;
-    sprite->palette_id = palette_id;
-    sprite->mirror = mirror;
-    sprite->prio = prio;
-    sprite->x = 0;
-    sprite->y = 0;
-    sprite->height = height;
-    sprite->width = width;
 }
 
 void ppu_load_tilemap(tile_t *tilemap, unsigned len, char *file)
@@ -438,33 +412,22 @@ int ppu_write_tiles_vertical(tile_t *tiles, unsigned len, layer_e layer, unsigne
 int ppu_write_pattern(pattern_t *pattern, unsigned width, unsigned height,
                       pattern_addr_t pattern_addr)
 {
-    unsigned row;
-    unsigned col;
-    unsigned addr;    // Write address in terms of pattern_t
-    unsigned wr_addr; // Final byte-address for write
-    unsigned srcaddr; // Address into patterns array
-    unsigned x_i;
-    unsigned y_i;
-
     // Check for invalid inputs and notify user of errors
     nowaymsg(ppu_fd == -1, "PPU not enabled or owned by this process!");
     nowaymsg(pattern == NULL, "Pattern array is NULL!");
+    nowaymsg(pattern_addr > PATTERN_MAXADDR, "Pattern address malformed!");
 
-    // pattern_addr's x_i, y_i as well as the specified width and height must not cause out-of-
-    //   -bounds access, or extend beyond the given tile chunk.
-    x_i = pattern_addr & 0x3;
-    y_i = (pattern_addr >> 2) & 0x3;
-    nowaymsg(x_i > TILECHUNK_WIDTH - width, "Pattern extends out of tile-chunk bounds!");
-    nowaymsg(y_i > TILECHUNK_HEIGHT - height, "Pattern extends out of tile-chunk bounds!");
-    nowaymsg(pattern_addr + width * height > PATTERN_MAXADDR, "Pattern extends out of Pattern RAM!");
-
-    for (row = 0; row < height; row++) // Write rows of tile-patterns
+    unsigned x_i = pattern_addr & 0x1F;        // Starting tile x coord. 1st 5 bits of pattern_addr
+    unsigned y_i = (pattern_addr >> 5) & 0x1F; // Starting tile y coord. 2nd 5 bits of pattern_addr
+    for (unsigned row = 0; row < height; row++) // Write rows of tile-patterns
     {
-        for (col = 0; col < width; col++) // For each tile-pattern in the current row
+        unsigned y_f = (y_i + row) & 0x1F; // This performs mod 32 to create wrap-around
+        for (unsigned col = 0; col < width; col++) // For each tile-pattern in the current row
         {
-            addr = pattern_addr + row * 4 + col;
-            wr_addr = VRAM_PATTERNOFFSET + TILEPATTERN_BSIZE * addr;
-            srcaddr = col + width * row;
+            unsigned x_f = (x_i + col) & 0x1F; // This performs mod 32 to create wrap-around
+            unsigned addr = ppu_pattern_addr(x_f, y_f); // Tile address
+            unsigned wr_addr = VRAM_PATTERNOFFSET + TILEPATTERN_BSIZE * addr; // Byte address
+            unsigned srcaddr = col + width * row; // Address into pattern array
 
             // write a full 8x8 tile's worth of pattern data:
             if (pwrite(ppu_fd, &(pattern[srcaddr].pxrow), TILEPATTERN_BSIZE, wr_addr) != TILEPATTERN_BSIZE)
@@ -498,9 +461,11 @@ int ppu_write_palette(palette_t *palette, layer_e layer_id, unsigned palette_id)
         layer_offset = (layer_id == LAYER_FG) ? PALETTERAM_FGOFFSET : PALETTERAM_BGOFFSET;
     }
 
-    wr_addr = VRAM_PALETTEOFFSET + layer_offset + palette_id * PALETTE_BSIZE + 4; // Offset by one color
+    // Offset by one color (4B) (to ignore the transparent one)
+    wr_addr = VRAM_PALETTEOFFSET + layer_offset + palette_id * PALETTE16_BSIZE + 4;
 
-    if (pwrite(ppu_fd, &(palette->color), PALETTE_BSIZE, wr_addr) != PALETTE_BSIZE)
+    // Only write the opaque 15 colors
+    if (pwrite(ppu_fd, &(palette->color), PALETTE15_BSIZE, wr_addr) != PALETTE15_BSIZE)
     {
         assert(errno == EBUSY);
 
@@ -522,6 +487,7 @@ int ppu_write_sprites(sprite_t *sprites, unsigned len, unsigned sprite_id_i)
 
     nowaymsg(sprites == NULL, "Sprite Array is NULL!");
     nowaymsg(sprite_id_i + len > SPRITE_MAXCOUNT, "Sprite write would exceed Sprite RAM bounds!");
+
     nowaymsg((sprite_buf = malloc(len * SPRITE_BSIZE)) == NULL, "Sprite data malloc failed!");
     nowaymsg((sprite_extra_buf = malloc(len)) == NULL, "Sprite extra data malloc failed!");
 
@@ -530,6 +496,10 @@ int ppu_write_sprites(sprite_t *sprites, unsigned len, unsigned sprite_id_i)
 
     for (i=0; i < len; i++)
     {
+        // TODO: Check for malformed inputs for this sprite
+        // nowaymsg(sprites[i].pattern_addr < PATTERN_MAXADDR, "Pattern address malformed!");
+        // ...
+
         sprite = (sprites[i].pattern_addr << 22) | (sprites[i].palette_id << 17) | (sprites[i].y << 9) | sprites[i].x;
         extra = (sprites[i].mirror << 6) | (sprites[i].width << 4) | (sprites[i].height << 2) | sprites[i].prio;
 

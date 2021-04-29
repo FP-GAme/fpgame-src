@@ -130,23 +130,23 @@ int ppu_write_vram(const void *buf, size_t len, off_t offset);
 /* =========================== */
 /* === PPU Data Generators === */
 /* =========================== */
-/** @brief Generates a pattern_addr_t using a pattern_id, and relative (x, y) position
+/** @brief Generates a pattern_addr_t using (x, y) coordinates 
  *
- * Pattern RAM is organized into blocks of 32x32-pixel chunks (or 4x4 8x8-pixel tile groups).
+ * Pattern RAM is organized into 32x32 8x8-pixel tiles.
  * @image html pattern_ram_organization.svg
- * Note each small square tile in the diagram above represents an 8 pixel by 8 pixel tile. There are
- *   16 such tiles per tile group.
+ * Note each small square in the diagram above represents an 8 pixel by 8 pixel tile.
  *
- * @p pattern_id selects which of these tile groups to write to.
- *   ( @p x, @p y ) indicates a position within this 16 tile group with the origin (0, 0) at the top
- *   left.
+ * The coordinate system starts with the origin (0,0) as the top-left most tile. The maximum value
+ *   for either coordinate is 31; the minimum is 0.
  *
- * @param pattern_id Index into Pattern RAM selecting a tile group. Range [0, 63].
- * @param x Within the selected tile group, horizontal tile offset. Range [0, 3].
- * @param y Within the selected tile group, vertical tile offset. Range [0, 3].
+ * @note When addressing groups of 8x8-pixel patterns (like for 16x16 or larger sprites), choose the
+ *   top left-most tile when determining coordinates (x, y).
+ *
+ * @param x Horizontal tile offset. Range [0, 31].
+ * @param y Vertical tile offset. Range [0, 31].
  * @returns A pattern_addr_t representing the address into Pattern RAM formed by the arguments.
  */
-pattern_addr_t ppu_pattern_addr (unsigned pattern_id, unsigned x, unsigned y);
+pattern_addr_t ppu_pattern_addr (unsigned x, unsigned y);
 
 /** @brief Generate a tile data for use with the ppu_write_tile functions
  *
@@ -159,22 +159,6 @@ pattern_addr_t ppu_pattern_addr (unsigned pattern_id, unsigned x, unsigned y);
  * @return           A tile_t representing the tile data formed by the inputs.
  */
 tile_t ppu_make_tile(pattern_addr_t pattern_addr, unsigned palette_id, mirror_e mirror);
-
-/** @brief Generate a sprite data for use with the ppu_write_sprites function
- *
- * Importantly, the sprite's position is defaulted to (0, 0).
- *
- * @param sprite Pointer to an empty sprite_t struct you want to initialize.
- * @param pattern_addr The address into Pattern RAM where this sprite starts. Recommended to
- *                     generate using @ref ppu_pattern_addr.
- * @param width Horizontal width of sprite in tiles. Can take values in [1, 4].
- * @param height Vertical height of sprite in tiles. Can take values in [1, 4].
- * @param palette_id Palette from the sprites section of Palette RAM to use. Must be within [0, 31].
- * @param prio Render priority for this sprite.
- * @param mirror Horizontal/Vertical mirror setting for this sprite.
- */
-void ppu_make_sprite(sprite_t *sprite, pattern_addr_t pattern_addr, unsigned width, unsigned height,
-                     unsigned palette_id, render_prio_e prio, mirror_e mirror);
 
 /** @brief Loads tile-data from a file into an linear array of tile_t
  *
@@ -293,29 +277,26 @@ int ppu_write_tiles_vertical(tile_t *tiles, unsigned len, layer_e layer, unsigne
 
 /** @brief Writes pattern_t patterns (8x8-pixel tiles) to a specified location in Pattern RAM
  *
- * @note As a reminder, pattern_addr points to a tile chunk and also a specific tile at (x_i, y_i)
- *       within.
+ * @note As a reminder, pattern_addr points to a specific tile at (x_i, y_i) in Pattern RAM.
  *
- * Within the current tile chunk pointed to by pattern_addr, a subset of @p width pattern_t by
+ * Starting at the initial tile pointed to by pattern_addr, a set of @p width pattern_t by
  *   @p height pattern_t is formed.
  *
  * pattern_t tile-patterns (8x8-pixel tiles) from @p patterns are written sequentially by rows of
  *   @p width until @p height rows have been written.
  *
- * The example diagrams below demonstrate the effect of this function with a variable width/height
- *   and pattern_addr of 0:
- * @image html ppu_write_patterns_ex0.svg
- * @image html ppu_write_patterns_ex1.svg
- *
- * @warning Note, however that if the subset indicated by width, height, x_i, y_i would extend
- *          beyond a 16x16 tile-group boundary, this function will give a warning and abort the
- *          program. For example, you are not allowed to write a 3x3-tile pattern starting at (2,3).
- * @image html ppu_write_patterns_ex2.svg
- * Another illegal example for a 2x2-tile pattern starting at (3, 0):
- * @image html ppu_write_patterns_ex3.svg
+ * The example diagram below demonstrates the effect of this function:
+ * @image html ppu_write_pattern_ex0.svg
  *
  * @warning It is the user's responsibility to ensure @p patterns has length @p width * @p height
  *          (in terms of pattern_t).
+ *
+ * @warning You cannot write with a starting address outside of Pattern-RAM.
+ * @image html ppu_write_pattern_warn0.svg
+ *
+ * @note It is okay to write patterns at the edge of Pattern-RAM, however, since they will wrap
+ *       around. The important point is that the start position of the write occurs in bounds.
+ * @image html ppu_write_pattern_ex1.svg
  * 
  * @pre PPU is currently locked by this process. See @ref ppu_enable.
  * @param pattern The buffer of pattern_t tiles. @p patterns must have @p width * @p height
