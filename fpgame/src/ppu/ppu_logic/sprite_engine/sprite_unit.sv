@@ -70,7 +70,7 @@ assign pixel.palette = out.conf.palette;
 assign pixel.pixel = out.pat[pat_index];
 assign pixel.fg_prio = out.conf.fg_prio;
 assign pixel.bg_prio = out.conf.bg_prio;
-assign pixel.transparent = (pixel.pixel == 'd0) || (out.conf.x < col)
+assign pixel.transparent = (pixel.pixel == 'd0) || (out.conf.x > col)
                          || (col >= width_limit);
 
 /*** Sequential Logic ***/

@@ -45,7 +45,7 @@ logic sprite_inc;
 
 /*** Modules ***/
 
-sprite_addr_gen addr_gen(.conf, .row, .addr(pattern_addr), .index(read_ack_count));
+sprite_addr_gen addr_gen(.conf, .row, .addr(pattern_addr), .index(read_req_count));
 
 counter #(3) req_cnt(.clock, .reset_l, .inc(read_req_inc),
                      .out(read_req_count), .clear(pat_cnt_clear | clear));
