@@ -195,28 +195,39 @@ void ppu_make_sprite(sprite_t *sprite, pattern_addr_t pattern_addr, unsigned wid
  */
 void ppu_load_tilemap(tile_t *tilemap, unsigned len, char *file);
 
-/** @brief Loads an 8x8-pixel tile graphic into @p pattern from @p file
+/** @brief Loads width*height-tile graphics into @p pattern from @p file
  *
- * @p file must be a simple text file, containing 8 lines, each with 8 hex chars: 0-F. Each hex char
- *    represents a pixel's color for any palette. 0 is always transparent, 1-F correspond to the 15
- *    available colors in a palette.
+ * @p file must be a .pattern text file, height * 8 lines, each with width * 8 hex chars: 0-F. Each
+ *    hex char represents a pixel's color for any palette. 0 is always transparent, 1-F correspond
+ *    to the 15 available colors in a palette. This format is best exported from
+ *    art_tools/c_to_pattern.py.
  *
- * Example:
+ * Example (width = height = 8):
+ *
  * 112233445
+ *
  * F00000005
+ *
  * F00000006
+ *
  * E00000006
+ *
  * E00000007
+ *
  * D00000007
+ *
  * D00000008
+ *
  * CCBBAA998
  *
  * A test file with the above text represents a multi-colored box outline with transparent center.
  *
  * @param pattern Pattern instance to copy the pixel data from @p file to.
  * @param file File path of the text file to copy pixel data from.
+ * @param width Number of 8x8 tile-patterns wide. Supports 1, 2, 3, or 4.
+ * @param height Number of 8x8 tile-patterns tall. Supports 1, 2, 3, or 4.
  */
-void ppu_load_pattern(pattern_t *pattern, char *file);
+void ppu_load_pattern(pattern_t *pattern, char *file, unsigned width, unsigned height);
 
 /** @brief Loads a color palette from @p file into @p palette
  *
