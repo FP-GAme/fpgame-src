@@ -5,6 +5,7 @@
 *.d
 *.a
 *.bin
+*.raw
 *.zip
 SoftDiv/div
 Wave-to-PCM/wav2bin

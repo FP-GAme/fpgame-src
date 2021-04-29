@@ -1,6 +1,12 @@
-/* sprite_engine.sv
+/*
+ * File: sprite_engine.sv
+ * Author: Joseph Yankel
+ * Author: Andrew Spaulding
+ *
  * Implements the Sprite-Engine.
  */
+
+`include "sprite_defines.vh"
 
 module sprite_engine (
     input  logic clk,
@@ -20,51 +26,77 @@ module sprite_engine (
     input  logic        enable,
 
     // from/to Pixel Mixer
-    input  logic [8:0]  pmxr_pixel_addr, 
+    input  logic [8:0]  pmxr_pixel_addr,
     output logic [8:0]  pmxr_pixel_data, // 5b palette address (relative to sprite section), 4b color
     output logic [1:0]  pmxr_pixel_prio, // Priority of the pixel
     output logic        done
 );
 
-/* TODO START: Implement sprite_engine. Remove these messages (if you want)
+/*** Wires ***/
 
-Important Interface Details:
+logic [8:0] col, pixel_addr;
+logic [1:0] pixel_prio;
+logic clock, reset_l, clear, ready;
 
-You have around 2800 clock cycles to Prepare for the pixel mixer.
-Any time leftover can be spent mining bitcoin.
+logic [7:0] row, next_row_for_real_this_time;
 
-When you assert the done signal, this module must be ready to accept pmxr_pixel_addr, and spit data
-  out on pmxr_pixel_data and pmxr_pixel_prio a clock cycle after.
+logic [12:0] pattern_addr;
+pixel_t [7:0] pattern_data;
+logic pattern_read, pattern_avail;
 
-To visualize this timing:
---- Assert done signal ---
---- some number of rising clk edges later ---
+logic [6:0] oam_addr;
+sprite_conf_t oam_data;
+logic oam_read, oam_avail;
 
---- pmxr sets pmxr_pixel_addr 0 ---
---- rising clk edge ---
+logic conf_req, conf_ack, conf_exists;
 
---- Sprite engine sees pmxr_pixel_addr 0 ---
---- pmxr sets pmxr_pixel_addr 1 ---
---- rising clk edge ---
+sprite_reg_t sprite;
+logic sprite_valid, sprite_ack;
 
---- Sprite engine sees pmxr_pixel_addr 1 ---
---- pmxr sets pmxr_pixel_addr 2 ---
---- Sprite Engine spits out pmxr_data corresponding to pmxr_pixel_addr 0 ---
---- rising clk edge ---
+/*** Modules ***/
 
-... and so on ...
+pattern_wrapper pat_wrap(.clock, .reset_l, .patram_addr, .patram_rddata,
+                         .pattern_addr, .pattern_data, .pattern_read,
+			 .pattern_avail);
 
-If this is confusing. See the diagram I sent over Slack.
+oam_wrapper oam_wrap(.clock, .reset_l, .sprram_addr_a, .sprram_addr_b,
+                     .sprram_rddata_a, .sprram_rddata_b, .oam_addr,
+		     .oam_data, .oam_read, .oam_avail);
 
-TODO END: Good luck!
-*/
+oam_scanner oam_scan(.clock, .reset_l, .clear, .row, .oam_addr, .oam_data,
+                     .oam_read, .oam_avail, .conf_req, .conf_ack, .conf_exists);
 
-// TODO: Remove these placeholders
-assign done = 1'b1;
-assign pmxr_pixel_prio = 2'b10;
-assign pmxr_pixel_data = 9'd0;
-assign patram_addr = 12'd0;
-assign sprram_addr_a = 6'd0;
-assign sprram_addr_b = 6'd0;
+sprite_manager spr_man(.clock, .reset_l, .clear, .row, .ready, .conf_req,
+                       .conf_ack, .conf_exists, .conf(oam_data), .pattern_addr,
+		       .pattern_data, .pattern_read, .pattern_avail, .sprite,
+		       .sprite_valid, .sprite_ack);
+
+sprite_file spr_file(.clock, .reset_l, .clear, .in(sprite),
+                     .in_valid(sprite_valid), .in_ack(sprite_ack),
+		     .col, .pixel_addr, .pixel_prio);
+
+/*** Combonational Logic ***/
+
+assign clock = clk;
+assign reset_l = rst_n;
+assign clear = prep;
+assign done = ready;
+
+assign next_row_for_real_this_time = (prep) ? next_row : row;
+
+assign pmxr_pixel_data = (enable) ? pixel_addr : 'd0;
+assign pmxr_pixel_prio = pixel_prio;
+
+/*** Sequential Logic ***/
+
+always_ff @(posedge clock, negedge reset_l) begin
+	if (~reset_l) begin
+		col <= 'd0;
+		row <= 'd0;
+	end else begin
+		col <= pmxr_pixel_addr;
+		row <= next_row_for_real_this_time;
+	end
+end
 
 endmodule : sprite_engine

@@ -539,6 +539,18 @@ set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
 set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 set_global_assignment -name EDA_TEST_BENCH_FILE src/fpgame_video_tb.sv -section_id fpgame_video_tb
+set_global_assignment -name ENABLE_SIGNALTAP ON
+set_global_assignment -name USE_SIGNALTAP_FILE stp1.stp
+set_global_assignment -name SYSTEMVERILOG_FILE src/common/counter.sv
+set_global_assignment -name VERILOG_INCLUDE_FILE src/ppu/ppu_logic/sprite_engine/sprite_defines.vh
+set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/ppu_logic/sprite_engine/sprite_unit.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/ppu_logic/sprite_engine/sprite_tournament.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/ppu_logic/sprite_engine/sprite_manager.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/ppu_logic/sprite_engine/sprite_file.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/ppu_logic/sprite_engine/sprite_addr_gen.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/ppu_logic/sprite_engine/pattern_wrapper.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/ppu_logic/sprite_engine/oam_wrapper.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/ppu_logic/sprite_engine/oam_scanner.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/dbuf_ppu_ctrl_regs/dbuf_ppu_ctrl_regs.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/ppu/ppu_logic/sprite_engine/sprite_engine.sv
 set_global_assignment -name QIP_FILE fpgame_soc/synthesis/fpgame_soc.qip
@@ -593,7 +605,5 @@ set_global_assignment -name QIP_FILE src/ppu/vram/sprite_ram/sprite_ram_ppu_faci
 set_global_assignment -name QIP_FILE src/ppu/vram/sprite_ram/sprite_ram_cpu_facing.qip
 set_global_assignment -name QIP_FILE src/ppu/vram/tile_ram/tile_ram_ppu_facing.qip
 set_global_assignment -name QIP_FILE src/ppu/vram/tile_ram/tile_ram_cpu_facing.qip
-set_global_assignment -name ENABLE_SIGNALTAP ON
-set_global_assignment -name USE_SIGNALTAP_FILE stp1.stp
 set_global_assignment -name SIGNALTAP_FILE stp1.stp
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

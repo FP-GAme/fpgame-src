@@ -8,6 +8,9 @@
 	<sof_data>
 		<user_name>Page_0</user_name>
 		<page_flags>1</page_flags>
+		<bit0>
+			<sof_filename>/home/andy/Documents/Projects/Capstone/fpgame/fpgame.sof</sof_filename> 
+		</bit0>
 	</sof_data>
 	<version>10</version>
 	<create_cvp_file>0</create_cvp_file>

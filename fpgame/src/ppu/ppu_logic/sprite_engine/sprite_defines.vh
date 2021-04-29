@@ -16,6 +16,9 @@
 /* The number of sprites which can be specified by OAM. */
 `define MAX_SPRITES 'd100
 
+/* The offset in memory where the second part of OAM starts. */
+`define OAM_EXT_OFFSET (`MAX_SPRITES * 4)
+
 /* Defines the pixel type, used internally by the sprite engine. */
 typedef logic [3:0] pixel_t;
 
@@ -67,6 +70,6 @@ typedef struct packed {
 	logic fg_prio;
 	logic bg_prio;
 	logic transparent;
-} sprite_pixel_t
+} sprite_pixel_t;
 
-`endif /* FPGAME_SPRITE_DEFINES_VH_
+`endif /* FPGAME_SPRITE_DEFINES_VH_ */

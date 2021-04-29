@@ -18,7 +18,8 @@ module sprite_file
 	output logic in_ack,
 
 	input  logic [8:0] col,
-	output logic [8:0] pixel_addr
+	output logic [8:0] pixel_addr,
+	output logic [1:0] pixel_prio
 );
 
 /*** Wires ***/
@@ -31,8 +32,7 @@ logic [SPRITES - 1:0] valid, ack;
 
 sprite_unit (.clock, .reset_l, .clear,
              .in(pipe[0]), .in_valid(valid[0]), .in_ack(ack[0]),
-             .out_valid(1'b0),
-             .col, .pixel(pixel[0]));
+             .out_ack(1'b0), .col, .pixel(pixel[0]));
 
 genvar i;
 generate
@@ -45,12 +45,12 @@ generate
 	end
 endgenerate
 
-sprite_tournament(.in(pixel), .col, .pixel_addr);
+sprite_tournament(.in(pixel), .col, .pixel_addr, .pixel_prio);
 
 /*** Combonational Logic ***/
 
 assign pipe[SPRITES - 1] = in;
 assign valid[SPRITES - 1] = in_valid;
-assign ack[SPRITES - 1] = in_ack;
+assign in_ack = ack[SPRITES - 1];
 
 endmodule : sprite_file

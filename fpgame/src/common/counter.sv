@@ -10,10 +10,10 @@ module counter
 (
 	input  logic clock, reset_l,
 	input  logic inc, clear,
-	output logic [$clog2:0] out
+	output logic [$clog2(WIDTH):0] out
 );
 
-logic [$clog2:0] next_count;
+logic [$clog2(WIDTH):0] next_count;
 
 always_comb begin
 	next_count = out;

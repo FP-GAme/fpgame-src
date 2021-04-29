@@ -30,8 +30,6 @@ module apu
 	output logic [28:0] mem_addr,
 	output logic        mem_read_en,
 
-	output logic [5:0]  chunk_addr, /* FIXME */
-
 	input  logic        i2s_clk,
 	output logic        i2s_out,
 	output logic        i2s_ws
@@ -60,7 +58,7 @@ logic debounce_i2s_ws, sample_req;
 /*** Modules ***/
 
 sample_fetcher s1 (.clock, .reset_l, .mem_data, .mem_ack, .mem_addr, .mem_read_en,
-                   .mem_wait, .chunk, .chunk_valid, .chunk_ack, .chunk_addr, .base(queued_base),
+                   .mem_wait, .chunk, .chunk_valid, .chunk_ack, .base(queued_base),
                    .base_valid(queued_base_valid), .base_ack(queued_base_ack));
 
 chunk_player c1 (.clock, .reset_l, .chunk, .chunk_valid, .chunk_ack, .sample,

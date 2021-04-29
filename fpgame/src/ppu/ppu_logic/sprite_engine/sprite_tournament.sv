@@ -19,9 +19,10 @@
 module sprite_tournament
 #(parameter SPRITES=`MAX_SPRITES_PER_LINE)
 (
-	input  sprite_pixel_t [SPRITES - 1:0] in;
-	input  logic [8:0] col;
-	output logic [8:0] pixel_addr;
+	input  sprite_pixel_t [SPRITES - 1:0] in,
+	input  logic [8:0] col,
+	output logic [8:0] pixel_addr,
+	output logic [1:0] pixel_prio
 );
 
 /*** Wires ***/
@@ -51,10 +52,11 @@ always_comb begin
 	end
 
 	/* Gets the index of the LSB */
-	select = $right(sel_mask)
+	select = $right(sel_mask);
 end
 
 assign exists = (visible != 'd0);
 assign pixel_addr = (exists) ? { in[select].palette, in[select].pixel } : 'd0;
+assign pixel_prio = { in[select].fg_prio, in[select].bg_prio };
 
 endmodule : sprite_tournament
