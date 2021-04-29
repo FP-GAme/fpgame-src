@@ -65,7 +65,8 @@ oam_wrapper oam_wrap(.clock, .reset_l, .sprram_addr_a, .sprram_addr_b,
 		     .oam_data, .oam_read, .oam_avail);
 
 oam_scanner oam_scan(.clock, .reset_l, .clear, .row, .oam_addr, .oam_data,
-                     .oam_read, .oam_avail, .conf_req, .conf_ack, .conf_exists);
+                     .oam_read, .oam_avail, .conf_req, .conf_ack, .conf_exists,
+		     .start(clear));
 
 sprite_manager spr_man(.clock, .reset_l, .clear, .row, .ready, .conf_req,
                        .conf_ack, .conf_exists, .conf(oam_data), .pattern_addr,
@@ -81,7 +82,7 @@ sprite_file spr_file(.clock, .reset_l, .clear, .in(sprite),
 assign clock = clk;
 assign reset_l = rst_n;
 assign clear = prep & ~last_prep;
-assign done = 1'b1;//ready;
+assign done = ready;
 
 assign next_row_for_real_this_time = (prep & ~last_prep) ? next_row : row;
 

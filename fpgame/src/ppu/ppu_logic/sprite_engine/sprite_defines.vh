@@ -14,7 +14,7 @@
 `define MAX_SPRITES_PER_LINE 'd16
 
 /* The number of sprites which can be specified by OAM. */
-`define MAX_SPRITES 'd100
+`define MAX_SPRITES 'd64
 
 /* The offset in memory where the second part of OAM starts. */
 `define OAM_EXT_OFFSET (`MAX_SPRITES * 4)

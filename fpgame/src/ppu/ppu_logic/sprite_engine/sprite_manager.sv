@@ -32,7 +32,7 @@ module sprite_manager
 
 /*** Wires ***/
 
-enum logic [1:0] { CONF_READ, PAT_READ, SEND_SPRITE } state, next_state;
+enum logic [2:0] { CONF_READ, PAT_READ, SEND_SPRITE, SIGNAL, DONE } state, next_state;
 
 sprite_conf_t sprite_conf, next_sprite_conf;
 pixel_t [3:0][7:0] pat_buf, next_pat_buf;
@@ -83,11 +83,18 @@ always_comb begin
 		ready = (~conf_exists
 		      || (sprite_count == `MAX_SPRITES_PER_LINE));
 		pat_cnt_clear = 'd1;
-		conf_req = ~ready;
+		conf_req = conf_exists && (sprite_count < `MAX_SPRITES_PER_LINE);
 
-		next_state = (conf_ack & ~clear) ? PAT_READ : CONF_READ;
-		next_sprite_conf = (clear) ? 'd0
-		                 : ((conf_ack) ? conf : sprite_conf);
+		if (clear) begin
+			next_state = CONF_READ;
+		end else if (~conf_req) begin
+			next_state = SIGNAL;
+		end else if (conf_ack) begin
+			next_state = PAT_READ;
+			next_sprite_conf = conf;
+		end else begin
+			next_state = CONF_READ;
+		end
 	end
 	PAT_READ: begin
 		pattern_read = (read_req_count <= { 1'b0, sprite_conf.w });
@@ -103,6 +110,13 @@ always_comb begin
 		sprite_valid = 'd1;
 		sprite_inc = sprite_ack;
 		next_state = (sprite_ack | clear) ? CONF_READ : SEND_SPRITE;
+	end
+	SIGNAL: begin
+		next_state = DONE;
+		ready = 1'b1;
+	end
+	DONE: begin
+		next_state = DONE;
 	end
 	endcase
 end
