@@ -47,8 +47,8 @@ logic [4:0] pat_offset, pat_index;
 
 always_comb begin
 	in_ack = 1'b0;
-	next_out = 'd0;
-	next_out_valid = 'd0;
+	next_out = out;
+	next_out_valid = out_valid;
 
 	if (clear | (out_ack & out_valid)) begin
 		next_out = 'd0;

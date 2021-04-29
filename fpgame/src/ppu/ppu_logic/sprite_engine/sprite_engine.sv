@@ -39,6 +39,7 @@ logic [1:0] pixel_prio;
 logic clock, reset_l, clear, ready;
 
 logic [7:0] row, next_row_for_real_this_time;
+logic last_prep;
 
 logic [12:0] pattern_addr;
 pixel_t [7:0] pattern_data;
@@ -79,10 +80,10 @@ sprite_file spr_file(.clock, .reset_l, .clear, .in(sprite),
 
 assign clock = clk;
 assign reset_l = rst_n;
-assign clear = prep;
-assign done = ready;
+assign clear = prep & ~last_prep;
+assign done = 1'b1;//ready;
 
-assign next_row_for_real_this_time = (prep) ? next_row : row;
+assign next_row_for_real_this_time = (prep & ~last_prep) ? next_row : row;
 
 assign pmxr_pixel_data = (enable) ? pixel_addr : 'd0;
 assign pmxr_pixel_prio = pixel_prio;
@@ -93,9 +94,11 @@ always_ff @(posedge clock, negedge reset_l) begin
 	if (~reset_l) begin
 		col <= 'd0;
 		row <= 'd0;
+		last_prep <= 'd0;
 	end else begin
 		col <= pmxr_pixel_addr;
 		row <= next_row_for_real_this_time;
+		last_prep <= prep;
 	end
 end
 

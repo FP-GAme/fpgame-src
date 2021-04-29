@@ -30,22 +30,23 @@ logic [SPRITES - 1:0] valid, ack;
 
 /*** Modules ***/
 
-sprite_unit (.clock, .reset_l, .clear,
-             .in(pipe[0]), .in_valid(valid[0]), .in_ack(ack[0]),
-             .out_ack(1'b0), .col, .pixel(pixel[0]));
+sprite_unit su0(.clock, .reset_l, .clear,
+                .in(pipe[0]), .in_valid(valid[0]), .in_ack(ack[0]),
+                .out_ack(1'b0), .col, .pixel(pixel[0]));
 
 genvar i;
 generate
 	for (i = 1; i < SPRITES; i = i + 1) begin: su_gen
-		sprite_unit (.clock, .reset_l, .clear,
-		             .in(pipe[i]), .in_valid(valid[i]), .in_ack(ack[i]),
-			     .out(pipe[i-1]), .out_valid(valid[i-1]),
-			     .out_ack(ack[i-1]),
-			     .col, .pixel(pixel[i]));
+		sprite_unit sui(.clock, .reset_l, .clear,
+		                   .in(pipe[i]), .in_valid(valid[i]),
+				   .in_ack(ack[i]),
+			           .out(pipe[i-1]), .out_valid(valid[i-1]),
+			           .out_ack(ack[i-1]),
+			           .col, .pixel(pixel[i]));
 	end
 endgenerate
 
-sprite_tournament(.in(pixel), .col, .pixel_addr, .pixel_prio);
+sprite_tournament king_of_spriters(.in(pixel), .col, .pixel_addr, .pixel_prio);
 
 /*** Combonational Logic ***/
 

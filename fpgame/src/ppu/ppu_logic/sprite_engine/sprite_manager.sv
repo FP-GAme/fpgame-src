@@ -58,8 +58,6 @@ counter #(5) spr_cnt(.clock, .reset_l, .clear,
 
 /*** Combonational Logic ***/
 
-assign read_ack_inc = pattern_avail;
-
 assign sprite.pat = pat_buf;
 assign sprite.conf.palette = sprite_conf.palette;
 assign sprite.conf.x = sprite_conf.x;
@@ -76,6 +74,7 @@ always_comb begin
 	conf_req = 'd0;
 	pattern_read = 'd0;
 	read_req_inc = 'd0;
+	read_ack_inc = 'd0;
 	sprite_valid = 'd0;
 	sprite_inc = 'd0;
 
@@ -93,6 +92,7 @@ always_comb begin
 	PAT_READ: begin
 		pattern_read = (read_req_count <= { 1'b0, sprite_conf.w });
 		read_req_inc = pattern_read;
+		read_ack_inc = pattern_avail;
 		next_pat_buf[read_ack_count] = (pattern_avail) ? pattern_data
 		                             : pat_buf[read_ack_count];
 		next_state = (clear) ? CONF_READ
