@@ -52,6 +52,7 @@
 #define TILEDATA_BSIZE 2          ///< Size of tile data in bytes
 #define PALETTE_BSIZE 60          ///< Size of 15 colors (a single palette)
 #define SPRITE_BSIZE 4            ///< Size of sprite data in bytes
+#define TILEPATTERN_HEIGHT 8      ///< Height in pixel rows of a single tile pattern (8x8 tile)
 
 
 /* ========================= */
@@ -194,36 +195,51 @@ void ppu_load_tilemap(tile_t *tilemap, unsigned len, char *file)
     nowaymsg(result == EOF, strerror(errno));
 }
 
-void ppu_load_pattern(pattern_t *pattern, char *file)
+void ppu_load_pattern(pattern_t *pattern, char *file, unsigned width, unsigned height)
 {
     FILE *fp;
     int result;
     uint32_t row_pattern;
-    unsigned count;       // Pattern rows written so far
 
     nowaymsg(pattern == NULL, "Tile array is NULL!");
 
     fp = fopen(file, "r");
     nowaymsg(fp == NULL, strerror(errno));
 
-    count = 0;
-    do {
-        // Reads the format (XXX,X,X) into (patter_addr, palette_id, mirror)
-        result = fscanf(fp, "%8X\n", &row_pattern);
+    for (unsigned tile = 0; tile < height; tile++)
+    {
+        for (unsigned row = 0; row < TILEPATTERN_HEIGHT; row++)
+        {
+            for (unsigned pxrow = 0; pxrow < width; pxrow++)
+            {
+                // Read the nibbles for this pixel (each corresponds to a color in the 15-color
+                //   palette, 1 is the first color, F is the last, 0 is transparent).
+                if (pxrow == width - 1)
+                {
+                    // Grab a set of 8 pixels and consume the newline
+                    result = fscanf(fp, "%8X\n", &row_pattern);
+                }
+                else
+                {
+                    // Grab a set of 8 pixels
+                    result = fscanf(fp, "%8X", &row_pattern);
+                }
 
-        // Source txt files have reversed nibble ordering (for ease of use).
-        // We need to reverse them back:
-        row_pattern = ((row_pattern & 0x0F0F0F0F) << 4) | ((row_pattern & 0xF0F0F0F0) >> 4);
-        row_pattern = ((row_pattern & 0x00FF00FF) << 8) | ((row_pattern & 0xFF00FF00) >> 8);
-        row_pattern = ((row_pattern & 0x0000FFFF) << 16) | ((row_pattern & 0xFFFF0000) >> 16);
-        // Credit to https://stackoverflow.com/questions/58716959/reversing-the-nibbles
+                // ensure result was valid
+                nowaymsg(result != 1, strerror(errno));
 
-        pattern->pxrow[count] = row_pattern;
-        count++;
-    } while(result != EOF && count < 8);
+                // Source txt files have reversed nibble ordering (for ease of use) (per each 4B).
+                // We need to reverse them back:
+                row_pattern = ((row_pattern & 0x0F0F0F0F) << 4) | ((row_pattern & 0xF0F0F0F0) >> 4);
+                row_pattern = ((row_pattern & 0x00FF00FF) << 8) | ((row_pattern & 0xFF00FF00) >> 8);
+                row_pattern = ((row_pattern & 0x0000FFFF) << 16) | ((row_pattern & 0xFFFF0000) >> 16);
+                // Credit to https://stackoverflow.com/questions/58716959/reversing-the-nibbles
 
+                pattern[pxrow + tile * height].pxrow[row] = row_pattern;
+            }
+        }
+    }
     result = fclose(fp);
-    nowaymsg(result == EOF, strerror(errno));
 }
 
 void ppu_load_palette(palette_t *palette, char *file)
