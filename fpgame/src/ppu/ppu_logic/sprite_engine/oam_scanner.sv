@@ -13,7 +13,6 @@ module oam_scanner
 	input  logic clock, reset_l, clear,
 
 	input  logic [7:0] row,
-	input  logic start,
 
 	input  logic conf_req,
 	output logic conf_ack,
@@ -27,7 +26,7 @@ module oam_scanner
 
 /*** Wires ***/
 
-enum [1:0] logic { INIT, STANDBY, MEM_REQ } state, next_state;
+enum logic [1:0] { INIT, STANDBY, MEM_REQ } state, next_state;
 
 logic oam_addr_inc;
 logic in_range;
@@ -50,7 +49,7 @@ always_comb begin
 
 	unique case (state)
 	INIT: begin
-		next_state = (start) ? STANDBY : INIT;
+		next_state = (clear) ? STANDBY : INIT;
 	end
 	STANDBY: begin
 		oam_read = (conf_req && conf_exists);
@@ -58,7 +57,9 @@ always_comb begin
 		oam_addr_inc = oam_read;
 	end
 	MEM_REQ: begin
-		next_state = (oam_avail | clear) ? STANDBY : MEM_REQ;
+		next_state = (oam_avail | clear)
+		           ? ((conf_exists) ? STANDBY : INIT)
+			   : MEM_REQ;
 		conf_ack = in_range & oam_avail;
 	end
 	endcase

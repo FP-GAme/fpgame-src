@@ -112,11 +112,11 @@ always_comb begin
 		next_state = (sprite_ack | clear) ? CONF_READ : SEND_SPRITE;
 	end
 	SIGNAL: begin
-		next_state = DONE;
+		next_state = (clear) ? CONF_READ : DONE;
 		ready = 1'b1;
 	end
 	DONE: begin
-		next_state = DONE;
+		next_state = (clear) ? CONF_READ : DONE;
 	end
 	endcase
 end
