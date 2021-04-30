@@ -26,6 +26,7 @@
 /* === Anti-Magic === */
 /* ================== */
 #define TILELAYER_MAX_PALETTES 16 ///< Maximum palettes for tile layers (as opposed to sprite layer)
+#define SPRLAYER_MAX_PALETTES 32  ///< Maximum palettes for sprite layer (as opposed to tile layers)
 #define PATTERN_MAXADDR 1023      ///< Maximum pattern_addr_t value
 #define MIRROR_MAXVAL 3           ///< Maximum allowable value for mirror_e
 #define SPRITE_MAXCOUNT 64        ///< Maximum supported sprites
@@ -49,6 +50,8 @@
 #define PALETTE15_BSIZE 60        ///< Size of 15 colors (not counting the transparent color)
 #define PALETTE16_BSIZE 64        ///< Size of 16 colors (technically a full palette)
 #define SPRITE_BSIZE 4            ///< Size of sprite data in bytes
+#define SPRITE_MAXWIDTH 4
+#define SPRITE_MAXWIDTH 4
 
 
 /* ========================= */
@@ -134,7 +137,7 @@ pattern_addr_t ppu_pattern_addr (unsigned x, unsigned y)
 tile_t ppu_make_tile(pattern_addr_t pattern_addr, unsigned palette_id, mirror_e mirror)
 {
     nowaymsg(pattern_addr > PATTERN_MAXADDR, "Pattern address malformed!");
-    nowaymsg(palette_id > TILELAYER_MAX_PALETTES, "Palette ID out of range!");
+    nowaymsg(palette_id >= TILELAYER_MAX_PALETTES, "Palette ID out of range!");
     nowaymsg(mirror > MIRROR_MAXVAL, "Mirror argument malformed!");
 
     return (pattern_addr << 6) | (palette_id << 2) | mirror;
@@ -497,11 +500,15 @@ int ppu_write_sprites(sprite_t *sprites, unsigned len, unsigned sprite_id_i)
     for (i=0; i < len; i++)
     {
         // TODO: Check for malformed inputs for this sprite
-        // nowaymsg(sprites[i].pattern_addr < PATTERN_MAXADDR, "Pattern address malformed!");
+        //nowaymsg(sprites[i].pattern_addr > PATTERN_MAXADDR, "Pattern address malformed!");
+        //nowaymsg(sprites[i].palette_id >= SPRLAYER_MAX_PALETTES, "Palette ID out of range!");
+        //nowaymsg(sprites[i].y >= 240, "Sprite y coord. out of range!");
+        //nowaymsg(sprites[i].x >= 320, "Sprite x coord. out of range!");
+        //nowaymsg(sprites[i].mirror > MIRROR_MAXVAL, "Mirror argument malformed!");
         // ...
 
         sprite = (sprites[i].pattern_addr << 22) | (sprites[i].palette_id << 17) | (sprites[i].y << 9) | sprites[i].x;
-        extra = (sprites[i].mirror << 6) | (sprites[i].width << 4) | (sprites[i].height << 2) | sprites[i].prio;
+        extra = (sprites[i].mirror << 6) | ((sprites[i].height - 1) << 4) | ((sprites[i].width - 1) << 2) | sprites[i].prio;
 
         sprite_buf[i] = sprite;
         sprite_extra_buf[i] = extra;
