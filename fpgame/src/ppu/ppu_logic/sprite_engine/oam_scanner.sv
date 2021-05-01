@@ -28,6 +28,8 @@ module oam_scanner
 
 enum logic [1:0] { INIT, STANDBY, MEM_REQ } state, next_state;
 
+logic [7:0] width_limit;
+logic [2:0] h_offset;
 logic oam_addr_inc;
 logic in_range;
 
@@ -39,8 +41,9 @@ counter #(7) oam_addr_cnt(.clock, .reset_l, .clear,
 /*** Combonational Logic ***/
 
 assign conf_exists = (oam_addr < `MAX_SPRITES);
-assign in_range = (oam_data.y <= row)
-                && ((oam_data.y + { oam_data.h + 2'b1, 3'd0 }) > row);
+assign h_offset = oam_data.h + 3'd1;
+assign width_limit = oam_data.y + { h_offset, 3'd0 };
+assign in_range = (oam_data.y <= row) && (width_limit > row);
 
 always_comb begin
 	oam_read = 1'b0;

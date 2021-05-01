@@ -62,7 +62,7 @@ always_comb begin
 	end
 end
 
-assign width_limit = out.conf.x + { out.conf.w, 3'd0 };
+assign width_limit = out.conf.x + { w_offset, 3'd0 };
 assign pat_offset = col - out.conf.x;
 assign w_offset = out.conf.w + 3'd1;
 assign mirror_limit = { w_offset, 3'd0 } - 6'd1;
