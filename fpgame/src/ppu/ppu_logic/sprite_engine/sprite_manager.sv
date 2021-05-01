@@ -81,8 +81,6 @@ always_comb begin
 
 	unique case (state)
 	CONF_READ: begin
-		ready = (~conf_exists
-		      || (sprite_count == `MAX_SPRITES_PER_LINE));
 		pat_cnt_clear = 'd1;
 		conf_req = conf_exists && (sprite_count < `MAX_SPRITES_PER_LINE);
 

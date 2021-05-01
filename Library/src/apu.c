@@ -67,7 +67,7 @@ void apu_callback_enable(void)
 {
 	sigset_t mask;
 	sigemptyset(&mask);
-	sigaddset(APU_CALLBACK_SIG);
+	sigaddset(&mask, APU_CALLBACK_SIG);
 	sigprocmask(SIG_UNBLOCK, &mask, NULL);
 }
 
@@ -75,7 +75,7 @@ void apu_callback_disable(void)
 {
 	sigset_t mask;
 	sigemptyset(&mask);
-	sigaddset(APU_CALLBACK_SIG);
+	sigaddset(&mask, APU_CALLBACK_SIG);
 	sigprocmask(SIG_BLOCK, &mask, NULL);
 }
 

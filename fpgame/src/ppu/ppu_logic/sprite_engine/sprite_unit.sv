@@ -55,7 +55,7 @@ always_comb begin
 	if (clear | (out_ack & out_valid)) begin
 		next_out = 'd0;
 		next_out_valid = 1'b0;
-	end else if (in_valid) begin
+	end else if (in_valid & ~out_valid) begin
 		in_ack = 1'b1;
 		next_out = in;
 		next_out_valid = 1'b1;
