@@ -18,6 +18,10 @@
 #ifndef _FP_GAME_CON_H_
 #define _FP_GAME_CON_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @brief These masks define the bit in which each button state is stored. */
 /**@{*/
 #define CON_BUT_B (1 << 15)
@@ -56,5 +60,9 @@
  *         negative integer on failure.
  */
 int get_con_state(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _FP_GAME_CON_H_ */

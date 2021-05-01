@@ -10,7 +10,7 @@
 
 module sprite_addr_gen
 (
-	input  sprite_conf_t conf,
+	input  sprite_conf_t sprite_conf,
 	input  logic [1:0] index,
 
 	input  logic [7:0] row,
@@ -26,13 +26,14 @@ logic [2:0] tile_row, h_offset;
 
 /*** Combonational Logic ***/
 
-assign row_offset = row - conf.y;
-assign h_offset = conf.h + 3'd1;
+assign row_offset = row - sprite_conf.y;
+assign h_offset = sprite_conf.h + 3'd1;
 assign mirror_limit = { h_offset, 3'd0 } - 6'd1;
-assign row_index = (conf.y_mirror) ? (mirror_limit - row_offset) : row_offset;
+assign row_index = (sprite_conf.y_mirror) ? (mirror_limit - row_offset)
+                                          : row_offset;
 
-assign tile_x = conf.tile[4:0] + { 3'd0, index };
-assign tile_y = conf.tile[9:5] + { 3'd0, row_index[4:3] };
+assign tile_y = sprite_conf.tile[9:5] + { 3'd0, row_index[4:3] };
+assign tile_x = sprite_conf.tile[4:0] + { 3'd0, index };
 assign tile_row = row_index[2:0];
 
 assign addr = { tile_y, tile_x, tile_row };

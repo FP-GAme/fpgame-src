@@ -45,7 +45,8 @@ logic sprite_inc;
 
 /*** Modules ***/
 
-sprite_addr_gen addr_gen(.conf, .row, .addr(pattern_addr), .index(read_req_count));
+sprite_addr_gen addr_gen(.sprite_conf, .row, .addr(pattern_addr),
+                         .index(read_req_count));
 
 counter #(3) req_cnt(.clock, .reset_l, .inc(read_req_inc),
                      .out(read_req_count), .clear(pat_cnt_clear | clear));
@@ -53,8 +54,8 @@ counter #(3) req_cnt(.clock, .reset_l, .inc(read_req_inc),
 counter #(3) ack_cnt(.clock, .reset_l, .inc(read_ack_inc),
                      .out(read_ack_count), .clear(pat_cnt_clear | clear));
 
-counter #(5) spr_cnt(.clock, .reset_l, .clear,
-                     .inc(sprite_inc), .out(sprite_count));
+counter #($clog2(`MAX_SPRITES_PER_LINE) + 1)
+        spr_cnt(.clock, .reset_l, .clear, .inc(sprite_inc), .out(sprite_count));
 
 /*** Combonational Logic ***/
 

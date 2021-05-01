@@ -8,7 +8,7 @@
  * The second disables the APU.
  *
  * Note that the first function will run the callback in a signal handler. The
- * user must manage the SIGINT signal if they need to disable the APU
+ * user must manage the SIGRTMAX signal if they need to disable the APU
  * callback, though this may result in silence for the user.
  *
  * Additionally, it is important to note that only one process may hold
@@ -18,6 +18,10 @@
 
 #ifndef _FP_GAME_APU_H_
 #define _FP_GAME_APU_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include <stdint.h>
 
@@ -67,5 +71,25 @@ int apu_enable(void (*callback)(const int8_t **buf, int *buf_size));
  * owned by the calling process.
  */
 void apu_disable(void);
+
+/**
+ * @brief Re-enables the APU callback function.
+ *
+ * Note that, on program start, the callback is "enabled" but will not
+ * occur until the APU is enabled.
+ */
+void apu_callback_enable(void);
+
+/**
+ * @brief Disables the APU callback function, temporarily.
+ *
+ * Note that, as this is akin to disabling an interrupt, it should
+ * be done only sparingly and briefly.
+ */
+void apu_callback_disable(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _FP_GAME_APU_H_ */

@@ -28,7 +28,7 @@ module oam_scanner
 
 enum logic [1:0] { INIT, STANDBY, MEM_REQ } state, next_state;
 
-logic [7:0] width_limit;
+logic [8:0] width_limit;
 logic [2:0] h_offset;
 logic oam_addr_inc;
 logic in_range;

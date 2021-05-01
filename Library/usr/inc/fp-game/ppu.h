@@ -13,6 +13,10 @@
 #ifndef _FP_GAME_PPU_H_
 #define _FP_GAME_PPU_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdlib.h>
 #include <stdint.h>
 #include <sys/types.h>
@@ -21,12 +25,12 @@
 /* === Types and Enums === */
 /* ======================= */
 /** @brief An enum which specifies a render layer.
- * 
+ *
  * These enum entries can be ORd together to form a bitmask. @see ppu_set_layer_enable.
  */
 typedef enum {
     LAYER_BG     = 1, ///< Denotes the background tile render layer
-    LAYER_FG     = 2, ///< Denotes the foreground tile render layer 
+    LAYER_FG     = 2, ///< Denotes the foreground tile render layer
     LAYER_SPR    = 4  ///< Denotes the sprite render layer
 } layer_e;
 
@@ -112,7 +116,7 @@ void ppu_disable(void);
  */
 int ppu_update(void);
 
-/** @brief Write directly to the VRAM buffer 
+/** @brief Write directly to the VRAM buffer
  *
  * @attention This gives a lower-level access to the VRAM buffer! See the higher-level write
  *   functions such as the various ppu_write_tiles functions, @ref ppu_write_sprites,
@@ -130,7 +134,7 @@ int ppu_write_vram(const void *buf, size_t len, off_t offset);
 /* =========================== */
 /* === PPU Data Generators === */
 /* =========================== */
-/** @brief Generates a pattern_addr_t using (x, y) coordinates 
+/** @brief Generates a pattern_addr_t using (x, y) coordinates
  *
  * Pattern RAM is organized into 32x32 8x8-pixel tiles.
  * @image html pattern_ram_organization.svg
@@ -170,7 +174,7 @@ tile_t ppu_make_tile(pattern_addr_t pattern_addr, unsigned palette_id, mirror_e 
  *     * 0 -> No mirror
  *     * 1 -> Horizontal Mirroring
  *     * 2 -> Vertical Mirroring
- *     * 3 -> Both Horizontal AND Vertical Mirroring 
+ *     * 3 -> Both Horizontal AND Vertical Mirroring
  *   * Each entry is separated either by a space or by a newline.
  *
  * @param tilemap Array of tile_t to load into.
@@ -233,7 +237,7 @@ void ppu_load_palette(palette_t *palette, const char *file);
  *   starting at ( @p x_i, @p y_i ) and moving horizontally. If overwriting count tiles would exceed
  *   the boundaries of the logical screen (63, @p y_i ), this function will automatically wrap
  *   around to the start of the logical screen (0, @p y_i ).
- * 
+ *
  * If len is lower than count, then this function repeats/tiles the given tiles buffer.
  *
  * This function is more efficient than ppu_write_tiles_vertical. So if writing a rectangular block
@@ -297,7 +301,7 @@ int ppu_write_tiles_vertical(tile_t *tiles, unsigned len, layer_e layer, unsigne
  * @note It is okay to write patterns at the edge of Pattern-RAM, however, since they will wrap
  *       around. The important point is that the start position of the write occurs in bounds.
  * @image html ppu_write_pattern_ex1.svg
- * 
+ *
  * @pre PPU is currently locked by this process. See @ref ppu_enable.
  * @param pattern The buffer of pattern_t tiles. @p patterns must have @p width * @p height
  *                total pattern_t. Create your buffer so that the pattern_t tiles occur row by row
@@ -330,7 +334,7 @@ int ppu_write_pattern(pattern_t *pattern, unsigned width, unsigned height,
 int ppu_write_palette(palette_t *palette, layer_e layer_id, unsigned palette_id);
 
 /** @brief Overwrites one or more sprite data entries in Sprite RAM
- * 
+ *
  * @pre PPU is currently locked by this process. See @ref ppu_enable.
  * @param sprites A pointer to an array of sprite data entries to submit to Sprite RAM.
  * @param len Length of @p sprites array.
@@ -381,5 +385,9 @@ int ppu_set_scroll(layer_e tile_layer, unsigned scroll_x, unsigned scroll_y);
  * @return 0 on success; -1 if PPU busy
  */
 int ppu_set_layer_enable(unsigned enable_mask);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _FP_GAME_PPU_H_ */

@@ -34,9 +34,8 @@ int apu_enable(void (*callback)(const int8_t **buf, int *buf_size))
 	noway(apu_fd != -1);
 
 	/* Open the apu device file */
-	// FIXME: There's an argument to be made that this should return -1
-	// instead. The user *could* close some files to fix the issue.
-	noway((apu_fd = open(APU_DEV_FILE, O_WRONLY)) < 0);
+	apu_fd = open(APU_DEV_FILE, O_WRONLY);
+	if (apu_fd < 0) { return -1;}
 
 	/* Register our signal handler for APU interrupts. */
 	callback_fn = callback;
@@ -62,6 +61,22 @@ void apu_disable(void)
 
 	apu_fd = -1;
 	callback_fn = NULL;
+}
+
+void apu_callback_enable(void)
+{
+	sigset_t mask;
+	sigemptyset(&mask);
+	sigaddset(APU_CALLBACK_SIG);
+	sigprocmask(SIG_UNBLOCK, &mask, NULL);
+}
+
+void apu_callback_disable(void)
+{
+	sigset_t mask;
+	sigemptyset(&mask);
+	sigaddset(APU_CALLBACK_SIG);
+	sigprocmask(SIG_BLOCK, &mask, NULL);
 }
 
 /**
