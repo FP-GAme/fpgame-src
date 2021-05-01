@@ -24,6 +24,9 @@
 /** @brief The maximum number of samples which may be given by a callback. */
 #define APU_BUF_MAX 512
 
+/** @brief The sampling rate of the APU. */
+#define APU_SAMPLE_RATE 32000
+
 /**
  * @brief Enables the APU.
  *

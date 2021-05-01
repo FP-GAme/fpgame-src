@@ -20,14 +20,16 @@ module sprite_addr_gen
 
 /*** Wires ***/
 
+logic [5:0] mirror_limit;
 logic [4:0] tile_x, tile_y, row_offset, row_index;
-logic [2:0] tile_row;
+logic [2:0] tile_row, h_offset;
 
 /*** Combonational Logic ***/
 
 assign row_offset = row - conf.y;
-assign row_index = (conf.y_mirror) ? (({ conf.h, 3'd0 } - 5'd1) - row_offset)
-                                   : row_offset;
+assign h_offset = conf.h + 3'd1;
+assign mirror_limit = { h_offset, 3'd0 } - 6'd1;
+assign row_index = (conf.y_mirror) ? (mirror_limit - row_offset) : row_offset;
 
 assign tile_x = conf.tile[4:0] + { 3'd0, index };
 assign tile_y = conf.tile[9:5] + { 3'd0, row_index[4:3] };
