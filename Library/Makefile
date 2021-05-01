@@ -6,7 +6,7 @@ OBJ = $(COBJ) $(ASMOBJ)
 DEPS = $(patsubst %.o,%.d,$(OBJ))
 
 # Mandatory C flags added by the makefile.
-override CFLAGS += -Wall -Wshadow -Wextra -Werror -Wuninitialized -pedantic $(addprefix -I,$(INC))
+override CFLAGS += -Wall -Wshadow -Wextra -Wuninitialized -Werror $(addprefix -I,$(INC))
 
 # Sets the default command to the target
 default: $(TARGET)

@@ -7,6 +7,7 @@
 *.bin
 *.raw
 *.zip
+sdk.mk
 SoftDiv/div
 Wave-to-PCM/wav2bin
 db/
@@ -20,8 +21,11 @@ hps_isw_handoff/
 spl_bsp/
 ctests/con_mod/con_test
 ctests/apu_mod/apu_test
+ctests/apu_mod/apu_clean
 ctests/apu_mod_polled/apu_poll
+ctests/apu_sin/apu_sin
 ctests/ppu_mod/ppu_test
+ctests/the_mall_test/the_mall_test
 
 # Ignore linux-socfpga folder
 linux-socfpga/

@@ -9,7 +9,8 @@ COBJ = $(patsubst %.c,%.o,$(shell find ./src -name '*.c'))
 ASMOBJ =
 
 # The folders to include headers from, reletive to make
-INC = src/inc usr/inc kern/inc
+-include sdk.mk
+override INC += src/inc usr/inc kern/inc
 
 # The directory to output the library to.
 OUTDIR = usr
@@ -17,4 +18,4 @@ OUTDIR = usr
 # The compiler to be used and its C flags.
 AR = ar
 CC = arm-none-linux-gnueabihf-gcc
-CFLAGS = -std=gnu99
+CFLAGS = -nostdinc -std=gnu99

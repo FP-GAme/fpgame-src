@@ -95,7 +95,6 @@ static void apu_sig_handler(int sig)
 
 	/* Send the new samples to the apu. */
 	if (write(apu_fd, buf, len)) {
-		printf("Write failed!\n");
-		perror("FUCK");
+		perror("APU callback failed");
 	}
 }
