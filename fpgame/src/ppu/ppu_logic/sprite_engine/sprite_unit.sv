@@ -41,7 +41,9 @@ sprite_reg_t next_out;
 logic next_out_valid;
 
 logic [8:0] width_limit;
+logic [5:0] mirror_limit;
 logic [4:0] pat_offset, pat_index;
+logic [2:0] w_offset;
 
 /*** Combonational Logic ***/
 
@@ -62,8 +64,10 @@ end
 
 assign width_limit = out.conf.x + { out.conf.w, 3'd0 };
 assign pat_offset = col - out.conf.x;
+assign w_offset = out.conf.w + 3'd1;
+assign mirror_limit = { w_offset, 3'd0 } - 6'd1;
 assign pat_index = (out.conf.x_mirror)
-                 ? (({ out.conf.w, 3'd0 } - 5'd1) - pat_offset)
+                 ? (mirror_limit - pat_offset)
 		 : pat_offset;
 
 assign pixel.palette = out.conf.palette;
