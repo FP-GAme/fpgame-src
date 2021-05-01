@@ -40,7 +40,7 @@ counter #(7) oam_addr_cnt(.clock, .reset_l, .clear,
 
 assign conf_exists = (oam_addr < `MAX_SPRITES);
 assign in_range = (oam_data.y <= row)
-                && ((oam_data.y + { oam_data.h, 3'd0 }) > row);
+                && ((oam_data.y + { oam_data.h + 2'b1, 3'd0 }) > row);
 
 always_comb begin
 	oam_read = 1'b0;
