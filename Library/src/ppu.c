@@ -143,7 +143,7 @@ tile_t ppu_make_tile(pattern_addr_t pattern_addr, unsigned palette_id, mirror_e 
     return (pattern_addr << 6) | (palette_id << 2) | mirror;
 }
 
-void ppu_load_tilemap(tile_t *tilemap, unsigned len, char *file)
+void ppu_load_tilemap(tile_t *tilemap, unsigned len, const char *file)
 {
     FILE *fp;
     int result;
@@ -172,7 +172,7 @@ void ppu_load_tilemap(tile_t *tilemap, unsigned len, char *file)
     nowaymsg(result == EOF, strerror(errno));
 }
 
-void ppu_load_pattern(pattern_t *pattern, char *file, unsigned width, unsigned height)
+void ppu_load_pattern(pattern_t *pattern, const char *file, unsigned width, unsigned height)
 {
     FILE *fp;
     int result;
@@ -219,7 +219,7 @@ void ppu_load_pattern(pattern_t *pattern, char *file, unsigned width, unsigned h
     result = fclose(fp);
 }
 
-void ppu_load_palette(palette_t *palette, char *file)
+void ppu_load_palette(palette_t *palette, const char *file)
 {
     FILE *fp;
     int result;

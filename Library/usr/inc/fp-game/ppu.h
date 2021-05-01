@@ -177,7 +177,7 @@ tile_t ppu_make_tile(pattern_addr_t pattern_addr, unsigned palette_id, mirror_e 
  * @param len Number of tiles to copy to @p tilemap.
  * @param file Path of the text file to open and read from.
  */
-void ppu_load_tilemap(tile_t *tilemap, unsigned len, char *file);
+void ppu_load_tilemap(tile_t *tilemap, unsigned len, const char *file);
 
 /** @brief Loads width*height-tile graphics into @p pattern from @p file
  *
@@ -211,7 +211,7 @@ void ppu_load_tilemap(tile_t *tilemap, unsigned len, char *file);
  * @param width Number of 8x8 tile-patterns wide. Supports 1, 2, 3, or 4.
  * @param height Number of 8x8 tile-patterns tall. Supports 1, 2, 3, or 4.
  */
-void ppu_load_pattern(pattern_t *pattern, char *file, unsigned width, unsigned height);
+void ppu_load_pattern(pattern_t *pattern, const char *file, unsigned width, unsigned height);
 
 /** @brief Loads a color palette from @p file into @p palette
  *
@@ -222,7 +222,7 @@ void ppu_load_pattern(pattern_t *pattern, char *file, unsigned width, unsigned h
  * @param palette Palette instance to copy the color data from @p file to.
  * @param file File path of the text file to copy color data from.
  */
-void ppu_load_palette(palette_t *palette, char *file);
+void ppu_load_palette(palette_t *palette, const char *file);
 
 /* =========================== */
 /* === PPU Write Functions === */
