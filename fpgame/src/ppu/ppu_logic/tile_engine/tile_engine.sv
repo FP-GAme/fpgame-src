@@ -415,12 +415,15 @@ module tile_engine #(
     // =======================
     // === Pixel-Mixer I/O ===
     // =======================
+    // In order to ensure the pixel mixer fetches the correct tile palette, we must incorporate our
+    //   current scroll value.
+    logic [8:0] pmxr_pixel_addr_scrolled;
+    logic [5:0] pmxr_tile_addr;
+    assign pmxr_pixel_addr_scrolled = pmxr_pixel_addr + (scroll_x & 9'b11111);
+    assign pmxr_tile_addr = pmxr_pixel_addr_scrolled[8:3];
+
     // This read-address port into tilram_rbuf is multiplexed between the patram_fetcher and pmxr.
-    assign tilram_rbuf_rdaddr = (state == TILENG_PREP) ? patram_fetcher_addr_abuf : pmxr_pixel_addr[8:3];
-    // Notice, scrolling is not applied here since scrolling was applied when we fetched the tiles.
-    // In other words, pixel-mixer will always fetch the range (0-40), but the range (0-40) itself
-    //   already has the correctly shifted tiles. (0 may correspond to the 63rd tile, for instance)
-    // TODO, we may actually need to incorporate a pixel-scrolling offset. Test by scrolling around and watching two adjacent tiles with different palettes.
+    assign tilram_rbuf_rdaddr = (state == TILENG_PREP) ? patram_fetcher_addr_abuf : pmxr_tile_addr;
 
     // This contains valid data with 1-cycle of read latency during the IDLE state
     // The MSBs form a color palette address, the LSBs form the pixel color
