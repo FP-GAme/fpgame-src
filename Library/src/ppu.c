@@ -500,15 +500,18 @@ int ppu_write_sprites(sprite_t *sprites, unsigned len, unsigned sprite_id_i)
     for (i=0; i < len; i++)
     {
         // TODO: Check for malformed inputs for this sprite
-        //nowaymsg(sprites[i].pattern_addr > PATTERN_MAXADDR, "Pattern address malformed!");
-        //nowaymsg(sprites[i].palette_id >= SPRLAYER_MAX_PALETTES, "Palette ID out of range!");
-        //nowaymsg(sprites[i].y >= 240, "Sprite y coord. out of range!");
-        //nowaymsg(sprites[i].x >= 320, "Sprite x coord. out of range!");
-        //nowaymsg(sprites[i].mirror > MIRROR_MAXVAL, "Mirror argument malformed!");
+        nowaymsg(sprites[i].pattern_addr > PATTERN_MAXADDR, "Pattern address malformed!");
+        nowaymsg(sprites[i].palette_id >= SPRLAYER_MAX_PALETTES, "Palette ID out of range!");
+        nowaymsg(sprites[i].y >= 240, "Sprite y coord. out of range!");
+        nowaymsg(sprites[i].x >= 320, "Sprite x coord. out of range!");
+        nowaymsg(sprites[i].mirror > MIRROR_MAXVAL, "Mirror argument malformed!");
         // ...
 
         sprite = (sprites[i].pattern_addr << 22) | (sprites[i].palette_id << 17) | (sprites[i].y << 9) | sprites[i].x;
         extra = (sprites[i].mirror << 6) | ((sprites[i].height - 1) << 4) | ((sprites[i].width - 1) << 2) | sprites[i].prio;
+
+        printf("Sprite: %X\n", sprite);
+        printf("extra: %X\n", extra);
 
         sprite_buf[i] = sprite;
         sprite_extra_buf[i] = extra;
