@@ -292,7 +292,6 @@ static ssize_t ppu_write(struct file *file, const char __user *buf, size_t len, 
 
     // Try to acquire the VRAM write lock. If we cannot, tell the user we are busy.
     if (atomic_xchg(&vram_lock, 1) == 1) {
-        printk(KERN_ALERT "FP-GAme PPU Driver write busy");
         return -EBUSY;
     }
 
