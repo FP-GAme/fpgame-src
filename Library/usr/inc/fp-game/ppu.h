@@ -71,8 +71,8 @@ typedef struct {
     unsigned palette_id;    ///< Palette to use for this sprite.
     mirror_e mirror;        ///< Graphics mirror functionality for this sprite.
     render_prio_e prio;     ///< Render this sprite above, in the middle, or behind other layers.
-    uint16_t x;             ///< x coordinate relative to top-left of screen for sprite [0, 319].
-    uint16_t y;             ///< y coordinate relative to top-left of screen for sprite [0, 239].
+    uint16_t x;             ///< x coordinate relative to top-left of screen for sprite [0, 511].
+    uint16_t y;             ///< y coordinate relative to top-left of screen for sprite [0, 255].
     uint8_t height;         ///< Height of sprite in terms of 8x8-pixel tiles. Legal values: [1, 4]
     uint8_t width;          ///< Width of sprite in terms of 8x8-pixel tiles. Legal values: [1, 4]
 } sprite_t;
@@ -212,8 +212,8 @@ void ppu_load_tilemap(tile_t *tilemap, unsigned len, const char *file);
  *
  * @param pattern Pattern instance to copy the pixel data from @p file to.
  * @param file File path of the text file to copy pixel data from.
- * @param width Number of 8x8 tile-patterns wide. Supports 1, 2, 3, or 4.
- * @param height Number of 8x8 tile-patterns tall. Supports 1, 2, 3, or 4.
+ * @param width Number of 8x8 tile-patterns wide. Supports width >= 1
+ * @param height Number of 8x8 tile-patterns tall. Supports height >= 1
  */
 void ppu_load_pattern(pattern_t *pattern, const char *file, unsigned width, unsigned height);
 
@@ -306,8 +306,8 @@ int ppu_write_tiles_vertical(tile_t *tiles, unsigned len, layer_e layer, unsigne
  * @param pattern The buffer of pattern_t tiles. @p patterns must have @p width * @p height
  *                total pattern_t. Create your buffer so that the pattern_t tiles occur row by row
  *                sequentially.
- * @param width The width (in 8x8-pixel tiles) of @p patterns. Range [1, 4]
- * @param height The height (in 8x8-pixel tiles) of @p patterns. Range [1, 4]
+ * @param width The width (in 8x8-pixel tiles) of @p patterns. Supports >= 1
+ * @param height The height (in 8x8-pixel tiles) of @p patterns. Supports >= 1
  * @param pattern_addr The pattern address to start at.
  * @return 0 on success; -1 if PPU busy
  */

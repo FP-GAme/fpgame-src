@@ -50,8 +50,11 @@
 #define PALETTE15_BSIZE 60        ///< Size of 15 colors (not counting the transparent color)
 #define PALETTE16_BSIZE 64        ///< Size of 16 colors (technically a full palette)
 #define SPRITE_BSIZE 4            ///< Size of sprite data in bytes
-#define SPRITE_MAXWIDTH 4
-#define SPRITE_MAXWIDTH 4
+#define SPRITE_MAX_PRIO 2         ///< Maximum sprite priority (maximum render_prio_e value)
+#define SPRITE_MAXX 511           ///< Maximum allowable x position for a sprite.
+#define SPRITE_MAXY 255           ///< Maximum allowable y position for a sprite
+#define SPRITE_MAXWIDTH 4        ///< Maximum allowable width (in tiles) for multi-pattern sprites
+#define SPRITE_MAXHEIGHT 4       ///< Maximum allowable height (in tiles) for multi-pattern sprites
 
 
 /* ========================= */
@@ -179,6 +182,8 @@ void ppu_load_pattern(pattern_t *pattern, const char *file, unsigned width, unsi
     uint32_t row_pattern;
 
     nowaymsg(pattern == NULL, "Tile array is NULL!");
+    nowaymsg(width == 0, "Pattern width cannot be 0!");
+    nowaymsg(height == 0, "Pattern height cannot be 0!");
 
     fp = fopen(file, "r");
     nowaymsg(fp == NULL, strerror(errno));
@@ -419,6 +424,8 @@ int ppu_write_pattern(pattern_t *pattern, unsigned width, unsigned height,
     nowaymsg(ppu_fd == -1, "PPU not enabled or owned by this process!");
     nowaymsg(pattern == NULL, "Pattern array is NULL!");
     nowaymsg(pattern_addr > PATTERN_MAXADDR, "Pattern address malformed!");
+    nowaymsg(width == 0, "Pattern width cannot be 0!");
+    nowaymsg(height == 0, "Pattern height cannot be 0!");
 
     unsigned x_i = pattern_addr & 0x1F;        // Starting tile x coord. 1st 5 bits of pattern_addr
     unsigned y_i = (pattern_addr >> 5) & 0x1F; // Starting tile y coord. 2nd 5 bits of pattern_addr
@@ -499,19 +506,20 @@ int ppu_write_sprites(sprite_t *sprites, unsigned len, unsigned sprite_id_i)
 
     for (i=0; i < len; i++)
     {
-        // TODO: Check for malformed inputs for this sprite
+        // Check for malformed inputs for this sprite
         nowaymsg(sprites[i].pattern_addr > PATTERN_MAXADDR, "Pattern address malformed!");
         nowaymsg(sprites[i].palette_id >= SPRLAYER_MAX_PALETTES, "Palette ID out of range!");
-        nowaymsg(sprites[i].y >= 240, "Sprite y coord. out of range!");
-        nowaymsg(sprites[i].x >= 320, "Sprite x coord. out of range!");
+        nowaymsg(sprites[i].y > SPRITE_MAXY, "Sprite y coord. out of range!");
+        nowaymsg(sprites[i].x > SPRITE_MAXX, "Sprite x coord. out of range!");
         nowaymsg(sprites[i].mirror > MIRROR_MAXVAL, "Mirror argument malformed!");
-        // ...
+        nowaymsg(sprites[i].height > SPRITE_MAXHEIGHT, "Sprite height exceeds maximum (4)!");
+        nowaymsg(sprites[i].height == 0, "Sprite height cannot be 0!");
+        nowaymsg(sprites[i].width > SPRITE_MAXWIDTH, "Sprite width exceeds maximum (4)!");
+        nowaymsg(sprites[i].width == 0, "Sprite width cannot be 0!");
+        nowaymsg(sprites[i].prio > SPRITE_MAX_PRIO, "Sprite Priority exceeds maximum (2)!");
 
         sprite = (sprites[i].pattern_addr << 22) | (sprites[i].palette_id << 17) | (sprites[i].y << 9) | sprites[i].x;
         extra = (sprites[i].mirror << 6) | ((sprites[i].height - 1) << 4) | ((sprites[i].width - 1) << 2) | sprites[i].prio;
-
-        printf("Sprite: %X\n", sprite);
-        printf("extra: %X\n", extra);
 
         sprite_buf[i] = sprite;
         sprite_extra_buf[i] = extra;
