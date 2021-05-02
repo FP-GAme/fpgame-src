@@ -21,6 +21,14 @@ extern "C" {
 #include <stdint.h>
 #include <sys/types.h>
 
+#define VRAM_PATTERNOFFSET 0x4000 ///< Byte offset of Pattern RAM in VRAM
+
+#define VRAM_PALETTEOFFSET 0xC000 ///< Byte offset of Palette RAM in VRAM
+
+#define VRAM_SPRITESOFFSET 0xD000 ///< Byte offset of Sprite RAM in VRAM
+
+#define SPRRAM_EXTRAOFFSET 0x100  ///< Byte offset from VRAM_SPRITEOFFSET of the extra data in Sprite RAM
+
 /* ======================= */
 /* === Types and Enums === */
 /* ======================= */
@@ -150,7 +158,7 @@ int ppu_write_vram(const void *buf, size_t len, off_t offset);
  * @param y Vertical tile offset. Range [0, 31].
  * @returns A pattern_addr_t representing the address into Pattern RAM formed by the arguments.
  */
-pattern_addr_t ppu_pattern_addr (unsigned x, unsigned y);
+pattern_addr_t ppu_pattern_addr(unsigned x, unsigned y);
 
 /** @brief Generate a tile data for use with the ppu_write_tile functions
  *

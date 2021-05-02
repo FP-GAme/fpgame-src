@@ -279,7 +279,7 @@ static ssize_t apu_write(struct file *file, const char __user *buf,
 	static atomic_t write_lock;
 
 	/* Verify length arguments */
-	if (len > APU_BUF_SIZE) {
+	if ((len > APU_BUF_SIZE) || (buf == NULL)) {
 		return -EINVAL;
 	}
 
