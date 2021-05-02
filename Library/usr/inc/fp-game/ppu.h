@@ -21,12 +21,21 @@ extern "C" {
 #include <stdint.h>
 #include <sys/types.h>
 
+#define TILELAYER_MAX_PALETTES 16 ///< Maximum palettes for tile layers (as opposed to sprite layer)
+#define SPRLAYER_MAX_PALETTES 32  ///< Maximum palettes for sprite layer (as opposed to tile layers)
+#define TILELAYER_WIDTH 64        ///< Width (in tiles) of the tile layer
+#define TILELAYER_HEIGHT 64       ///< Height (in tiles) of the tile layer
+#define TILEPATTERN_BSIZE 32      ///< Size (in Bytes) of a single pattern_t (tile-pattern)
+#define TILEPATTERN_HEIGHT 8      ///< Height in pixel rows of a single tile pattern (8x8 tile)
+#define TILERAM_FGOFFSET 0x2000   ///< Byte offset for foreground tile layer within Tile RAM
 #define VRAM_PATTERNOFFSET 0x4000 ///< Byte offset of Pattern RAM in VRAM
-
 #define VRAM_PALETTEOFFSET 0xC000 ///< Byte offset of Palette RAM in VRAM
-
 #define VRAM_SPRITESOFFSET 0xD000 ///< Byte offset of Sprite RAM in VRAM
-
+#define PALETTERAM_BGOFFSET 0     ///< Byte offset from start of Palette RAM to BG section
+#define PALETTERAM_FGOFFSET 0x400 ///< Byte offset from start of Palette RAM to FG section
+#define PALETTERAM_SPROFFSET 0x800///< Byte offset from start of Palette RAM to SPR section
+#define PALETTERAM_SPRITEMAX 32   ///< Maximum number of palettes for sprites to access
+#define PALETTERAM_TILEMAX 16     ///< Maximum number of palettes for a tile layer to access
 #define SPRRAM_EXTRAOFFSET 0x100  ///< Byte offset from VRAM_SPRITEOFFSET of the extra data in Sprite RAM
 
 /* ======================= */

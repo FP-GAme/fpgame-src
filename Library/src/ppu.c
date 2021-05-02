@@ -25,27 +25,11 @@
 /* ================== */
 /* === Anti-Magic === */
 /* ================== */
-#define TILELAYER_MAX_PALETTES 16 ///< Maximum palettes for tile layers (as opposed to sprite layer)
-#define SPRLAYER_MAX_PALETTES 32  ///< Maximum palettes for sprite layer (as opposed to tile layers)
 #define PATTERN_MAXADDR 1023      ///< Maximum pattern_addr_t value
 #define MIRROR_MAXVAL 3           ///< Maximum allowable value for mirror_e
 #define SPRITE_MAXCOUNT 64        ///< Maximum supported sprites
 #define COLOR_24MASK 0xFFFFFF     ///< 24-bit color mask
 #define LAYER_ENMASK 0x7          ///< Enable Mask for layer_e
-#define TILELAYER_WIDTH 64        ///< Width (in tiles) of the tile layer
-#define TILELAYER_HEIGHT 64       ///< Height (in tiles) of the tile layer
-#define VRAM_PATTERNOFFSET 0x4000 ///< Byte offset of Pattern RAM in VRAM
-#define VRAM_PALETTEOFFSET 0xC000 ///< Byte offset of Palette RAM in VRAM
-#define VRAM_SPRITESOFFSET 0xD000 ///< Byte offset of Sprite RAM in VRAM
-#define PALETTERAM_BGOFFSET 0     ///< Byte offset from start of Palette RAM to BG section
-#define PALETTERAM_FGOFFSET 0x400 ///< Byte offset from start of Palette RAM to FG section
-#define PALETTERAM_SPROFFSET 0x800///< Byte offset from start of Palette RAM to SPR section
-#define PALETTERAM_SPRITEMAX 32   ///< Maximum number of palettes for sprites to access
-#define PALETTERAM_TILEMAX 16     ///< Maximum number of palettes for a tile layer to access
-#define SPRRAM_EXTRAOFFSET 0x100  ///< Byte offset of the extra data in Sprite RAM
-#define TILEPATTERN_BSIZE 32      ///< Size (in Bytes) of a single pattern_t (tile-pattern)
-#define TILEPATTERN_HEIGHT 8      ///< Height in pixel rows of a single tile pattern (8x8 tile)
-#define TILERAM_FGOFFSET 0x2000   ///< Byte offset for foreground tile layer within Tile RAM
 #define TILEDATA_BSIZE 2          ///< Size of tile data in bytes
 #define PALETTE15_BSIZE 60        ///< Size of 15 colors (not counting the transparent color)
 #define PALETTE16_BSIZE 64        ///< Size of 16 colors (technically a full palette)
@@ -409,7 +393,7 @@ int ppu_write_tiles_vertical(tile_t *tiles, unsigned len, layer_e layer, unsigne
         }
         towrite = count - written; // Write the leftover tiles next (if any)
         // Wrap around to 0th row, starting at the fixed column
-        start_addr = tile_layer_offset + x_i * TILEDATA_BSIZE; 
+        start_addr = tile_layer_offset + x_i * TILEDATA_BSIZE;
     }
 
     free(write_tiles);
@@ -456,7 +440,7 @@ int ppu_write_palette(palette_t *palette, layer_e layer_id, unsigned palette_id)
 {
     unsigned wr_addr;
     unsigned layer_offset;
-    
+
     nowaymsg(ppu_fd == -1, "PPU not enabled or owned by this process!");
     nowaymsg(palette == NULL, "Palette is NULL!");
 
@@ -531,7 +515,7 @@ int ppu_write_sprites(sprite_t *sprites, unsigned len, unsigned sprite_id_i)
 
         return -1; // In this case, PPU is busy (errno == EBUSY)
     }
-    
+
     if (pwrite(ppu_fd, sprite_extra_buf, len, wraddr_extra) != (ssize_t)len)
     {
         assert(errno == EBUSY);
