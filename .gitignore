@@ -1,31 +1,4 @@
-*.wav
-*.mp3
-*.o
-*.*.swp
-*.d
-*.a
-*.bin
-*.raw
-*.zip
-sdk.mk
-SoftDiv/div
-Wave-to-PCM/wav2bin
-db/
-incremental_db/
-output_files/
-simulation/
-unsaved/
-synthesis/
-hps_isw_handoff/
-.qsys_edit/
-spl_bsp/
-ctests/con_mod/con_test
-ctests/apu_mod/apu_test
-ctests/apu_mod/apu_clean
-ctests/apu_mod_polled/apu_poll
-ctests/apu_sin/apu_sin
-ctests/ppu_mod/ppu_test
-ctests/the_mall_test/the_mall_test
+# Git Ignore File for Project Root
 
 # Ignore linux-socfpga folder
 linux-socfpga/

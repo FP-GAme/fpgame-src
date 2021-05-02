@@ -1,3 +1,5 @@
+# Git Ignore File for Kernel
+
 # Ignore Kernel Module Compilation Stuff
 *.ko
 *.o

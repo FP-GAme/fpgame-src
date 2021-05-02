@@ -1,3 +1,5 @@
+# Git Ignore File for Quartus Project
+
 db/
 incremental_db/
 simulation/
@@ -55,3 +57,4 @@ fpgame_soc/testbench/
 *.sld
 *.spd
 *.stp
+*.rpt.lck
