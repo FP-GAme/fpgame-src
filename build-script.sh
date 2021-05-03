@@ -111,8 +111,24 @@ mkdir -p $1/linux/lib/modules/5.9.0/
 cp Kernel/apu/apu.ko $1/linux/lib/modules/5.9.0/
 cp Kernel/con/con.ko $1/linux/lib/modules/5.9.0/
 cp Kernel/ppu/ppu.ko $1/linux/lib/modules/5.9.0/
+
 # The following is the result of the `depmod` command run manually:
-cp Kernel/depmod/modules.dep.bin $1/linux/lib/modules/5.9.0/
+cp img_src/depmod/modules.dep.bin $1/linux/lib/modules/5.9.0/
+
+# install fpgame system software
+mkdir -p $1/linux/usr/bin/fpgame
+cp img_src/systemd/fpgame.sh $1/linux/usr/bin/fpgame/
+
+# install fpgame systemd service
+cp img_src/systemd/fpgame.service $1/linux/etc/systemd/system/
+
+# ensure fpgame systemd service is enabled by default
+mkdir -p $1/linux/etc/systemd/system/multi-user.target.wants
+ln -sf /etc/systemd/system/fpgame.service \
+  $1/linux/etc/systemd/system/multi-user.target.wants/
+
+# Cleanup /home/root/
+rm -rf $1/linux/home/root/*
 
 set +e # the above commands should exit on fail
 

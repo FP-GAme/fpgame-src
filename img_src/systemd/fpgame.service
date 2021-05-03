@@ -1,0 +1,12 @@
+[Unit]
+Description=FP-GAme system software
+After=sysinit.target
+Before=getty@tty1.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c /usr/bin/fpgame/fpgame.sh
+SendSIGUP=no
+
+[Install]
+WantedBy=multi-user.target

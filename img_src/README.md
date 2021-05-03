@@ -2,6 +2,11 @@
 This folder marks the directory to copy the de10_nano_linux_console.img file
 during the build from source process.
 
+Also, this directory contains some additional files we copy during the auto-build process:
+* systemd/fpgame.service
+* systemd/fpgame.sh
+* depmod/modules.depmod.bin
+
 The full build_from_source_guide.pdf can be found in this repository under the docs subdirectory.
 
 Reminders:
