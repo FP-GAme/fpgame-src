@@ -239,7 +239,7 @@ void ppu_load_palette(palette_t *palette, const char *file)
 /* =========================== */
 /* === PPU Write Functions === */
 /* =========================== */
-int ppu_write_tiles_horizontal(tile_t *tiles, unsigned len, layer_e layer, unsigned x_i,
+int ppu_write_tiles_horizontal(const tile_t *tiles, unsigned len, layer_e layer, unsigned x_i,
                                unsigned y_i, unsigned count)
 {
     // Catch input errors and tell the user
@@ -325,8 +325,8 @@ int ppu_write_tiles_horizontal(tile_t *tiles, unsigned len, layer_e layer, unsig
     return 0;
 }
 
-int ppu_write_tiles_vertical(tile_t *tiles, unsigned len, layer_e layer, unsigned x_i, unsigned y_i,
-                             unsigned count)
+int ppu_write_tiles_vertical(const tile_t *tiles, unsigned len, layer_e layer, unsigned x_i,
+                             unsigned y_i, unsigned count)
 {
     unsigned i;            // Generic reusable loop iterator
     unsigned start_addr;   // Actual Byte-address in VRAM to write to.
@@ -401,7 +401,7 @@ int ppu_write_tiles_vertical(tile_t *tiles, unsigned len, layer_e layer, unsigne
     return 0;
 }
 
-int ppu_write_pattern(pattern_t *pattern, unsigned width, unsigned height,
+int ppu_write_pattern(const pattern_t *pattern, unsigned width, unsigned height,
                       pattern_addr_t pattern_addr)
 {
     // Check for invalid inputs and notify user of errors
@@ -436,7 +436,7 @@ int ppu_write_pattern(pattern_t *pattern, unsigned width, unsigned height,
     return 0;
 }
 
-int ppu_write_palette(palette_t *palette, layer_e layer_id, unsigned palette_id)
+int ppu_write_palette(const palette_t *palette, layer_e layer_id, unsigned palette_id)
 {
     unsigned wr_addr;
     unsigned layer_offset;
@@ -469,7 +469,7 @@ int ppu_write_palette(palette_t *palette, layer_e layer_id, unsigned palette_id)
     return 0;
 }
 
-int ppu_write_sprites(sprite_t *sprites, unsigned len, unsigned sprite_id_i)
+int ppu_write_sprites(const sprite_t *sprites, unsigned len, unsigned sprite_id_i)
 {
     unsigned i;
     uint32_t *sprite_buf;

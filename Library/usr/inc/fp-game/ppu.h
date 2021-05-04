@@ -271,7 +271,7 @@ void ppu_load_palette(palette_t *palette, const char *file);
  *              64 if count > 64.
  * @return 0 on success; -1 if PPU busy
  */
-int ppu_write_tiles_horizontal(tile_t *tiles, unsigned len, layer_e layer, unsigned x_i,
+int ppu_write_tiles_horizontal(const tile_t *tiles, unsigned len, layer_e layer, unsigned x_i,
                                unsigned y_i, unsigned count);
 
 /** @brief Writes an array to a vertical segment of tiles
@@ -293,8 +293,8 @@ int ppu_write_tiles_horizontal(tile_t *tiles, unsigned len, layer_e layer, unsig
  *              64 if count > 64.
  * @return 0 on success; -1 if PPU busy
  */
-int ppu_write_tiles_vertical(tile_t *tiles, unsigned len, layer_e layer, unsigned x_i, unsigned y_i,
-                             unsigned count);
+int ppu_write_tiles_vertical(const tile_t *tiles, unsigned len, layer_e layer, unsigned x_i,
+                             unsigned y_i, unsigned count);
 
 /** @brief Writes pattern_t patterns (8x8-pixel tiles) to a specified location in Pattern RAM
  *
@@ -328,7 +328,7 @@ int ppu_write_tiles_vertical(tile_t *tiles, unsigned len, layer_e layer, unsigne
  * @param pattern_addr The pattern address to start at.
  * @return 0 on success; -1 if PPU busy
  */
-int ppu_write_pattern(pattern_t *pattern, unsigned width, unsigned height,
+int ppu_write_pattern(const pattern_t *pattern, unsigned width, unsigned height,
                       pattern_addr_t pattern_addr);
 
 /** @brief Overwrites a palette in Palette RAM
@@ -348,7 +348,7 @@ int ppu_write_pattern(pattern_t *pattern, unsigned width, unsigned height,
  *                   bounds of the palette layer section indicated by @p layer_id.
  * @return 0 on success; -1 if PPU busy
  */
-int ppu_write_palette(palette_t *palette, layer_e layer_id, unsigned palette_id);
+int ppu_write_palette(const palette_t *palette, layer_e layer_id, unsigned palette_id);
 
 /** @brief Overwrites one or more sprite data entries in Sprite RAM
  *
@@ -359,7 +359,7 @@ int ppu_write_palette(palette_t *palette, layer_e layer_id, unsigned palette_id)
  *                    must fall in range [0, 63 - @p len ].
  * @return 0 on success; -1 if PPU busy
  */
-int ppu_write_sprites(sprite_t *sprites, unsigned len, unsigned sprite_id_i);
+int ppu_write_sprites(const sprite_t *sprites, unsigned len, unsigned sprite_id_i);
 
 /** @brief Set the universal background color of the PPU
  *
