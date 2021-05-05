@@ -52,7 +52,10 @@ always_comb begin
 	end
 
 	/* Gets the index of the LSB */
-	select = $right(sel_mask);
+	select = 0;
+  for (int i = SPRITES - 1; i >= 0; i--)
+		if (sel_mask[i])
+			select = i;
 end
 
 assign exists = (visible != 'd0);
