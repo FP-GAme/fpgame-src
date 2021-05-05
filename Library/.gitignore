@@ -6,4 +6,4 @@
 *.a
 
 # Ignore doxygen output files
-docs/html/
+usr/docs/html/
