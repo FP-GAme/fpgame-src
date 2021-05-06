@@ -306,7 +306,8 @@ int ppu_write_tiles_vertical(const tile_t *tiles, unsigned len, layer_e layer, u
  * pattern_t tile-patterns (8x8-pixel tiles) from @p patterns are written sequentially by rows of
  *   @p width until @p height rows have been written.
  *
- * The example diagram below demonstrates the effect of this function:
+ * The example diagram below demonstrates the effect of this function. Note however that this
+ * diagram is shortened to a 16x16 view for readability. The actual Pattern RAM is 32x32.
  * @image html ppu_write_pattern_ex0.svg
  *
  * @warning It is the user's responsibility to ensure @p patterns has length @p width * @p height
