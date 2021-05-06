@@ -258,12 +258,41 @@ static int ppu_open(struct inode *inode, struct file *file)
  *
  * Calling this function releases the PPU lock, allowing other processes to use the PPU.
  *
+ * If the calling process owned the PPU lock, then this function is guaranteed to reset VRAM and
+ *   leave the PPU in a ready-to-write state.
+ *
  * @return 0 on success, -1 on error.
  */
 static int ppu_release(struct inode *inode, struct file *file)
 {
-    if (atomic_xchg(&ppu_lock, 0) == 0) {
+    if (atomic_xchg(&ppu_lock, 1) == 0) { // Do not unlock yet, but check if it was already unlocked
+        atomic_set(&ppu_lock, 0); // reset lock
         printk(KERN_ALERT "Close called on PPU when it wasn't open!");
+        return -1;
+    }
+    else
+    {
+        // Spin until the VRAM is not busy
+        while (atomic_xchg(&vram_lock, 1) == 1);
+
+        // properly reset VRAM for the next program to grab the PPU
+        memset(vram_base_v, 0, VRAM_SIZE+8);
+
+        // reset control registers to their defaults (0)
+        mmio_write(PPU_BGSCROLL_OFFSET, 0);
+        mmio_write(PPU_FGSCROLL_OFFSET, 0);
+        mmio_write(PPU_BGCOLOR_OFFSET, 0);
+        mmio_write(PPU_ENABLE_OFFSET, 0);
+
+        // DMA the changes to the PPU (blanking out the screen)
+        mmio_write(PPU_DMA_ADDR_OFFSET, vram_addr_p);
+
+        // Spin until the VRAM is not busy
+        while (atomic_xchg(&vram_lock, 1) == 1);
+
+        // release the locks
+        atomic_set(&vram_lock, 0); // reset vram lock
+        atomic_set(&ppu_lock, 0); // reset ppu lock
     }
 
     return 0;
