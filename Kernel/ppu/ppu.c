@@ -428,4 +428,4 @@ module_platform_driver(ppu_platform);
 
 MODULE_AUTHOR("Joseph Yankel");
 MODULE_DESCRIPTION("FP-GAme Device Driver used by FP-GAme Library to control PPU");
-MODULE_LICENSE("GPL");
+MODULE_LICENSE("Dual MIT/GPL");

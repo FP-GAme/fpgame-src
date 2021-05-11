@@ -59,7 +59,7 @@ typedef struct packed {
 
 /* Holds the values which will be saved by a sprite unit. */
 typedef struct packed {
-	pixel_t [31:0] pat; // TODO: Verify this argument.
+	pixel_t [31:0] pat;
 	stripped_sprite_conf_t conf;
 } sprite_reg_t;
 
@@ -69,7 +69,7 @@ typedef struct packed {
 	pixel_t pixel;
 	logic fg_prio;
 	logic bg_prio;
-	logic transparent;
+	logic visible;
 } sprite_pixel_t;
 
 `endif /* FPGAME_SPRITE_DEFINES_VH_ */

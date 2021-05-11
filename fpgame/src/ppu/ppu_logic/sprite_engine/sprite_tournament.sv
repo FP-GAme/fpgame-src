@@ -38,7 +38,7 @@ generate
 	for (i = 0; i < SPRITES; i = i + 1) begin : tournament_gen
 		 assign fg[i] = in[i].fg_prio;
 		 assign bg[i] = in[i].bg_prio;
-		 assign visible[i] = ~in[i].transparent;
+		 assign visible[i] = in[i].visible;
 	end
 endgenerate
 
@@ -60,6 +60,6 @@ end
 
 assign exists = (visible != 'd0);
 assign pixel_addr = (exists) ? { in[select].palette, in[select].pixel } : 'd0;
-assign pixel_prio = { in[select].fg_prio, in[select].bg_prio };
+assign pixel_prio = (exists) ? { in[select].fg_prio, in[select].bg_prio } : 'd0;
 
 endmodule : sprite_tournament

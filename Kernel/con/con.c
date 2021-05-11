@@ -127,4 +127,4 @@ module_exit(con_clean);
 
 MODULE_AUTHOR("Andrew Spaulding");
 MODULE_DESCRIPTION("The nightmares, Snake? They never go away.");
-MODULE_LICENSE("GPL"); /* I wonder if this is legally binding \_(ツ)_/ */
+MODULE_LICENSE("Dual MIT/GPL"); /* I wonder if this is legally binding \_(ツ)_/ */

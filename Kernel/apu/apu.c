@@ -419,4 +419,4 @@ module_platform_driver(apu_platform);
 
 MODULE_AUTHOR("Andrew Spaulding");
 MODULE_DESCRIPTION("THEIR SCREAMS ARE MUSIC TO MY AUDIO RECEPTORS!!!");
-MODULE_LICENSE("GPL"); /* I wonder if this is legally binding \_(ツ)_/ */
+MODULE_LICENSE("Dual MIT/GPL"); /* I wonder if this is legally binding \_(ツ)_/ */

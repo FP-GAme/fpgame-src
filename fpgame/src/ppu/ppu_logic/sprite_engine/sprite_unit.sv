@@ -40,7 +40,7 @@ module sprite_unit
 sprite_reg_t next_out;
 logic next_out_valid;
 
-logic [8:0] width_limit;
+logic [9:0] width_limit;
 logic [5:0] mirror_limit;
 logic [4:0] pat_offset, pat_index;
 logic [2:0] w_offset;
@@ -53,7 +53,6 @@ always_comb begin
 	next_out_valid = out_valid;
 
 	if (clear | (out_ack & out_valid)) begin
-		next_out = 'd0;
 		next_out_valid = 1'b0;
 	end else if (in_valid & ~out_valid) begin
 		in_ack = 1'b1;
@@ -62,20 +61,20 @@ always_comb begin
 	end
 end
 
+assign w_offset = out.conf.w + 3'd1;
 assign width_limit = out.conf.x + { w_offset, 3'd0 };
 assign pat_offset = col - out.conf.x;
-assign w_offset = out.conf.w + 3'd1;
 assign mirror_limit = { w_offset, 3'd0 } - 6'd1;
 assign pat_index = (out.conf.x_mirror)
                  ? (mirror_limit - pat_offset)
-		 : pat_offset;
+                 : pat_offset;
 
 assign pixel.palette = out.conf.palette;
 assign pixel.pixel = out.pat[pat_index];
 assign pixel.fg_prio = out.conf.fg_prio;
 assign pixel.bg_prio = out.conf.bg_prio;
-assign pixel.transparent = (pixel.pixel == 'd0) || (out.conf.x > col)
-                         || (col >= width_limit);
+assign pixel.visible = (pixel.pixel != 'd0) && out_valid
+                     && (out.conf.x <= col) && (col < width_limit);
 
 /*** Sequential Logic ***/
 
